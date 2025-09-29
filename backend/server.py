@@ -432,7 +432,3 @@ async def shutdown_db_client():
 @api_router.get("/health")
 async def health_check():
     return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
-
-@api_router.get("/")
-async def root():
-    return {"message": "ReminderAI Backend API", "status": "running"}
