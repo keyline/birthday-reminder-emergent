@@ -40,6 +40,10 @@ const ContactsPage = () => {
   const [editingContact, setEditingContact] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [generatingMessage, setGeneratingMessage] = useState(null);
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadResult, setUploadResult] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
