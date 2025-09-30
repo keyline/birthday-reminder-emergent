@@ -49,8 +49,17 @@ const ContactsPage = () => {
     email: '',
     whatsapp: '',
     birthday: '',
-    anniversary_date: ''
+    anniversary_date: '',
+    message_tone: 'normal',
+    whatsapp_image: '',
+    email_image: ''
   });
+  const [selectedContacts, setSelectedContacts] = useState([]);
+  const [showBulkActions, setShowBulkActions] = useState(false);
+  const [bulkTone, setBulkTone] = useState('normal');
+  const [messagePreview, setMessagePreview] = useState(null);
+  const [showMessageDialog, setShowMessageDialog] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     fetchContacts();
