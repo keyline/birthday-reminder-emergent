@@ -26,7 +26,9 @@ import {
   Key,
   User,
   Globe,
-  Send
+  Send,
+  Coins,
+  Infinity
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
