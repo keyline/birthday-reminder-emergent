@@ -1254,6 +1254,13 @@ async def update_contact_images(
 # Include the router in the main app
 app.include_router(api_router)
 
+# Create uploads directory
+uploads_dir = Path("uploads")
+uploads_dir.mkdir(exist_ok=True)
+
+# Mount static files for image serving
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
