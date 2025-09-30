@@ -13,6 +13,9 @@ from datetime import datetime, date, timezone, timedelta
 import bcrypt
 from jose import JWTError, jwt
 from emergentintegrations.llm.chat import LlmChat, UserMessage
+from fastapi import UploadFile, File
+import pandas as pd
+import io
 import asyncio
 
 
