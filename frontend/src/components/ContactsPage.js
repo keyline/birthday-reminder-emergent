@@ -113,7 +113,10 @@ const ContactsPage = () => {
       email: contact.email || '',
       whatsapp: contact.whatsapp || '',
       birthday: contact.birthday || '',
-      anniversary_date: contact.anniversary_date || ''
+      anniversary_date: contact.anniversary_date || '',
+      message_tone: contact.message_tone || 'normal',
+      whatsapp_image: contact.whatsapp_image || '',
+      email_image: contact.email_image || ''
     });
     setIsDialogOpen(true);
   };
