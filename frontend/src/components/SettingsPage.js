@@ -66,6 +66,7 @@ const SettingsPage = () => {
 
   useEffect(() => {
     fetchSettings();
+    fetchCredits();
   }, []);
 
   const fetchSettings = async () => {
