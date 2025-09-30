@@ -86,6 +86,9 @@ class Contact(BaseModel):
     whatsapp: Optional[str] = None
     birthday: Optional[date] = None
     anniversary_date: Optional[date] = None
+    message_tone: str = "normal"
+    whatsapp_image: Optional[str] = None
+    email_image: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class TemplateCreate(BaseModel):
