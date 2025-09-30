@@ -204,6 +204,57 @@ const SettingsPage = () => {
           </p>
         </div>
 
+        {/* Credits Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <Card className="border-0 shadow-lg bg-gradient-to-r from-green-50 to-emerald-50">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg font-medium text-gray-700 flex items-center">
+                <MessageCircle className="w-5 h-5 mr-2 text-green-500" />
+                WhatsApp Credits
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-gray-900 flex items-center">
+                {credits.unlimited_whatsapp ? (
+                  <>
+                    <Infinity className="w-6 h-6 text-green-600 mr-2" />
+                    <span className="text-green-600">Unlimited</span>
+                  </>
+                ) : (
+                  <>
+                    {credits.whatsapp_credits}
+                    <Coins className="w-5 h-5 text-green-600 ml-2" />
+                  </>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-lg bg-gradient-to-r from-blue-50 to-cyan-50">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg font-medium text-gray-700 flex items-center">
+                <Mail className="w-5 h-5 mr-2 text-blue-500" />
+                Email Credits
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-gray-900 flex items-center">
+                {credits.unlimited_email ? (
+                  <>
+                    <Infinity className="w-6 h-6 text-blue-600 mr-2" />
+                    <span className="text-blue-600">Unlimited</span>
+                  </>
+                ) : (
+                  <>
+                    {credits.email_credits}
+                    <Coins className="w-5 h-5 text-blue-600 ml-2" />
+                  </>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         <Tabs defaultValue="apis" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="apis">API Configuration</TabsTrigger>
