@@ -323,6 +323,7 @@ const ContactsPage = () => {
           </div>
           
           <div className="flex gap-3">
+            {/* Bulk Upload Dialog */}
             <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
               <DialogTrigger asChild>
                 <Button 
@@ -469,6 +470,7 @@ const ContactsPage = () => {
               </DialogContent>
             </Dialog>
 
+            {/* Add Contact Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button 
@@ -480,99 +482,100 @@ const ContactsPage = () => {
                   Add Contact
                 </Button>
               </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle data-testid="contact-dialog-title">
-                  {editingContact ? 'Edit Contact' : 'Add New Contact'}
-                </DialogTitle>
-                <DialogDescription>
-                  {editingContact 
-                    ? 'Update the contact information below.'
-                    : 'Add a new person to your celebration list.'
-                  }
-                </DialogDescription>
-              </DialogHeader>
-              
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Name *</Label>
-                  <Input
-                    id="name"
-                    data-testid="contact-name-input"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="Enter full name"
-                    required
-                  />
-                </div>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle data-testid="contact-dialog-title">
+                    {editingContact ? 'Edit Contact' : 'Add New Contact'}
+                  </DialogTitle>
+                  <DialogDescription>
+                    {editingContact 
+                      ? 'Update the contact information below.'
+                      : 'Add a new person to your celebration list.'
+                    }
+                  </DialogDescription>
+                </DialogHeader>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    data-testid="contact-email-input"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder="Enter email address"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="whatsapp">WhatsApp Number</Label>
-                  <Input
-                    id="whatsapp"
-                    data-testid="contact-whatsapp-input"
-                    value={formData.whatsapp}
-                    onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
-                    placeholder="Enter WhatsApp number"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="birthday">Birthday</Label>
-                  <Input
-                    id="birthday"
-                    data-testid="contact-birthday-input"
-                    type="date"
-                    value={formData.birthday}
-                    onChange={(e) => setFormData({ ...formData, birthday: e.target.value })}
-                    className="date-picker"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="anniversary">Anniversary Date</Label>
-                  <Input
-                    id="anniversary"
-                    data-testid="contact-anniversary-input"
-                    type="date"
-                    value={formData.anniversary_date}
-                    onChange={(e) => setFormData({ ...formData, anniversary_date: e.target.value })}
-                    className="date-picker"
-                  />
-                </div>
-                
-                <div className="flex justify-end space-x-2 pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setIsDialogOpen(false)}
-                    data-testid="cancel-contact-button"
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    className="btn-gradient"
-                    data-testid="save-contact-button"
-                  >
-                    {editingContact ? 'Update Contact' : 'Add Contact'}
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Name *</Label>
+                    <Input
+                      id="name"
+                      data-testid="contact-name-input"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      placeholder="Enter full name"
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      data-testid="contact-email-input"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      placeholder="Enter email address"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="whatsapp">WhatsApp Number</Label>
+                    <Input
+                      id="whatsapp"
+                      data-testid="contact-whatsapp-input"
+                      value={formData.whatsapp}
+                      onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
+                      placeholder="Enter WhatsApp number"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="birthday">Birthday</Label>
+                    <Input
+                      id="birthday"
+                      data-testid="contact-birthday-input"
+                      type="date"
+                      value={formData.birthday}
+                      onChange={(e) => setFormData({ ...formData, birthday: e.target.value })}
+                      className="date-picker"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="anniversary">Anniversary Date</Label>
+                    <Input
+                      id="anniversary"
+                      data-testid="contact-anniversary-input"
+                      type="date"
+                      value={formData.anniversary_date}
+                      onChange={(e) => setFormData({ ...formData, anniversary_date: e.target.value })}
+                      className="date-picker"
+                    />
+                  </div>
+                  
+                  <div className="flex justify-end space-x-2 pt-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsDialogOpen(false)}
+                      data-testid="cancel-contact-button"
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      type="submit" 
+                      className="btn-gradient"
+                      data-testid="save-contact-button"
+                    >
+                      {editingContact ? 'Update Contact' : 'Add Contact'}
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         {/* Search */}
@@ -589,7 +592,7 @@ const ContactsPage = () => {
           </div>
         </div>
 
-        {/* Contacts Grid */}
+        {/* Contacts Grid - Simplified for now */}
         {filteredContacts.length === 0 ? (
           <div className="text-center py-16" data-testid="no-contacts-message">
             <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
@@ -618,152 +621,77 @@ const ContactsPage = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" data-testid="contacts-grid">
-            {filteredContacts.map((contact) => {
-              const upcomingEvents = getUpcomingEvents(contact);
-              
-              return (
-                <Card 
-                  key={contact.id} 
-                  className="card-hover glass border-0 shadow-lg"
-                  data-testid={`contact-card-${contact.id}`}
-                >
-                  <CardHeader className="pb-3">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <CardTitle className="text-lg font-semibold text-gray-900 mb-1" data-testid={`contact-name-${contact.id}`}>
-                          {contact.name}
-                        </CardTitle>
-                        
-                        {/* Upcoming Events */}
-                        {upcomingEvents.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mb-2">
-                            {upcomingEvents.map((event, index) => (
-                              <Badge 
-                                key={index}
-                                variant="outline" 
-                                className={`text-xs ${
-                                  event.type === 'birthday' 
-                                    ? 'bg-rose-50 text-rose-700 border-rose-200'
-                                    : 'bg-pink-50 text-pink-700 border-pink-200'
-                                }`}
-                                data-testid={`upcoming-event-${contact.id}-${index}`}
-                              >
-                                {event.type === 'birthday' ? (
-                                  <Gift className="w-3 h-3 mr-1" />
-                                ) : (
-                                  <Heart className="w-3 h-3 mr-1" />
-                                )}
-                                {event.days === 0 ? 'Today!' : `${event.days}d`}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      
-                      <div className="flex space-x-1">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleEdit(contact)}
-                          className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600"
-                          data-testid={`edit-contact-${contact.id}`}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleDelete(contact.id, contact.name)}
-                          className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
-                          data-testid={`delete-contact-${contact.id}`}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  
-                  <CardContent className="space-y-3">
-                    {/* Contact Info */}
-                    <div className="space-y-2 text-sm">
-                      {contact.email && (
-                        <div className="flex items-center text-gray-600" data-testid={`contact-email-${contact.id}`}>
-                          <Mail className="w-4 h-4 mr-2 text-gray-400" />
-                          <span className="truncate">{contact.email}</span>
-                        </div>
-                      )}
-                      
-                      {contact.whatsapp && (
-                        <div className="flex items-center text-gray-600" data-testid={`contact-whatsapp-${contact.id}`}>
-                          <Phone className="w-4 h-4 mr-2 text-gray-400" />
-                          <span>{contact.whatsapp}</span>
-                        </div>
-                      )}
-                      
-                      {contact.birthday && (
-                        <div className="flex items-center text-gray-600" data-testid={`contact-birthday-${contact.id}`}>
-                          <Gift className="w-4 h-4 mr-2 text-gray-400" />
-                          <span>Birthday: {formatDate(contact.birthday)}</span>
-                        </div>
-                      )}
-                      
-                      {contact.anniversary_date && (
-                        <div className="flex items-center text-gray-600" data-testid={`contact-anniversary-${contact.id}`}>
-                          <Heart className="w-4 h-4 mr-2 text-gray-400" />
-                          <span>Anniversary: {formatDate(contact.anniversary_date)}</span>
-                        </div>
-                      )}
+            {filteredContacts.map((contact) => (
+              <Card 
+                key={contact.id} 
+                className="card-hover glass border-0 shadow-lg"
+                data-testid={`contact-card-${contact.id}`}
+              >
+                <CardHeader className="pb-3">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <CardTitle className="text-lg font-semibold text-gray-900 mb-1" data-testid={`contact-name-${contact.id}`}>
+                        {contact.name}
+                      </CardTitle>
                     </div>
                     
-                    {/* AI Message Generation */}
-                    <div className="pt-3 border-t border-gray-100">
-                      <p className="text-xs text-gray-500 mb-2">Generate AI message:</p>
-                      <div className="flex space-x-2">
-                        {contact.birthday && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => generateMessage(contact, 'birthday')}
-                            disabled={generatingMessage === `${contact.id}-birthday`}
-                            className="flex-1 text-xs h-7 bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200"
-                            data-testid={`generate-birthday-message-${contact.id}`}
-                          >
-                            {generatingMessage === `${contact.id}-birthday` ? (
-                              <div className="animate-spin rounded-full h-3 w-3 border-b border-rose-600" />
-                            ) : (
-                              <>
-                                <Gift className="w-3 h-3 mr-1" />
-                                Birthday
-                              </>
-                            )}
-                          </Button>
-                        )}
-                        
-                        {contact.anniversary_date && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => generateMessage(contact, 'anniversary')}
-                            disabled={generatingMessage === `${contact.id}-anniversary`}
-                            className="flex-1 text-xs h-7 bg-pink-50 hover:bg-pink-100 text-pink-700 border-pink-200"
-                            data-testid={`generate-anniversary-message-${contact.id}`}
-                          >
-                            {generatingMessage === `${contact.id}-anniversary` ? (
-                              <div className="animate-spin rounded-full h-3 w-3 border-b border-pink-600" />
-                            ) : (
-                              <>
-                                <Heart className="w-3 h-3 mr-1" />
-                                Anniversary
-                              </>
-                            )}
-                          </Button>
-                        )}
-                      </div>
+                    <div className="flex space-x-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleEdit(contact)}
+                        className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600"
+                        data-testid={`edit-contact-${contact.id}`}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleDelete(contact.id, contact.name)}
+                        className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
+                        data-testid={`delete-contact-${contact.id}`}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+                  </div>
+                </CardHeader>
+                
+                <CardContent className="space-y-3">
+                  {/* Contact Info */}
+                  <div className="space-y-2 text-sm">
+                    {contact.email && (
+                      <div className="flex items-center text-gray-600" data-testid={`contact-email-${contact.id}`}>
+                        <Mail className="w-4 h-4 mr-2 text-gray-400" />
+                        <span className="truncate">{contact.email}</span>
+                      </div>
+                    )}
+                    
+                    {contact.whatsapp && (
+                      <div className="flex items-center text-gray-600" data-testid={`contact-whatsapp-${contact.id}`}>
+                        <Phone className="w-4 h-4 mr-2 text-gray-400" />
+                        <span>{contact.whatsapp}</span>
+                      </div>
+                    )}
+                    
+                    {contact.birthday && (
+                      <div className="flex items-center text-gray-600" data-testid={`contact-birthday-${contact.id}`}>
+                        <Gift className="w-4 h-4 mr-2 text-gray-400" />
+                        <span>Birthday: {formatDate(contact.birthday)}</span>
+                      </div>
+                    )}
+                    
+                    {contact.anniversary_date && (
+                      <div className="flex items-center text-gray-600" data-testid={`contact-anniversary-${contact.id}`}>
+                        <Heart className="w-4 h-4 mr-2 text-gray-400" />
+                        <span>Anniversary: {formatDate(contact.anniversary_date)}</span>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         )}
         
