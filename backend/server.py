@@ -1005,6 +1005,54 @@ async def test_email_config(current_user: User = Depends(get_current_user)):
     except Exception as e:
         return {"status": "error", "message": f"Email API test error: {str(e)}"}
 
+# Credit Management Routes
+@api_router.get("/credits")
+async def get_user_credits(current_user: User = Depends(get_current_user)):
+    user = await db.users.find_one({"id": current_user.id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {
+        "whatsapp_credits": user.get("whatsapp_credits", 0),
+        "email_credits": user.get("email_credits", 0),
+        "unlimited_whatsapp": user.get("unlimited_whatsapp", False),
+        "unlimited_email": user.get("unlimited_email", False)
+    }
+
+@api_router.post("/credits/deduct")
+async def deduct_credits(message_type: str, count: int = 1, current_user: User = Depends(get_current_user)):
+    """Deduct credits when messages are sent"""
+    if message_type not in ["whatsapp", "email"]:
+        raise HTTPException(status_code=400, detail="Invalid message type")
+    
+    user = await db.users.find_one({"id": current_user.id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Check if user has unlimited credits
+    unlimited_field = f"unlimited_{message_type}"
+    if user.get(unlimited_field, False):
+        return {"message": f"Unlimited {message_type} credits", "credits_remaining": "unlimited"}
+    
+    # Check and deduct credits
+    credits_field = f"{message_type}_credits"
+    current_credits = user.get(credits_field, 0)
+    
+    if current_credits < count:
+        raise HTTPException(status_code=400, detail=f"Insufficient {message_type} credits")
+    
+    new_credits = current_credits - count
+    
+    await db.users.update_one(
+        {"id": current_user.id},
+        {"$set": {credits_field: new_credits}}
+    )
+    
+    return {
+        "message": f"Deducted {count} {message_type} credits",
+        "credits_remaining": new_credits
+    }
+
 # Include the router in the main app
 app.include_router(api_router)
 
