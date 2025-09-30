@@ -15,7 +15,11 @@ import {
   Plus,
   Clock,
   Sparkles,
-  TrendingUp
+  TrendingUp,
+  MessageCircle,
+  Mail,
+  Coins,
+  Infinity
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
