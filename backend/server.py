@@ -617,20 +617,160 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_user)):
     }
 
 # Admin Routes
-@api_router.get("/admin/users", response_model=List[User])
-async def get_all_users(admin_user: User = Depends(get_admin_user)):
+@api_router.get("/admin/dashboard", response_model=AdminDashboardStats)
+async def get_admin_dashboard(admin_user: User = Depends(get_admin_user)):
+    # Get all users
+    users = await db.users.find().to_list(10000)
+    
+    # Calculate stats
+    total_users = len(users)
+    active_subscriptions = len([u for u in users if u.get('subscription_status') == 'active'])
+    trial_users = len([u for u in users if u.get('subscription_status') == 'trial'])
+    expired_users = len([u for u in users if u.get('subscription_status') in ['expired', 'cancelled']])
+    
+    # Get total contacts and templates
+    total_contacts = await db.contacts.count_documents({})
+    total_templates = await db.templates.count_documents({})
+    
+    # Calculate revenue (assuming $9.99 per active subscription)
+    monthly_revenue = active_subscriptions * 9.99
+    
+    # Recent signups (last 30 days)
+    thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)
+    recent_signups = len([u for u in users if datetime.fromisoformat(u.get('created_at', '2020-01-01T00:00:00+00:00')) > thirty_days_ago])
+    
+    # Simple churn rate calculation (expired/cancelled out of total)
+    churn_rate = (expired_users / total_users * 100) if total_users > 0 else 0.0
+    
+    return AdminDashboardStats(
+        total_users=total_users,
+        active_subscriptions=active_subscriptions,
+        trial_users=trial_users,
+        expired_users=expired_users,
+        total_contacts=total_contacts,
+        total_templates=total_templates,
+        monthly_revenue=monthly_revenue,
+        recent_signups=recent_signups,
+        churn_rate=churn_rate
+    )
+
+@api_router.get("/admin/users", response_model=List[UserStats])
+async def get_all_users_with_stats(admin_user: User = Depends(get_admin_user)):
     users = await db.users.find().to_list(1000)
-    return [User(**parse_from_mongo(user)) for user in users]
+    user_stats = []
+    
+    for user in users:
+        user = parse_from_mongo(user)
+        user_id = user['id']
+        
+        # Get user's contact and template counts
+        contacts_count = await db.contacts.count_documents({"user_id": user_id})
+        templates_count = await db.templates.count_documents({"user_id": user_id})
+        
+        # Calculate total usage (contacts + templates)
+        total_usage = contacts_count + templates_count
+        
+        user_stats.append(UserStats(
+            id=user_id,
+            email=user['email'],
+            full_name=user['full_name'],
+            subscription_status=user.get('subscription_status', 'trial'),
+            subscription_expires=user.get('subscription_expires'),
+            is_admin=user.get('is_admin', False),
+            created_at=user['created_at'],
+            contacts_count=contacts_count,
+            templates_count=templates_count,
+            last_login=user.get('last_login'),
+            total_usage=total_usage
+        ))
+    
+    # Sort by total usage descending
+    user_stats.sort(key=lambda x: x.total_usage, reverse=True)
+    return user_stats
 
 @api_router.put("/admin/users/{user_id}/subscription")
 async def update_user_subscription(user_id: str, subscription_status: str, admin_user: User = Depends(get_admin_user)):
+    # Calculate expiry date based on subscription status
+    subscription_expires = None
+    if subscription_status == 'active':
+        subscription_expires = datetime.now(timezone.utc) + timedelta(days=30)
+    elif subscription_status == 'trial':
+        subscription_expires = datetime.now(timezone.utc) + timedelta(days=14)
+    
+    update_data = {"subscription_status": subscription_status}
+    if subscription_expires:
+        update_data["subscription_expires"] = subscription_expires.isoformat()
+    
     result = await db.users.update_one(
         {"id": user_id},
-        {"$set": {"subscription_status": subscription_status}}
+        {"$set": update_data}
     )
+    
     if result.modified_count == 0:
         raise HTTPException(status_code=404, detail="User not found")
-    return {"message": "Subscription updated successfully"}
+    return {"message": "Subscription updated successfully", "expires": subscription_expires}
+
+@api_router.put("/admin/users/{user_id}/expiry")
+async def update_user_expiry(user_id: str, expiry_date: str, admin_user: User = Depends(get_admin_user)):
+    try:
+        # Parse the expiry date
+        expiry_datetime = datetime.fromisoformat(expiry_date.replace('Z', '+00:00'))
+        
+        result = await db.users.update_one(
+            {"id": user_id},
+            {"$set": {"subscription_expires": expiry_datetime.isoformat()}}
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        return {"message": "Expiry date updated successfully", "expires": expiry_datetime}
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format")
+
+@api_router.delete("/admin/users/{user_id}")
+async def delete_user(user_id: str, admin_user: User = Depends(get_admin_user)):
+    # Don't allow deleting admin users
+    user_to_delete = await db.users.find_one({"id": user_id})
+    if not user_to_delete:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if user_to_delete.get('is_admin', False):
+        raise HTTPException(status_code=400, detail="Cannot delete admin users")
+    
+    # Delete user's data
+    await db.contacts.delete_many({"user_id": user_id})
+    await db.templates.delete_many({"user_id": user_id})
+    
+    # Delete user
+    result = await db.users.delete_one({"id": user_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {"message": "User and all associated data deleted successfully"}
+
+@api_router.post("/admin/users/{user_id}/extend")
+async def extend_user_subscription(user_id: str, days: int, admin_user: User = Depends(get_admin_user)):
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Get current expiry or use current time
+    current_expiry = user.get('subscription_expires')
+    if current_expiry:
+        if isinstance(current_expiry, str):
+            current_expiry = datetime.fromisoformat(current_expiry.replace('Z', '+00:00'))
+        new_expiry = current_expiry + timedelta(days=days)
+    else:
+        new_expiry = datetime.now(timezone.utc) + timedelta(days=days)
+    
+    result = await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"subscription_expires": new_expiry.isoformat()}}
+    )
+    
+    return {"message": f"Subscription extended by {days} days", "new_expiry": new_expiry}
 
 # Include the router in the main app
 app.include_router(api_router)
