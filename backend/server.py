@@ -119,6 +119,30 @@ class TokenResponse(BaseModel):
     token_type: str
     user: User
 
+class UserStats(BaseModel):
+    id: str
+    email: str
+    full_name: str
+    subscription_status: str
+    subscription_expires: Optional[datetime] = None
+    is_admin: bool
+    created_at: datetime
+    contacts_count: int
+    templates_count: int
+    last_login: Optional[datetime] = None
+    total_usage: int
+
+class AdminDashboardStats(BaseModel):
+    total_users: int
+    active_subscriptions: int
+    trial_users: int
+    expired_users: int
+    total_contacts: int
+    total_templates: int
+    monthly_revenue: float
+    recent_signups: int  # Last 30 days
+    churn_rate: float
+
 # Helper functions
 def hash_password(password: str) -> str:
     salt = bcrypt.gensalt()
