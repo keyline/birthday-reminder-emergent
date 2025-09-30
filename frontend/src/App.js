@@ -152,6 +152,10 @@ function App() {
               element={user?.is_admin ? <AdminPage /> : <Navigate to="/dashboard" />}
             />
             <Route
+              path="/settings"
+              element={user ? <SettingsPage /> : <Navigate to="/login" />}
+            />
+            <Route
               path="/"
               element={<Navigate to={user ? "/dashboard" : "/login"} />}
             />
