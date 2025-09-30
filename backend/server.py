@@ -605,22 +605,64 @@ async def delete_template(template_id: str, current_user: User = Depends(get_cur
         raise HTTPException(status_code=404, detail="Template not found")
     return {"message": "Template deleted successfully"}
 
-# AI Message Generation
+# Enhanced AI Message Generation with Tone Variations
 @api_router.post("/generate-message", response_model=MessageResponse)
 async def generate_message(request: GenerateMessageRequest, current_user: User = Depends(get_current_user)):
     try:
-        # Initialize LLM chat
+        # Tone-specific system messages and prompts
+        tone_configs = {
+            "normal": {
+                "system": "You are a friendly assistant that generates warm, heartfelt messages for special occasions.",
+                "style": "warm and friendly"
+            },
+            "business": {
+                "system": "You are a professional assistant that generates polite, respectful business messages.",
+                "style": "professional and courteous"
+            },
+            "formal": {
+                "system": "You are a formal assistant that generates elegant, sophisticated messages.",
+                "style": "formal and respectful"
+            },
+            "informal": {
+                "system": "You are a casual assistant that generates relaxed, friendly messages.",
+                "style": "casual and relaxed"
+            },
+            "funny": {
+                "system": "You are a humorous assistant that generates light-hearted, amusing messages while staying appropriate.",
+                "style": "funny and entertaining"
+            },
+            "casual": {
+                "system": "You are a laid-back assistant that generates easy-going, casual messages.",
+                "style": "casual and easy-going"
+            }
+        }
+        
+        tone_config = tone_configs.get(request.tone, tone_configs["normal"])
+        
+        # Initialize LLM chat with tone-specific system message
         chat = LlmChat(
             api_key=EMERGENT_LLM_KEY,
-            session_id=f"user_{current_user.id}_message_gen",
-            system_message="You are a helpful assistant that generates personalized birthday and anniversary messages. Create warm, heartfelt messages that are appropriate for the occasion and relationship."
+            session_id=f"user_{current_user.id}_message_gen_{request.tone}",
+            system_message=tone_config["system"]
         ).with_model("openai", "gpt-4o")
         
-        # Create prompt based on request
-        prompt = f"Generate a {request.tone} {request.occasion} message for {request.contact_name}. "
+        # Create tone-specific prompt
+        prompt = f"Generate a {tone_config['style']} {request.occasion} message for {request.contact_name}. "
         prompt += f"The relationship is: {request.relationship}. "
-        prompt += "Make it personal, heartfelt, and appropriate for the occasion. "
-        prompt += "Keep it between 50-150 words. Do not include any greeting like 'Dear' or signature."
+        prompt += f"Make it {tone_config['style']} and appropriate for the occasion. "
+        
+        if request.tone == "funny":
+            prompt += "Include some light humor but keep it tasteful and appropriate. "
+        elif request.tone == "business":
+            prompt += "Keep it professional yet warm, suitable for a business relationship. "
+        elif request.tone == "formal":
+            prompt += "Use elegant language and formal expressions. "
+        elif request.tone == "informal":
+            prompt += "Use casual language and be conversational. "
+        elif request.tone == "casual":
+            prompt += "Keep it simple, laid-back, and easy-going. "
+        
+        prompt += "Keep it between 30-100 words. Do not include greetings like 'Dear' or signatures."
         
         user_message = UserMessage(text=prompt)
         response = await chat.send_message(user_message)
@@ -629,15 +671,68 @@ async def generate_message(request: GenerateMessageRequest, current_user: User =
         
     except Exception as e:
         logging.error(f"Error generating message: {str(e)}")
-        # Fallback message
+        # Tone-specific fallback messages
         fallback_messages = {
-            "birthday": f"Happy Birthday, {request.contact_name}! Wishing you a wonderful day filled with joy, laughter, and all your favorite things. May this new year of your life bring you happiness, success, and beautiful memories!",
-            "anniversary": f"Happy Anniversary, {request.contact_name}! Celebrating another year of love, laughter, and beautiful memories together. Wishing you both continued happiness and many more wonderful years ahead!"
+            "birthday": {
+                "normal": f"Happy Birthday, {request.contact_name}! Wishing you a wonderful day filled with joy and happiness!",
+                "business": f"Happy Birthday, {request.contact_name}! We hope you have a wonderful celebration and a successful year ahead.",
+                "formal": f"Wishing you a very Happy Birthday, {request.contact_name}. May this special day bring you joy and prosperity.",
+                "informal": f"Hey {request.contact_name}! Happy Birthday! Hope you have an awesome day!",
+                "funny": f"Happy Birthday, {request.contact_name}! Another year older and still fabulous! Time to eat cake and pretend calories don't count!",
+                "casual": f"Happy Birthday {request.contact_name}! Have a great one and enjoy your day!"
+            },
+            "anniversary": {
+                "normal": f"Happy Anniversary, {request.contact_name}! Celebrating your special day with you!",
+                "business": f"Happy Anniversary, {request.contact_name}! Congratulations on this milestone.",
+                "formal": f"Congratulations on your Anniversary, {request.contact_name}. Wishing you continued happiness.",
+                "informal": f"Happy Anniversary {request.contact_name}! Hope you two have a blast celebrating!",
+                "funny": f"Happy Anniversary {request.contact_name}! Another year of successfully putting up with each other - impressive!",
+                "casual": f"Happy Anniversary {request.contact_name}! Enjoy your special day!"
+            }
         }
         
-        return MessageResponse(
-            message=fallback_messages.get(request.occasion, f"Happy {request.occasion}, {request.contact_name}! Wishing you all the best on this special day!")
-        )
+        occasion_messages = fallback_messages.get(request.occasion, {})
+        fallback_message = occasion_messages.get(request.tone, f"Happy {request.occasion}, {request.contact_name}!")
+        
+        return MessageResponse(message=fallback_message)
+
+@api_router.post("/generate-message-preview")
+async def generate_message_preview(contact_id: str, occasion: str, message_type: str, current_user: User = Depends(get_current_user)):
+    # Get contact details
+    contact = await db.contacts.find_one({"id": contact_id, "user_id": current_user.id})
+    if not contact:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    
+    contact = parse_from_mongo(contact)
+    
+    # Generate message using contact's tone preference
+    message_request = GenerateMessageRequest(
+        contact_name=contact["name"],
+        occasion=occasion,
+        relationship="friend",
+        tone=contact.get("message_tone", "normal")
+    )
+    
+    message_response = await generate_message(message_request, current_user)
+    
+    # Get appropriate image
+    image_url = None
+    if message_type == "whatsapp" and contact.get("whatsapp_image"):
+        image_url = contact["whatsapp_image"]
+    elif message_type == "email" and contact.get("email_image"):
+        image_url = contact["email_image"]
+    else:
+        # Use default image (we'll implement default image management later)
+        image_url = "/default-celebration.jpg"
+    
+    return MessagePreview(
+        contact_id=contact_id,
+        occasion=occasion,
+        message_type=message_type,
+        generated_message=message_response.message,
+        image_url=image_url,
+        editable=True
+    )
 
 # Dashboard/Analytics Routes
 @api_router.get("/dashboard/stats")
