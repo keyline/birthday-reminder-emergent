@@ -358,9 +358,13 @@ const ContactsPage = () => {
                         <strong>Excel Format Requirements:</strong>
                         <ul className="mt-2 space-y-1 text-sm">
                           <li>• Column 1: <strong>name</strong> (required)</li>
-                          <li>• Column 2: <strong>birthday</strong> (optional, format: YYYY-MM-DD)</li>
-                          <li>• Column 3: <strong>anniversary</strong> (optional, format: YYYY-MM-DD)</li>
-                          <li>• At least one date (birthday or anniversary) is required per contact</li>
+                          <li>• Column 2: <strong>birthday</strong> (optional, format: DD-MM or DD-MM-YYYY)</li>
+                          <li>• Column 3: <strong>anniversary</strong> (optional, format: DD-MM or DD-MM-YYYY)</li>
+                          <li>• Column 4: <strong>email</strong> (optional, valid email format)</li>
+                          <li>• Column 5: <strong>whatsapp</strong> (optional, phone number)</li>
+                          <li>• <strong>Contact Info:</strong> At least one of email OR WhatsApp is required</li>
+                          <li>• <strong>Dates:</strong> At least one of birthday OR anniversary is required</li>
+                          <li>• <strong>Duplicates:</strong> Email/WhatsApp checked against your existing contacts</li>
                         </ul>
                       </AlertDescription>
                     </Alert>
