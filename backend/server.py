@@ -320,12 +320,50 @@ async def bulk_upload_contacts(
                 name = str(row['name']).strip() if pd.notna(row['name']) else ""
                 birthday = row['birthday'] if pd.notna(row['birthday']) else None
                 anniversary = row['anniversary'] if pd.notna(row['anniversary']) else None
+                email = str(row['email']).strip() if pd.notna(row['email']) and str(row['email']).strip().lower() != 'nan' else ""
+                whatsapp = str(row['whatsapp']).strip() if pd.notna(row['whatsapp']) and str(row['whatsapp']).strip().lower() != 'nan' else ""
                 
                 # Validation: Name is mandatory
                 if not name or name.lower() == 'nan':
                     errors.append(f"Row {row_number}: Name is required")
                     failed_imports.append(row_number)
                     continue
+                
+                # Validation: At least one contact method (email or whatsapp) is required
+                if not email and not whatsapp:
+                    errors.append(f"Row {row_number}: Either email or WhatsApp number is required")
+                    failed_imports.append(row_number)
+                    continue
+                
+                # Validation: Email format (if provided)
+                if email:
+                    email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+                    if not re.match(email_pattern, email):
+                        errors.append(f"Row {row_number}: Invalid email format")
+                        failed_imports.append(row_number)
+                        continue
+                    
+                    # Check for duplicate email within user's contacts
+                    if email.lower() in existing_emails:
+                        errors.append(f"Row {row_number}: Email '{email}' already exists in your contacts")
+                        failed_imports.append(row_number)
+                        continue
+                
+                # Validation: WhatsApp format (if provided)
+                if whatsapp:
+                    # Basic phone number validation (digits, spaces, +, -, (, ))
+                    phone_pattern = r'^[\+]?[1-9][\d\s\-\(\)]{7,15}$'
+                    clean_whatsapp = re.sub(r'[\s\-\(\)]', '', whatsapp)
+                    if not re.match(phone_pattern, whatsapp) or len(clean_whatsapp) < 8:
+                        errors.append(f"Row {row_number}: Invalid WhatsApp number format")
+                        failed_imports.append(row_number)
+                        continue
+                    
+                    # Check for duplicate WhatsApp within user's contacts
+                    if whatsapp in existing_whatsapp:
+                        errors.append(f"Row {row_number}: WhatsApp number '{whatsapp}' already exists in your contacts")
+                        failed_imports.append(row_number)
+                        continue
                 
                 # Validation: At least one date (birthday or anniversary) is required
                 if not birthday and not anniversary:
