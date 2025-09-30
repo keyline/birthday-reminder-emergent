@@ -9,6 +9,7 @@ import Dashboard from './components/Dashboard';
 import ContactsPage from './components/ContactsPage';
 import TemplatesPage from './components/TemplatesPage';
 import AdminPage from './components/AdminPage';
+import SettingsPage from './components/SettingsPage';
 import Navbar from './components/Navbar';
 import { Toaster } from './components/ui/sonner';
 
