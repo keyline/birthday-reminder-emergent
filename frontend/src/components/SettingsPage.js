@@ -396,7 +396,9 @@ const SettingsPage = () => {
                       />
                     </div>
                     <div className="text-xs text-green-700 bg-green-100 p-2 rounded">
-                      Endpoint: https://demo.digitalsms.biz/api/?apikey=&lt;YourApiKey&gt;&amp;mobile=&lt;MobileNumber&gt;&amp;msg=testmsg
+                      <strong>API Format:</strong> https://demo.digitalsms.biz/api/<br/>
+                      <strong>Parameters:</strong> ?apikey=[YourAPIKey]&mobile=[ContactPhone]&msg=[MessageText]<br/>
+                      <strong>Example:</strong> ?apikey=abc123&mobile=1234567890&msg=Happy Birthday John!
                     </div>
                     <Alert className="border-amber-200 bg-amber-50">
                       <AlertCircle className="h-4 w-4 text-amber-600" />
