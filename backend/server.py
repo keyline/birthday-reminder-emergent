@@ -363,6 +363,21 @@ async def delete_contact(contact_id: str, current_user: User = Depends(get_curre
         raise HTTPException(status_code=404, detail="Contact not found")
     return {"message": "Contact deleted successfully"}
 
+@api_router.put("/contacts/bulk-tone-update")
+async def bulk_update_tone(bulk_update: BulkToneUpdate, current_user: User = Depends(get_current_user)):
+    result = await db.contacts.update_many(
+        {
+            "id": {"$in": bulk_update.contact_ids},
+            "user_id": current_user.id
+        },
+        {"$set": {"message_tone": bulk_update.message_tone}}
+    )
+    
+    return {
+        "message": f"Updated tone to '{bulk_update.message_tone}' for {result.modified_count} contacts",
+        "updated_count": result.modified_count
+    }
+
 # Bulk Upload Contacts from Excel
 @api_router.post("/contacts/bulk-upload", response_model=BulkUploadResponse)
 async def bulk_upload_contacts(
