@@ -152,6 +152,32 @@ const SettingsPage = () => {
     }
   };
 
+  const sendTestWhatsAppMessage = async () => {
+    if (!testPhoneNumber.trim()) {
+      toast.error('Please enter a phone number for testing');
+      return;
+    }
+
+    setSendingTestMessage(true);
+
+    try {
+      const response = await axios.post(`${API}/send-whatsapp-test`, null, {
+        params: { phone_number: testPhoneNumber }
+      });
+
+      if (response.data.status === 'success') {
+        toast.success('Test WhatsApp message sent successfully!');
+      } else {
+        toast.error(`Failed to send test message: ${response.data.message}`);
+      }
+    } catch (error) {
+      console.error('Error sending test message:', error);
+      toast.error(error.response?.data?.detail || 'Failed to send test message');
+    } finally {
+      setSendingTestMessage(false);
+    }
+  };
+
   const testEmailConfig = async () => {
     if (!settings.email_api_key || !settings.sender_email) {
       toast.error('Please configure email settings first');
