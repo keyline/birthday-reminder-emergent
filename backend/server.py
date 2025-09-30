@@ -352,9 +352,9 @@ async def bulk_upload_contacts(
                 # Validation: WhatsApp format (if provided)
                 if whatsapp:
                     # Basic phone number validation (digits, spaces, +, -, (, ))
-                    phone_pattern = r'^[\+]?[1-9][\d\s\-\(\)]{7,15}$'
+                    phone_pattern = r'^[\+]?[1-9][\d\s\-\(\)]{7,20}$'
                     clean_whatsapp = re.sub(r'[\s\-\(\)]', '', whatsapp)
-                    if not re.match(phone_pattern, whatsapp) or len(clean_whatsapp) < 8:
+                    if not re.match(phone_pattern, whatsapp) or len(clean_whatsapp) < 7:
                         errors.append(f"Row {row_number}: Invalid WhatsApp number format")
                         failed_imports.append(row_number)
                         continue
