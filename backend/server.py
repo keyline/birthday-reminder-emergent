@@ -772,6 +772,19 @@ async def extend_user_subscription(user_id: str, days: int, admin_user: User = D
     
     return {"message": f"Subscription extended by {days} days", "new_expiry": new_expiry}
 
+@api_router.post("/admin/make-admin/{user_email}")
+async def make_user_admin(user_email: str):
+    """Temporary endpoint to make a user admin - should be removed in production"""
+    result = await db.users.update_one(
+        {"email": user_email},
+        {"$set": {"is_admin": True}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {"message": f"User {user_email} is now an admin"}
+
 # Include the router in the main app
 app.include_router(api_router)
 
