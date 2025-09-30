@@ -51,6 +51,12 @@ const SettingsPage = () => {
   const [testingEmail, setTestingEmail] = useState(false);
   const [whatsappTestResult, setWhatsappTestResult] = useState(null);
   const [emailTestResult, setEmailTestResult] = useState(null);
+  const [credits, setCredits] = useState({
+    whatsapp_credits: 0,
+    email_credits: 0,
+    unlimited_whatsapp: false,
+    unlimited_email: false
+  });
 
   const timezones = [
     'UTC', 'America/New_York', 'America/Los_Angeles', 'America/Chicago',
