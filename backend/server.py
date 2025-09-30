@@ -812,6 +812,53 @@ async def extend_user_subscription(user_id: str, days: int, admin_user: User = D
     
     return {"message": f"Subscription extended by {days} days", "new_expiry": new_expiry}
 
+@api_router.put("/admin/users/{user_id}/credits")
+async def update_user_credits(user_id: str, credit_update: CreditUpdate, admin_user: User = Depends(get_admin_user)):
+    update_data = {}
+    
+    if credit_update.whatsapp_credits is not None:
+        update_data["whatsapp_credits"] = credit_update.whatsapp_credits
+    if credit_update.email_credits is not None:
+        update_data["email_credits"] = credit_update.email_credits
+    if credit_update.unlimited_whatsapp is not None:
+        update_data["unlimited_whatsapp"] = credit_update.unlimited_whatsapp
+    if credit_update.unlimited_email is not None:
+        update_data["unlimited_email"] = credit_update.unlimited_email
+    
+    result = await db.users.update_one(
+        {"id": user_id},
+        {"$set": update_data}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {"message": "User credits updated successfully", "updated_fields": update_data}
+
+@api_router.post("/admin/users/{user_id}/add-credits")
+async def add_credits_to_user(user_id: str, whatsapp_credits: int = 0, email_credits: int = 0, admin_user: User = Depends(get_admin_user)):
+    # Get current user credits
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    new_whatsapp_credits = user.get("whatsapp_credits", 0) + whatsapp_credits
+    new_email_credits = user.get("email_credits", 0) + email_credits
+    
+    result = await db.users.update_one(
+        {"id": user_id},
+        {"$set": {
+            "whatsapp_credits": new_whatsapp_credits,
+            "email_credits": new_email_credits
+        }}
+    )
+    
+    return {
+        "message": f"Added {whatsapp_credits} WhatsApp and {email_credits} email credits",
+        "new_whatsapp_credits": new_whatsapp_credits,
+        "new_email_credits": new_email_credits
+    }
+
 @api_router.post("/admin/make-admin/{user_email}")
 async def make_user_admin(user_email: str):
     """Temporary endpoint to make a user admin - should be removed in production"""
