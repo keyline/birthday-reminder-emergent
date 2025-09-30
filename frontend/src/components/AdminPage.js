@@ -49,6 +49,14 @@ const AdminPage = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [extensionDays, setExtensionDays] = useState(30);
   const [customExpiryDate, setCustomExpiryDate] = useState('');
+  const [isCreditDialogOpen, setIsCreditDialogOpen] = useState(false);
+  const [selectedUserForCredits, setSelectedUserForCredits] = useState(null);
+  const [creditUpdate, setCreditUpdate] = useState({
+    whatsapp_credits: 0,
+    email_credits: 0,
+    unlimited_whatsapp: false,
+    unlimited_email: false
+  });
 
   useEffect(() => {
     Promise.all([fetchDashboardStats(), fetchUsers()]);
