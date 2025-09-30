@@ -383,7 +383,7 @@ const SettingsPage = () => {
                   <div className="flex items-center space-x-3">
                     <Button
                       onClick={testWhatsAppConfig}
-                      disabled={testingWhatsApp || !settings.whatsapp_phone_number_id || !settings.whatsapp_access_token}
+                      disabled={testingWhatsApp || !((settings.whatsapp_provider === 'facebook' && settings.whatsapp_phone_number_id && settings.whatsapp_access_token) || (settings.whatsapp_provider === 'digitalsms' && settings.digitalsms_api_key))}
                       variant="outline"
                       size="sm"
                       data-testid="test-whatsapp-button"
