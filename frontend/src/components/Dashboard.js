@@ -28,6 +28,12 @@ const Dashboard = () => {
     total_templates: 0,
     upcoming_events: []
   });
+  const [credits, setCredits] = useState({
+    whatsapp_credits: 0,
+    email_credits: 0,
+    unlimited_whatsapp: false,
+    unlimited_email: false
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
