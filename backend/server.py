@@ -171,15 +171,28 @@ class UserSettingsCreate(BaseModel):
 class UserSettings(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     user_id: str
+    
+    # WhatsApp API Provider
+    whatsapp_provider: str = "facebook"  # "facebook" or "digitalsms"
+    
+    # Facebook Graph API
     whatsapp_phone_number_id: Optional[str] = None
     whatsapp_access_token: Optional[str] = None
+    
+    # DigitalSMS API
+    digitalsms_api_key: Optional[str] = None
+    
+    # Email settings
     email_api_key: Optional[str] = None
     sender_email: Optional[str] = None
     sender_name: Optional[str] = None
+    
+    # Scheduling settings
     daily_send_time: str = "09:00"
     timezone: str = "UTC"
     execution_report_enabled: bool = True
     execution_report_email: Optional[str] = None
+    
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
