@@ -294,13 +294,18 @@ async def bulk_upload_contacts(
             raise HTTPException(status_code=400, detail=f"Error reading Excel file: {str(e)}")
         
         # Validate required columns
-        required_columns = ['name', 'birthday', 'anniversary']
+        required_columns = ['name', 'birthday', 'anniversary', 'email', 'whatsapp']
         missing_columns = [col for col in required_columns if col not in df.columns]
         if missing_columns:
             raise HTTPException(
                 status_code=400, 
-                detail=f"Missing required columns: {', '.join(missing_columns)}. Expected columns: name, birthday, anniversary"
+                detail=f"Missing required columns: {', '.join(missing_columns)}. Expected columns: name, birthday, anniversary, email, whatsapp"
             )
+        
+        # Get existing contacts for duplicate checking
+        existing_contacts = await db.contacts.find({"user_id": current_user.id}).to_list(1000)
+        existing_emails = {contact.get('email', '').lower() for contact in existing_contacts if contact.get('email')}
+        existing_whatsapp = {contact.get('whatsapp', '') for contact in existing_contacts if contact.get('whatsapp')}
         
         # Process rows
         successful_imports = []
