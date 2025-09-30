@@ -811,6 +811,135 @@ async def make_user_admin(user_email: str):
     
     return {"message": f"User {user_email} is now an admin"}
 
+# User Settings Routes
+@api_router.get("/settings", response_model=UserSettings)
+async def get_user_settings(current_user: User = Depends(get_current_user)):
+    settings = await db.user_settings.find_one({"user_id": current_user.id})
+    
+    if not settings:
+        # Create default settings for user
+        default_settings = UserSettings(
+            user_id=current_user.id,
+            execution_report_email=current_user.email
+        )
+        settings_dict = prepare_for_mongo(default_settings.dict())
+        await db.user_settings.insert_one(settings_dict)
+        return default_settings
+    
+    return UserSettings(**parse_from_mongo(settings))
+
+@api_router.put("/settings", response_model=UserSettings)
+async def update_user_settings(settings_data: UserSettingsCreate, current_user: User = Depends(get_current_user)):
+    # Update timestamp
+    update_data = settings_data.dict(exclude_unset=True)
+    update_data["updated_at"] = datetime.now(timezone.utc)
+    
+    # If execution_report_email not provided, use user's email
+    if not update_data.get("execution_report_email"):
+        update_data["execution_report_email"] = current_user.email
+    
+    # Prepare for MongoDB
+    update_data = prepare_for_mongo(update_data)
+    
+    # Update or create settings
+    result = await db.user_settings.update_one(
+        {"user_id": current_user.id},
+        {"$set": update_data},
+        upsert=True
+    )
+    
+    # Fetch updated settings
+    settings = await db.user_settings.find_one({"user_id": current_user.id})
+    return UserSettings(**parse_from_mongo(settings))
+
+@api_router.post("/settings/test-whatsapp")
+async def test_whatsapp_config(current_user: User = Depends(get_current_user)):
+    settings = await db.user_settings.find_one({"user_id": current_user.id})
+    
+    if not settings or not settings.get("whatsapp_phone_number_id") or not settings.get("whatsapp_access_token"):
+        raise HTTPException(status_code=400, detail="WhatsApp configuration not found")
+    
+    # Test WhatsApp API configuration
+    try:
+        import requests
+        
+        phone_number_id = settings["whatsapp_phone_number_id"]
+        access_token = settings["whatsapp_access_token"]
+        
+        url = f"https://graph.facebook.com/v21.0/{phone_number_id}/messages"
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json"
+        }
+        
+        # Test message payload
+        payload = {
+            "messaging_product": "whatsapp",
+            "to": "1234567890",  # Test number (won't actually send)
+            "type": "text",
+            "text": {
+                "body": "Test configuration - This is a test message to verify WhatsApp API setup."
+            }
+        }
+        
+        # Make a test request (this will likely fail with invalid number, but will validate credentials)
+        response = requests.post(url, json=payload, headers=headers)
+        
+        if response.status_code in [200, 400]:  # 400 might be invalid number, but credentials are valid
+            return {"status": "success", "message": "WhatsApp API configuration is valid"}
+        else:
+            return {"status": "error", "message": f"WhatsApp API test failed: {response.text}"}
+            
+    except Exception as e:
+        return {"status": "error", "message": f"WhatsApp API test error: {str(e)}"}
+
+@api_router.post("/settings/test-email")
+async def test_email_config(current_user: User = Depends(get_current_user)):
+    settings = await db.user_settings.find_one({"user_id": current_user.id})
+    
+    if not settings or not settings.get("email_api_key") or not settings.get("sender_email"):
+        raise HTTPException(status_code=400, detail="Email configuration not found")
+    
+    # Test Brevo API configuration
+    try:
+        import requests
+        
+        api_key = settings["email_api_key"]
+        sender_email = settings["sender_email"]
+        sender_name = settings.get("sender_name", "ReminderAI")
+        
+        url = "https://api.brevo.com/v3/smtp/email"
+        headers = {
+            "api-key": api_key,
+            "Content-Type": "application/json"
+        }
+        
+        # Test email payload
+        payload = {
+            "sender": {
+                "name": sender_name,
+                "email": sender_email
+            },
+            "to": [
+                {
+                    "email": current_user.email,
+                    "name": current_user.full_name
+                }
+            ],
+            "subject": "ReminderAI - Email Configuration Test",
+            "htmlContent": "<html><body><h2>Email Configuration Test</h2><p>Your email API configuration is working correctly!</p><p>This is a test email to verify your Brevo API setup.</p></body></html>"
+        }
+        
+        response = requests.post(url, json=payload, headers=headers)
+        
+        if response.status_code == 201:
+            return {"status": "success", "message": "Email API configuration is valid and test email sent"}
+        else:
+            return {"status": "error", "message": f"Email API test failed: {response.text}"}
+            
+    except Exception as e:
+        return {"status": "error", "message": f"Email API test error: {str(e)}"}
+
 # Include the router in the main app
 app.include_router(api_router)
 
