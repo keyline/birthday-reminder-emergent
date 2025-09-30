@@ -279,40 +279,105 @@ const SettingsPage = () => {
                   WhatsApp API Configuration
                 </CardTitle>
                 <CardDescription>
-                  Configure Facebook Graph API for WhatsApp Business messaging
+                  Configure WhatsApp messaging with multiple API providers
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="whatsapp-phone-id" className="flex items-center">
-                      <Phone className="w-4 h-4 mr-2" />
-                      Phone Number ID
-                    </Label>
-                    <Input
-                      id="whatsapp-phone-id"
-                      data-testid="whatsapp-phone-id-input"
-                      value={settings.whatsapp_phone_number_id}
-                      onChange={(e) => setSettings({ ...settings, whatsapp_phone_number_id: e.target.value })}
-                      placeholder="Enter WhatsApp Phone Number ID"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="whatsapp-token" className="flex items-center">
-                      <Key className="w-4 h-4 mr-2" />
-                      Access Token
-                    </Label>
-                    <Input
-                      id="whatsapp-token"
-                      data-testid="whatsapp-token-input"
-                      type="password"
-                      value={settings.whatsapp_access_token}
-                      onChange={(e) => setSettings({ ...settings, whatsapp_access_token: e.target.value })}
-                      placeholder="Enter WhatsApp Access Token"
-                    />
-                  </div>
+              <CardContent className="space-y-6">
+                {/* Provider Selection */}
+                <div className="space-y-2">
+                  <Label htmlFor="whatsapp-provider" className="flex items-center">
+                    <Globe className="w-4 h-4 mr-2" />
+                    WhatsApp API Provider
+                  </Label>
+                  <Select 
+                    value={settings.whatsapp_provider} 
+                    onValueChange={(value) => setSettings({ ...settings, whatsapp_provider: value })}
+                  >
+                    <SelectTrigger data-testid="whatsapp-provider-select">
+                      <SelectValue placeholder="Select WhatsApp API Provider" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="facebook">Facebook Graph API (WhatsApp Business)</SelectItem>
+                      <SelectItem value="digitalsms">DigitalSMS API</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
+
+                {/* Facebook Graph API Configuration */}
+                {settings.whatsapp_provider === 'facebook' && (
+                  <div className="space-y-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <h4 className="font-medium text-blue-900 flex items-center">
+                      <MessageCircle className="w-4 h-4 mr-2" />
+                      Facebook Graph API Configuration
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="whatsapp-phone-id" className="flex items-center">
+                          <Phone className="w-4 h-4 mr-2" />
+                          Phone Number ID
+                        </Label>
+                        <Input
+                          id="whatsapp-phone-id"
+                          data-testid="whatsapp-phone-id-input"
+                          value={settings.whatsapp_phone_number_id}
+                          onChange={(e) => setSettings({ ...settings, whatsapp_phone_number_id: e.target.value })}
+                          placeholder="Enter WhatsApp Phone Number ID"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="whatsapp-token" className="flex items-center">
+                          <Key className="w-4 h-4 mr-2" />
+                          Access Token
+                        </Label>
+                        <Input
+                          id="whatsapp-token"
+                          data-testid="whatsapp-token-input"
+                          type="password"
+                          value={settings.whatsapp_access_token}
+                          onChange={(e) => setSettings({ ...settings, whatsapp_access_token: e.target.value })}
+                          placeholder="Enter WhatsApp Access Token"
+                        />
+                      </div>
+                    </div>
+                    <div className="text-xs text-blue-700 bg-blue-100 p-2 rounded">
+                      Endpoint: https://graph.facebook.com/v21.0/[PHONE_NUMBER_ID]/messages
+                    </div>
+                  </div>
+                )}
+
+                {/* DigitalSMS API Configuration */}
+                {settings.whatsapp_provider === 'digitalsms' && (
+                  <div className="space-y-4 p-4 bg-green-50 rounded-lg border border-green-200">
+                    <h4 className="font-medium text-green-900 flex items-center">
+                      <MessageCircle className="w-4 h-4 mr-2" />
+                      DigitalSMS API Configuration
+                    </h4>
+                    <div className="space-y-2">
+                      <Label htmlFor="digitalsms-api-key" className="flex items-center">
+                        <Key className="w-4 h-4 mr-2" />
+                        API Key
+                      </Label>
+                      <Input
+                        id="digitalsms-api-key"
+                        data-testid="digitalsms-api-key-input"
+                        type="password"
+                        value={settings.digitalsms_api_key}
+                        onChange={(e) => setSettings({ ...settings, digitalsms_api_key: e.target.value })}
+                        placeholder="Enter DigitalSMS API Key"
+                      />
+                    </div>
+                    <div className="text-xs text-green-700 bg-green-100 p-2 rounded">
+                      Endpoint: https://demo.digitalsms.biz/api/?apikey=&lt;YourApiKey&gt;&amp;mobile=&lt;MobileNumber&gt;&amp;msg=testmsg
+                    </div>
+                    <Alert className="border-amber-200 bg-amber-50">
+                      <AlertCircle className="h-4 w-4 text-amber-600" />
+                      <AlertDescription className="text-amber-800">
+                        Note: DigitalSMS API supports text messages only. Images will be sent as text links.
+                      </AlertDescription>
+                    </Alert>
+                  </div>
+                )}
 
                 <div className="flex items-center justify-between pt-4 border-t">
                   <div className="flex items-center space-x-3">
