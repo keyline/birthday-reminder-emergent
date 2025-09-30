@@ -407,44 +407,80 @@ const SettingsPage = () => {
                   </div>
                 )}
 
-                <div className="flex items-center justify-between pt-4 border-t">
-                  <div className="flex items-center space-x-3">
-                    <Button
-                      onClick={testWhatsAppConfig}
-                      disabled={testingWhatsApp || !((settings.whatsapp_provider === 'facebook' && settings.whatsapp_phone_number_id && settings.whatsapp_access_token) || (settings.whatsapp_provider === 'digitalsms' && settings.digitalsms_api_key))}
-                      variant="outline"
-                      size="sm"
-                      data-testid="test-whatsapp-button"
-                    >
-                      {testingWhatsApp ? (
-                        <div className="animate-spin rounded-full h-4 w-4 border-b border-gray-600 mr-2" />
-                      ) : (
-                        <TestTube className="w-4 h-4 mr-2" />
-                      )}
-                      Test Configuration
-                    </Button>
-
-                    {whatsappTestResult && (
-                      <Badge
+                <div className="space-y-4 pt-4 border-t">
+                  {/* Configuration Test */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <Button
+                        onClick={testWhatsAppConfig}
+                        disabled={testingWhatsApp || !((settings.whatsapp_provider === 'facebook' && settings.whatsapp_phone_number_id && settings.whatsapp_access_token) || (settings.whatsapp_provider === 'digitalsms' && settings.digitalsms_api_key))}
                         variant="outline"
-                        className={whatsappTestResult.status === 'success' 
-                          ? 'bg-green-100 text-green-700 border-green-200'
-                          : 'bg-red-100 text-red-700 border-red-200'
-                        }
+                        size="sm"
+                        data-testid="test-whatsapp-button"
                       >
-                        {whatsappTestResult.status === 'success' ? (
-                          <CheckCircle className="w-3 h-3 mr-1" />
+                        {testingWhatsApp ? (
+                          <div className="animate-spin rounded-full h-4 w-4 border-b border-gray-600 mr-2" />
                         ) : (
-                          <XCircle className="w-3 h-3 mr-1" />
+                          <TestTube className="w-4 h-4 mr-2" />
                         )}
-                        {whatsappTestResult.status === 'success' ? 'Valid' : 'Invalid'}
-                      </Badge>
-                    )}
+                        Test Configuration
+                      </Button>
+
+                      {whatsappTestResult && (
+                        <Badge
+                          variant="outline"
+                          className={whatsappTestResult.status === 'success' 
+                            ? 'bg-green-100 text-green-700 border-green-200'
+                            : 'bg-red-100 text-red-700 border-red-200'
+                          }
+                        >
+                          {whatsappTestResult.status === 'success' ? (
+                            <CheckCircle className="w-3 h-3 mr-1" />
+                          ) : (
+                            <XCircle className="w-3 h-3 mr-1" />
+                          )}
+                          {whatsappTestResult.status === 'success' ? 'Valid' : 'Invalid'}
+                        </Badge>
+                      )}
+                    </div>
+
+                    <div className="text-xs text-gray-500">
+                      Provider: {settings.whatsapp_provider === 'facebook' ? 'Facebook Graph API' : 'DigitalSMS API'}
+                    </div>
                   </div>
 
-                  <div className="text-xs text-gray-500">
-                    Provider: {settings.whatsapp_provider === 'facebook' ? 'Facebook Graph API' : 'DigitalSMS API'}
-                  </div>
+                  {/* Real Message Test */}
+                  {whatsappTestResult?.status === 'success' && (
+                    <div className="space-y-2 p-3 bg-green-50 rounded-lg border border-green-200">
+                      <Label className="text-sm font-medium text-green-800">Send Test Message</Label>
+                      <div className="flex space-x-2">
+                        <Input
+                          placeholder="Enter phone number (e.g., +1234567890)"
+                          value={testPhoneNumber}
+                          onChange={(e) => setTestPhoneNumber(e.target.value)}
+                          className="flex-1"
+                          data-testid="test-phone-input"
+                        />
+                        <Button
+                          onClick={sendTestWhatsAppMessage}
+                          disabled={sendingTestMessage || !testPhoneNumber.trim()}
+                          size="sm"
+                          className="bg-green-600 hover:bg-green-700 text-white"
+                          data-testid="send-test-message-button"
+                        >
+                          {sendingTestMessage ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b border-white mr-2" />
+                          ) : (
+                            <Send className="w-4 h-4 mr-2" />
+                          )}
+                          Send Test
+                        </Button>
+                      </div>
+                      <p className="text-xs text-green-700">
+                        This will send an actual WhatsApp message to verify your {settings.whatsapp_provider === 'facebook' ? 'Facebook' : 'DigitalSMS'} API configuration.
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {whatsappTestResult?.status === 'error' && (
