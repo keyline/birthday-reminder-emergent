@@ -1357,11 +1357,16 @@ async def send_whatsapp_message(user_id: str, phone_number: str, message: str, i
 
 @api_router.post("/send-whatsapp-test")
 async def send_test_whatsapp_message(phone_number: str, current_user: User = Depends(get_current_user)):
-    """Send a test WhatsApp message"""
+    """Send a test WhatsApp message to a real phone number"""
+    # Validate phone number format (basic validation)
+    clean_phone = phone_number.replace("+", "").replace(" ", "").replace("-", "")
+    if not clean_phone.isdigit() or len(clean_phone) < 8:
+        raise HTTPException(status_code=400, detail="Invalid phone number format")
+    
     result = await send_whatsapp_message(
         user_id=current_user.id,
-        phone_number=phone_number,
-        message="Test message from ReminderAI - Your WhatsApp API is working correctly!"
+        phone_number=clean_phone,
+        message=f"🎉 Test message from ReminderAI! Your WhatsApp API configuration is working perfectly. This message was sent to {phone_number}."
     )
     return result
 
