@@ -147,11 +147,22 @@ class BulkUploadResponse(BaseModel):
     imported_contacts: List[Contact]
 
 class UserSettingsCreate(BaseModel):
+    # WhatsApp API Provider Selection
+    whatsapp_provider: Optional[str] = "facebook"  # "facebook" or "digitalsms"
+    
+    # Facebook Graph API (existing)
     whatsapp_phone_number_id: Optional[str] = None
     whatsapp_access_token: Optional[str] = None
+    
+    # DigitalSMS API (new)
+    digitalsms_api_key: Optional[str] = None
+    
+    # Email settings
     email_api_key: Optional[str] = None
     sender_email: Optional[str] = None
     sender_name: Optional[str] = None
+    
+    # Scheduling settings
     daily_send_time: Optional[str] = "09:00"  # HH:MM format
     timezone: Optional[str] = "UTC"
     execution_report_enabled: bool = True
