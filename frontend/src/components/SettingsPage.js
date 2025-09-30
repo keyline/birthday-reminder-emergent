@@ -117,7 +117,11 @@ const SettingsPage = () => {
   };
 
   const testWhatsAppConfig = async () => {
-    if (!settings.whatsapp_phone_number_id || !settings.whatsapp_access_token) {
+    const isConfigComplete = settings.whatsapp_provider === 'facebook' 
+      ? (settings.whatsapp_phone_number_id && settings.whatsapp_access_token)
+      : (settings.whatsapp_provider === 'digitalsms' && settings.digitalsms_api_key);
+
+    if (!isConfigComplete) {
       toast.error('Please configure WhatsApp settings first');
       return;
     }
