@@ -62,6 +62,10 @@ class User(BaseModel):
     full_name: str
     subscription_status: str = "trial"
     is_admin: bool = False
+    whatsapp_credits: int = 100  # Default credits
+    email_credits: int = 100     # Default credits
+    unlimited_whatsapp: bool = False
+    unlimited_email: bool = False
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class ContactCreate(BaseModel):
