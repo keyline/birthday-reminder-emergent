@@ -427,11 +427,17 @@ async def bulk_upload_contacts(
                 contact = Contact(
                     user_id=current_user.id,
                     name=name,
-                    email=None,  # Not included in bulk upload
-                    whatsapp=None,  # Not included in bulk upload
+                    email=email if email else None,
+                    whatsapp=whatsapp if whatsapp else None,
                     birthday=birthday_date,
                     anniversary_date=anniversary_date
                 )
+                
+                # Add to existing contact tracking to prevent duplicates within the same upload
+                if email:
+                    existing_emails.add(email.lower())
+                if whatsapp:
+                    existing_whatsapp.add(whatsapp)
                 
                 # Save to database
                 contact_dict = prepare_for_mongo(contact.dict())
