@@ -415,7 +415,7 @@ const SettingsPage = () => {
                   </div>
 
                   <div className="text-xs text-gray-500">
-                    Endpoint: https://graph.facebook.com/v21.0/[PHONE_NUMBER_ID]/messages
+                    Provider: {settings.whatsapp_provider === 'facebook' ? 'Facebook Graph API' : 'DigitalSMS API'}
                   </div>
                 </div>
 
