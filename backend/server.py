@@ -271,6 +271,120 @@ async def delete_contact(contact_id: str, current_user: User = Depends(get_curre
         raise HTTPException(status_code=404, detail="Contact not found")
     return {"message": "Contact deleted successfully"}
 
+# Bulk Upload Contacts from Excel
+@api_router.post("/contacts/bulk-upload", response_model=BulkUploadResponse)
+async def bulk_upload_contacts(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user)
+):
+    # Validate file type
+    if not file.filename.endswith(('.xlsx', '.xls')):
+        raise HTTPException(status_code=400, detail="Only Excel files (.xlsx, .xls) are supported")
+    
+    try:
+        # Read the uploaded file
+        contents = await file.read()
+        
+        # Parse Excel file
+        try:
+            df = pd.read_excel(io.BytesIO(contents))
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Error reading Excel file: {str(e)}")
+        
+        # Validate required columns
+        required_columns = ['name', 'birthday', 'anniversary']
+        missing_columns = [col for col in required_columns if col not in df.columns]
+        if missing_columns:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Missing required columns: {', '.join(missing_columns)}. Expected columns: name, birthday, anniversary"
+            )
+        
+        # Process rows
+        successful_imports = []
+        failed_imports = []
+        errors = []
+        
+        for index, row in df.iterrows():
+            row_number = index + 2  # Excel rows start from 1, plus header
+            
+            try:
+                # Extract and clean data
+                name = str(row['name']).strip() if pd.notna(row['name']) else ""
+                birthday = row['birthday'] if pd.notna(row['birthday']) else None
+                anniversary = row['anniversary'] if pd.notna(row['anniversary']) else None
+                
+                # Validation: Name is mandatory
+                if not name or name.lower() == 'nan':
+                    errors.append(f"Row {row_number}: Name is required")
+                    failed_imports.append(row_number)
+                    continue
+                
+                # Validation: At least one date (birthday or anniversary) is required
+                if not birthday and not anniversary:
+                    errors.append(f"Row {row_number}: Either birthday or anniversary is required")
+                    failed_imports.append(row_number)
+                    continue
+                
+                # Parse dates
+                birthday_date = None
+                anniversary_date = None
+                
+                if birthday:
+                    try:
+                        if isinstance(birthday, str):
+                            birthday_date = pd.to_datetime(birthday).date()
+                        else:
+                            birthday_date = birthday.date() if hasattr(birthday, 'date') else birthday
+                    except Exception as e:
+                        errors.append(f"Row {row_number}: Invalid birthday date format - {str(e)}")
+                        failed_imports.append(row_number)
+                        continue
+                
+                if anniversary:
+                    try:
+                        if isinstance(anniversary, str):
+                            anniversary_date = pd.to_datetime(anniversary).date()
+                        else:
+                            anniversary_date = anniversary.date() if hasattr(anniversary, 'date') else anniversary
+                    except Exception as e:
+                        errors.append(f"Row {row_number}: Invalid anniversary date format - {str(e)}")
+                        failed_imports.append(row_number)
+                        continue
+                
+                # Create contact
+                contact = Contact(
+                    user_id=current_user.id,
+                    name=name,
+                    email=None,  # Not included in bulk upload
+                    whatsapp=None,  # Not included in bulk upload
+                    birthday=birthday_date,
+                    anniversary_date=anniversary_date
+                )
+                
+                # Save to database
+                contact_dict = prepare_for_mongo(contact.dict())
+                await db.contacts.insert_one(contact_dict)
+                
+                successful_imports.append(contact)
+                
+            except Exception as e:
+                errors.append(f"Row {row_number}: Unexpected error - {str(e)}")
+                failed_imports.append(row_number)
+        
+        return BulkUploadResponse(
+            total_rows=len(df),
+            successful_imports=len(successful_imports),
+            failed_imports=len(failed_imports),
+            errors=errors,
+            imported_contacts=successful_imports
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
+
 # Template Routes
 @api_router.post("/templates", response_model=Template)
 async def create_template(template_data: TemplateCreate, current_user: User = Depends(get_current_user)):
