@@ -53,6 +53,15 @@ const Dashboard = () => {
     }
   };
 
+  const fetchCredits = async () => {
+    try {
+      const response = await axios.get(`${API}/credits`);
+      setCredits(response.data);
+    } catch (error) {
+      console.error('Error fetching credits:', error);
+    }
+  };
+
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { 
