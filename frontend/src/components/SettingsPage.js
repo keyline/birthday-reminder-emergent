@@ -55,6 +55,8 @@ const SettingsPage = () => {
   const [testingEmail, setTestingEmail] = useState(false);
   const [whatsappTestResult, setWhatsappTestResult] = useState(null);
   const [emailTestResult, setEmailTestResult] = useState(null);
+  const [testPhoneNumber, setTestPhoneNumber] = useState('');
+  const [sendingTestMessage, setSendingTestMessage] = useState(false);
   const [credits, setCredits] = useState({
     whatsapp_credits: 0,
     email_credits: 0,
