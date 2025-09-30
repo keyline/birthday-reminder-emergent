@@ -115,6 +115,59 @@ const Dashboard = () => {
           </p>
         </div>
 
+        {/* Credits Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <Card className="stats-card border-0 shadow-lg bg-gradient-to-r from-green-50 to-emerald-50" data-testid="whatsapp-credits-card">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-gray-700 flex items-center">
+                <MessageCircle className="w-4 h-4 mr-2 text-green-500" />
+                WhatsApp Credits
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-gray-900 mb-1 flex items-center" data-testid="whatsapp-credits-count">
+                {credits.unlimited_whatsapp ? (
+                  <>
+                    <Infinity className="w-8 h-8 text-green-600 mr-2" />
+                    <span className="text-green-600">Unlimited</span>
+                  </>
+                ) : (
+                  <>
+                    {credits.whatsapp_credits}
+                    <Coins className="w-6 h-6 text-green-600 ml-2" />
+                  </>
+                )}
+              </div>
+              <p className="text-sm text-gray-600">Messages remaining</p>
+            </CardContent>
+          </Card>
+
+          <Card className="stats-card border-0 shadow-lg bg-gradient-to-r from-blue-50 to-cyan-50" data-testid="email-credits-card">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-gray-700 flex items-center">
+                <Mail className="w-4 h-4 mr-2 text-blue-500" />
+                Email Credits
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-gray-900 mb-1 flex items-center" data-testid="email-credits-count">
+                {credits.unlimited_email ? (
+                  <>
+                    <Infinity className="w-8 h-8 text-blue-600 mr-2" />
+                    <span className="text-blue-600">Unlimited</span>
+                  </>
+                ) : (
+                  <>
+                    {credits.email_credits}
+                    <Coins className="w-6 h-6 text-blue-600 ml-2" />
+                  </>
+                )}
+              </div>
+              <p className="text-sm text-gray-600">Messages remaining</p>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card className="stats-card border-0 shadow-lg" data-testid="contacts-stat-card">
