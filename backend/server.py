@@ -1191,6 +1191,66 @@ async def deduct_credits(message_type: str, count: int = 1, current_user: User =
         "credits_remaining": new_credits
     }
 
+# Image Upload Routes
+@api_router.post("/upload-image")
+async def upload_image(file: UploadFile = File(...), current_user: User = Depends(get_current_user)):
+    """Upload image for contacts"""
+    # Validate file type
+    allowed_types = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"]
+    if file.content_type not in allowed_types:
+        raise HTTPException(status_code=400, detail="Only image files (JPEG, PNG, GIF, WebP) are allowed")
+    
+    # Validate file size (5MB limit)
+    max_size = 5 * 1024 * 1024  # 5MB
+    file_content = await file.read()
+    if len(file_content) > max_size:
+        raise HTTPException(status_code=400, detail="File size must be less than 5MB")
+    
+    # Create uploads directory if it doesn't exist
+    upload_dir = Path("uploads/images")
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Generate unique filename
+    file_extension = file.filename.split(".")[-1] if "." in file.filename else "jpg"
+    unique_filename = f"{current_user.id}_{uuid.uuid4().hex}.{file_extension}"
+    file_path = upload_dir / unique_filename
+    
+    # Save file
+    with open(file_path, "wb") as buffer:
+        buffer.write(file_content)
+    
+    # Return file URL
+    file_url = f"/uploads/images/{unique_filename}"
+    return {"image_url": file_url, "filename": unique_filename}
+
+@api_router.put("/contacts/{contact_id}/images")
+async def update_contact_images(
+    contact_id: str, 
+    whatsapp_image: Optional[str] = None,
+    email_image: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Update contact images for WhatsApp and Email"""
+    contact = await db.contacts.find_one({"id": contact_id, "user_id": current_user.id})
+    if not contact:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    
+    update_data = {}
+    if whatsapp_image is not None:
+        update_data["whatsapp_image"] = whatsapp_image
+    if email_image is not None:
+        update_data["email_image"] = email_image
+    
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No image data provided")
+    
+    await db.contacts.update_one(
+        {"id": contact_id, "user_id": current_user.id},
+        {"$set": update_data}
+    )
+    
+    return {"message": "Contact images updated successfully"}
+
 # Include the router in the main app
 app.include_router(api_router)
 
