@@ -1253,6 +1253,106 @@ async def deduct_credits(message_type: str, count: int = 1, current_user: User =
         "credits_remaining": new_credits
     }
 
+# WhatsApp Message Sending Functions
+async def send_whatsapp_message(user_id: str, phone_number: str, message: str, image_url: Optional[str] = None):
+    """Send WhatsApp message using configured provider"""
+    settings = await db.user_settings.find_one({"user_id": user_id})
+    
+    if not settings:
+        return {"status": "error", "message": "No WhatsApp configuration found"}
+    
+    whatsapp_provider = settings.get("whatsapp_provider", "facebook")
+    
+    try:
+        import requests
+        
+        if whatsapp_provider == "facebook":
+            phone_number_id = settings.get("whatsapp_phone_number_id")
+            access_token = settings.get("whatsapp_access_token")
+            
+            if not phone_number_id or not access_token:
+                return {"status": "error", "message": "Facebook WhatsApp configuration incomplete"}
+            
+            url = f"https://graph.facebook.com/v21.0/{phone_number_id}/messages"
+            headers = {
+                "Authorization": f"Bearer {access_token}",
+                "Content-Type": "application/json"
+            }
+            
+            # Prepare message payload
+            if image_url:
+                payload = {
+                    "messaging_product": "whatsapp",
+                    "to": phone_number,
+                    "type": "image",
+                    "image": {
+                        "link": image_url,
+                        "caption": message
+                    }
+                }
+            else:
+                payload = {
+                    "messaging_product": "whatsapp",
+                    "to": phone_number,
+                    "type": "text",
+                    "text": {
+                        "body": message
+                    }
+                }
+            
+            response = requests.post(url, json=payload, headers=headers)
+            
+            if response.status_code == 200:
+                return {"status": "success", "message": "Message sent via Facebook WhatsApp API"}
+            else:
+                return {"status": "error", "message": f"Facebook API error: {response.text}"}
+                
+        elif whatsapp_provider == "digitalsms":
+            api_key = settings.get("digitalsms_api_key")
+            
+            if not api_key:
+                return {"status": "error", "message": "DigitalSMS API key not configured"}
+            
+            url = "https://demo.digitalsms.biz/api/"
+            
+            # DigitalSMS API doesn't support images in the provided format
+            # So we'll send text message only
+            if image_url:
+                message = f"{message}\n\nImage: {image_url}"
+            
+            params = {
+                "apikey": api_key,
+                "mobile": phone_number,
+                "msg": message
+            }
+            
+            response = requests.get(url, params=params)
+            
+            if response.status_code == 200:
+                response_text = response.text.lower()
+                if "success" in response_text or "sent" in response_text or "ok" in response_text:
+                    return {"status": "success", "message": "Message sent via DigitalSMS API"}
+                else:
+                    return {"status": "error", "message": f"DigitalSMS API error: {response.text}"}
+            else:
+                return {"status": "error", "message": f"DigitalSMS API HTTP error: {response.status_code}"}
+        
+        else:
+            return {"status": "error", "message": f"Unknown WhatsApp provider: {whatsapp_provider}"}
+            
+    except Exception as e:
+        return {"status": "error", "message": f"WhatsApp sending error: {str(e)}"}
+
+@api_router.post("/send-whatsapp-test")
+async def send_test_whatsapp_message(phone_number: str, current_user: User = Depends(get_current_user)):
+    """Send a test WhatsApp message"""
+    result = await send_whatsapp_message(
+        user_id=current_user.id,
+        phone_number=phone_number,
+        message="Test message from ReminderAI - Your WhatsApp API is working correctly!"
+    )
+    return result
+
 # Image Upload Routes
 @api_router.post("/upload-image")
 async def upload_image(file: UploadFile = File(...), current_user: User = Depends(get_current_user)):
