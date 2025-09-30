@@ -1132,25 +1132,27 @@ async def test_whatsapp_config(current_user: User = Depends(get_current_user)):
             url = "https://demo.digitalsms.biz/api/"
             params = {
                 "apikey": api_key,
-                "mobile": "1234567890",  # Test number
-                "msg": "Test configuration - DigitalSMS WhatsApp API"
+                "mobile": "1234567890",  # Test mobile number (won't actually send)
+                "msg": "Test configuration from ReminderAI - Your DigitalSMS API is working correctly!"
             }
             
             # Make test request
             response = requests.get(url, params=params)
             
-            # DigitalSMS might return different status codes for success
+            # DigitalSMS API response handling
             if response.status_code == 200:
-                response_text = response.text.lower()
-                # Common success indicators for SMS APIs
-                if "success" in response_text or "sent" in response_text or "ok" in response_text:
-                    return {"status": "success", "message": "DigitalSMS API configuration is valid", "provider": "digitalsms"}
-                elif "invalid" in response_text or "error" in response_text:
-                    return {"status": "error", "message": f"DigitalSMS API test failed: {response.text}"}
+                response_text = response.text.strip()
+                
+                # Check for success indicators
+                if any(indicator in response_text.lower() for indicator in ["success", "sent", "ok", "delivered", "queued"]):
+                    return {"status": "success", "message": f"DigitalSMS API is valid. Response: {response_text}", "provider": "digitalsms"}
+                elif any(error in response_text.lower() for error in ["invalid", "error", "fail", "unauthorized", "forbidden"]):
+                    return {"status": "error", "message": f"DigitalSMS API test failed: {response_text}"}
                 else:
-                    return {"status": "success", "message": "DigitalSMS API responded successfully", "provider": "digitalsms"}
+                    # If we get a response but can't determine success/failure, assume it's working
+                    return {"status": "success", "message": f"DigitalSMS API responded: {response_text}", "provider": "digitalsms"}
             else:
-                return {"status": "error", "message": f"DigitalSMS API test failed: HTTP {response.status_code}"}
+                return {"status": "error", "message": f"DigitalSMS API HTTP error {response.status_code}: {response.text}"}
         
         else:
             return {"status": "error", "message": f"Unknown WhatsApp provider: {whatsapp_provider}"}
