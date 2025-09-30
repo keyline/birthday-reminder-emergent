@@ -1,11 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
+import { useDropzone } from 'react-dropzone';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Badge } from './ui/badge';
+import { Progress } from './ui/progress';
+import { Alert, AlertDescription } from './ui/alert';
 import { toast } from 'sonner';
 import { 
   Plus, 
@@ -18,7 +21,13 @@ import {
   Heart,
   Search,
   Gift,
-  Sparkles
+  Sparkles,
+  Upload,
+  FileSpreadsheet,
+  Download,
+  CheckCircle,
+  XCircle,
+  AlertCircle
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
