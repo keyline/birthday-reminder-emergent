@@ -631,6 +631,25 @@ const AdminPage = () => {
                             <Calendar className="w-4 h-4" />
                           </Button>
                           
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedUserForCredits(user);
+                              setCreditUpdate({
+                                whatsapp_credits: user.whatsapp_credits,
+                                email_credits: user.email_credits,
+                                unlimited_whatsapp: user.unlimited_whatsapp,
+                                unlimited_email: user.unlimited_email
+                              });
+                              setIsCreditDialogOpen(true);
+                            }}
+                            className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                            data-testid={`manage-credits-${user.id}`}
+                          >
+                            <Coins className="w-4 h-4" />
+                          </Button>
+                          
                           {!user.is_admin && (
                             <Button
                               size="sm"
