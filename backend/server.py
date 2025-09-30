@@ -112,7 +112,27 @@ class GenerateMessageRequest(BaseModel):
     contact_name: str
     occasion: str  # "birthday" or "anniversary"
     relationship: Optional[str] = "friend"
-    tone: Optional[str] = "warm"  # "warm", "professional", "casual", "funny"
+    tone: str = "normal"  # "normal", "business", "formal", "informal", "funny", "casual"
+
+class BulkToneUpdate(BaseModel):
+    contact_ids: List[str]
+    message_tone: str
+
+class MessagePreview(BaseModel):
+    contact_id: str
+    occasion: str
+    message_type: str  # "whatsapp" or "email"
+    generated_message: str
+    custom_message: Optional[str] = None
+    image_url: Optional[str] = None
+    editable: bool = True
+
+class CustomMessageRequest(BaseModel):
+    contact_id: str
+    occasion: str
+    message_type: str
+    custom_message: str
+    image_url: Optional[str] = None
 
 class MessageResponse(BaseModel):
     message: str
