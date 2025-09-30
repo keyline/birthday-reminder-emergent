@@ -160,7 +160,10 @@ const ContactsPage = () => {
       email: '',
       whatsapp: '',
       birthday: '',
-      anniversary_date: ''
+      anniversary_date: '',
+      message_tone: 'normal',
+      whatsapp_image: '',
+      email_image: ''
     });
     setEditingContact(null);
   };
