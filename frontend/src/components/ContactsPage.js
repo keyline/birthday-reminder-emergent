@@ -226,12 +226,14 @@ const ContactsPage = () => {
   });
 
   const downloadTemplate = () => {
-    // Create a sample Excel template
+    // Create a sample Excel template with new format
     const templateData = [
-      ['name', 'birthday', 'anniversary'],
-      ['John Doe', '1990-05-15', ''],
-      ['Jane Smith', '', '2018-09-20'],
-      ['Bob Johnson', '1985-12-03', '2010-07-14']
+      ['name', 'birthday', 'anniversary', 'email', 'whatsapp'],
+      ['John Doe', '15-05', '', 'john@example.com', '+1234567890'],
+      ['Jane Smith', '', '20-09', 'jane@example.com', ''],
+      ['Bob Johnson', '03-12-1985', '14-07-2010', '', '+9876543210'],
+      ['Alice Brown', '25-08', '', 'alice@example.com', '+1122334455'],
+      ['Mike Wilson', '10-11', '05-06', 'mike@example.com', '+5566778899']
     ];
 
     const csvContent = templateData.map(row => row.join(',')).join('\n');
