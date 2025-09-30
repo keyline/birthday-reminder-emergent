@@ -138,6 +138,42 @@ const AdminPage = () => {
     }
   };
 
+  const updateUserCredits = async () => {
+    try {
+      await axios.put(`${API}/admin/users/${selectedUserForCredits.id}/credits`, creditUpdate);
+      toast.success('User credits updated successfully!');
+      fetchUsers();
+      setIsCreditDialogOpen(false);
+      setSelectedUserForCredits(null);
+      setCreditUpdate({
+        whatsapp_credits: 0,
+        email_credits: 0,
+        unlimited_whatsapp: false,
+        unlimited_email: false
+      });
+    } catch (error) {
+      console.error('Error updating credits:', error);
+      toast.error('Failed to update credits');
+    }
+  };
+
+  const addCreditsToUser = async (userId, whatsappCredits, emailCredits) => {
+    try {
+      await axios.post(`${API}/admin/users/${userId}/add-credits`, null, {
+        params: { 
+          whatsapp_credits: whatsappCredits,
+          email_credits: emailCredits
+        }
+      });
+      
+      toast.success(`Added ${whatsappCredits} WhatsApp and ${emailCredits} email credits!`);
+      fetchUsers();
+    } catch (error) {
+      console.error('Error adding credits:', error);
+      toast.error('Failed to add credits');
+    }
+  };
+
   const deleteUser = async (userId, userName) => {
     if (window.confirm(`Are you sure you want to delete ${userName}? This will permanently delete all their data including contacts and templates.`)) {
       try {
