@@ -156,6 +156,104 @@ const ContactsPage = () => {
     setEditingContact(null);
   };
 
+  // Excel Upload Functions
+  const onDrop = useCallback(async (acceptedFiles) => {
+    const file = acceptedFiles[0];
+    if (!file) return;
+
+    setUploading(true);
+    setUploadProgress(0);
+    setUploadResult(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // Simulate upload progress
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + 10;
+        });
+      }, 200);
+
+      const response = await axios.post(`${API}/contacts/bulk-upload`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+
+      const result = response.data;
+      setUploadResult(result);
+
+      if (result.successful_imports > 0) {
+        toast.success(`Successfully imported ${result.successful_imports} contacts!`);
+        fetchContacts(); // Refresh the contacts list
+      }
+
+      if (result.failed_imports > 0) {
+        toast.warning(`${result.failed_imports} contacts failed to import. Check the results for details.`);
+      }
+
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      toast.error(error.response?.data?.detail || 'Failed to upload file');
+      setUploadResult({
+        total_rows: 0,
+        successful_imports: 0,
+        failed_imports: 1,
+        errors: [error.response?.data?.detail || 'Upload failed'],
+        imported_contacts: []
+      });
+    } finally {
+      setUploading(false);
+    }
+  }, []);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
+      'application/vnd.ms-excel': ['.xls']
+    },
+    maxFiles: 1
+  });
+
+  const downloadTemplate = () => {
+    // Create a sample Excel template
+    const templateData = [
+      ['name', 'birthday', 'anniversary'],
+      ['John Doe', '1990-05-15', ''],
+      ['Jane Smith', '', '2018-09-20'],
+      ['Bob Johnson', '1985-12-03', '2010-07-14']
+    ];
+
+    const csvContent = templateData.map(row => row.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'contacts_template.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+    
+    toast.success('Template downloaded! You can open it in Excel and save as .xlsx format.');
+  };
+
+  const resetUpload = () => {
+    setUploadResult(null);
+    setUploadProgress(0);
+    setUploading(false);
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return 'Not set';
     const date = new Date(dateString);
