@@ -161,6 +161,16 @@ class UserStats(BaseModel):
     templates_count: int
     last_login: Optional[datetime] = None
     total_usage: int
+    whatsapp_credits: int
+    email_credits: int
+    unlimited_whatsapp: bool
+    unlimited_email: bool
+
+class CreditUpdate(BaseModel):
+    whatsapp_credits: Optional[int] = None
+    email_credits: Optional[int] = None
+    unlimited_whatsapp: Optional[bool] = None
+    unlimited_email: Optional[bool] = None
 
 class AdminDashboardStats(BaseModel):
     total_users: int
