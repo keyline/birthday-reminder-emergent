@@ -322,17 +322,164 @@ const ContactsPage = () => {
             </p>
           </div>
           
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button 
-                className="btn-gradient" 
-                onClick={resetForm}
-                data-testid="add-contact-button"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Contact
-              </Button>
-            </DialogTrigger>
+          <div className="flex gap-3">
+            <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+              <DialogTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  className="bg-white/80 border-gray-200 hover:bg-white hover:shadow-md"
+                  onClick={resetUpload}
+                  data-testid="bulk-upload-button"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Bulk Upload
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center" data-testid="upload-dialog-title">
+                    <FileSpreadsheet className="w-5 h-5 mr-2 text-green-600" />
+                    Bulk Upload Contacts
+                  </DialogTitle>
+                  <DialogDescription>
+                    Upload an Excel file (.xlsx or .xls) with your contacts data
+                  </DialogDescription>
+                </DialogHeader>
+                
+                {!uploadResult ? (
+                  <div className="space-y-6">
+                    {/* Upload Instructions */}
+                    <Alert>
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        <strong>Excel Format Requirements:</strong>
+                        <ul className="mt-2 space-y-1 text-sm">
+                          <li>• Column 1: <strong>name</strong> (required)</li>
+                          <li>• Column 2: <strong>birthday</strong> (optional, format: YYYY-MM-DD)</li>
+                          <li>• Column 3: <strong>anniversary</strong> (optional, format: YYYY-MM-DD)</li>
+                          <li>• At least one date (birthday or anniversary) is required per contact</li>
+                        </ul>
+                      </AlertDescription>
+                    </Alert>
+
+                    {/* Download Template Button */}
+                    <div className="flex justify-center">
+                      <Button
+                        variant="outline"
+                        onClick={downloadTemplate}
+                        className="mb-4"
+                        data-testid="download-template-button"
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        Download Template
+                      </Button>
+                    </div>
+
+                    {/* Upload Area */}
+                    <div
+                      {...getRootProps()}
+                      className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
+                        isDragActive
+                          ? 'border-rose-400 bg-rose-50'
+                          : 'border-gray-300 hover:border-rose-400 hover:bg-rose-50'
+                      }`}
+                      data-testid="file-drop-zone"
+                    >
+                      <input {...getInputProps()} />
+                      <FileSpreadsheet className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                      {isDragActive ? (
+                        <p className="text-rose-600 font-medium">Drop your Excel file here...</p>
+                      ) : (
+                        <div>
+                          <p className="text-gray-600 mb-2">
+                            Drag and drop your Excel file here, or{' '}
+                            <span className="text-rose-600 font-medium">browse</span>
+                          </p>
+                          <p className="text-sm text-gray-500">Supports .xlsx and .xls files</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Upload Progress */}
+                    {uploading && (
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span>Uploading and processing...</span>
+                          <span>{uploadProgress}%</span>
+                        </div>
+                        <Progress value={uploadProgress} className="w-full" />
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  /* Upload Results */
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-3 gap-4">
+                      <Card className="text-center p-4">
+                        <div className="text-2xl font-bold text-blue-600">{uploadResult.total_rows}</div>
+                        <div className="text-sm text-gray-600">Total Rows</div>
+                      </Card>
+                      <Card className="text-center p-4">
+                        <div className="text-2xl font-bold text-green-600 flex items-center justify-center">
+                          <CheckCircle className="w-6 h-6 mr-1" />
+                          {uploadResult.successful_imports}
+                        </div>
+                        <div className="text-sm text-gray-600">Imported</div>
+                      </Card>
+                      <Card className="text-center p-4">
+                        <div className="text-2xl font-bold text-red-600 flex items-center justify-center">
+                          <XCircle className="w-6 h-6 mr-1" />
+                          {uploadResult.failed_imports}
+                        </div>
+                        <div className="text-sm text-gray-600">Failed</div>
+                      </Card>
+                    </div>
+
+                    {uploadResult.errors.length > 0 && (
+                      <div>
+                        <h4 className="font-medium text-gray-900 mb-2">Import Errors:</h4>
+                        <div className="max-h-40 overflow-y-auto bg-red-50 rounded-lg p-3">
+                          <ul className="space-y-1 text-sm text-red-700">
+                            {uploadResult.errors.map((error, index) => (
+                              <li key={index}>• {error}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex justify-end space-x-2">
+                      <Button
+                        variant="outline"
+                        onClick={resetUpload}
+                        data-testid="upload-another-button"
+                      >
+                        Upload Another File
+                      </Button>
+                      <Button
+                        onClick={() => setIsUploadDialogOpen(false)}
+                        className="btn-gradient"
+                        data-testid="close-upload-dialog-button"
+                      >
+                        Close
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </DialogContent>
+            </Dialog>
+
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button 
+                  className="btn-gradient" 
+                  onClick={resetForm}
+                  data-testid="add-contact-button"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Contact
+                </Button>
+              </DialogTrigger>
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
                 <DialogTitle data-testid="contact-dialog-title">
