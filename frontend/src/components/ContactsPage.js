@@ -30,7 +30,13 @@ import {
   Download,
   CheckCircle,
   XCircle,
-  AlertCircle
+  AlertCircle,
+  Palette,
+  Image,
+  Eye,
+  MessageSquare,
+  Volume2,
+  Copy
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
