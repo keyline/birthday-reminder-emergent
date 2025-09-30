@@ -105,6 +105,13 @@ class GenerateMessageRequest(BaseModel):
 class MessageResponse(BaseModel):
     message: str
 
+class BulkUploadResponse(BaseModel):
+    total_rows: int
+    successful_imports: int
+    failed_imports: int
+    errors: List[str]
+    imported_contacts: List[Contact]
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str
