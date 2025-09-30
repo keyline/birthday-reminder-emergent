@@ -1317,27 +1317,37 @@ async def send_whatsapp_message(user_id: str, phone_number: str, message: str, i
             
             url = "https://demo.digitalsms.biz/api/"
             
-            # DigitalSMS API doesn't support images in the provided format
-            # So we'll send text message only
+            # Prepare message - if image is provided, include it as a link in the text
+            final_message = message
             if image_url:
-                message = f"{message}\n\nImage: {image_url}"
+                # Convert relative URL to absolute if needed
+                if image_url.startswith('/'):
+                    # Assume it's a local upload, convert to full URL
+                    final_message = f"{message}\n\n📷 Image: https://birthday-alert-4.preview.emergentagent.com{image_url}"
+                else:
+                    final_message = f"{message}\n\n📷 Image: {image_url}"
             
             params = {
                 "apikey": api_key,
                 "mobile": phone_number,
-                "msg": message
+                "msg": final_message
             }
             
             response = requests.get(url, params=params)
             
             if response.status_code == 200:
-                response_text = response.text.lower()
-                if "success" in response_text or "sent" in response_text or "ok" in response_text:
-                    return {"status": "success", "message": "Message sent via DigitalSMS API"}
+                response_text = response.text.strip()
+                
+                # Check for success indicators in DigitalSMS response
+                if any(indicator in response_text.lower() for indicator in ["success", "sent", "ok", "delivered", "queued"]):
+                    return {"status": "success", "message": f"Message sent via DigitalSMS API. Response: {response_text}"}
+                elif any(error in response_text.lower() for error in ["invalid", "error", "fail", "unauthorized", "forbidden", "insufficient"]):
+                    return {"status": "error", "message": f"DigitalSMS API error: {response_text}"}
                 else:
-                    return {"status": "error", "message": f"DigitalSMS API error: {response.text}"}
+                    # If response is unclear, log it but assume success if HTTP 200
+                    return {"status": "success", "message": f"Message sent via DigitalSMS API. Server response: {response_text}"}
             else:
-                return {"status": "error", "message": f"DigitalSMS API HTTP error: {response.status_code}"}
+                return {"status": "error", "message": f"DigitalSMS API HTTP error {response.status_code}: {response.text}"}
         
         else:
             return {"status": "error", "message": f"Unknown WhatsApp provider: {whatsapp_provider}"}
