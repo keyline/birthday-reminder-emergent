@@ -69,6 +69,9 @@ const ContactsPage = () => {
   const [messagePreview, setMessagePreview] = useState(null);
   const [showMessageDialog, setShowMessageDialog] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [viewMode, setViewMode] = useState('card'); // 'card' or 'grid'
+  const [filterBy, setFilterBy] = useState('all'); // 'all', 'birthday', 'anniversary', 'both'
+  const [sortBy, setSortBy] = useState('name'); // 'name', 'created', 'birthday', 'anniversary'
 
   useEffect(() => {
     fetchContacts();
