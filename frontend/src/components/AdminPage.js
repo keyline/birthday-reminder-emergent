@@ -582,6 +582,20 @@ const AdminPage = () => {
                               <div>{user.contacts_count} contacts</div>
                               <div>{user.templates_count} templates</div>
                             </div>
+                            <div className="text-xs text-center space-y-1">
+                              <div className="flex items-center justify-center space-x-1">
+                                <MessageCircle className="w-3 h-3 text-green-600" />
+                                <span className={user.unlimited_whatsapp ? 'text-green-600 font-medium' : ''}>
+                                  {user.unlimited_whatsapp ? '∞' : user.whatsapp_credits}
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-center space-x-1">
+                                <Mail className="w-3 h-3 text-blue-600" />
+                                <span className={user.unlimited_email ? 'text-blue-600 font-medium' : ''}>
+                                  {user.unlimited_email ? '∞' : user.email_credits}
+                                </span>
+                              </div>
+                            </div>
                           </div>
                         </div>
                         
