@@ -776,6 +776,130 @@ const AdminPage = () => {
           </TabsContent>
         </Tabs>
 
+        {/* Credit Management Dialog */}
+        <Dialog open={isCreditDialogOpen} onOpenChange={setIsCreditDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center">
+                <Coins className="w-5 h-5 mr-2 text-green-600" />
+                Manage Credits
+              </DialogTitle>
+              <DialogDescription>
+                Manage credits for {selectedUserForCredits?.full_name}
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-6">
+              {/* WhatsApp Credits */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="flex items-center">
+                    <MessageCircle className="w-4 h-4 mr-2 text-green-600" />
+                    WhatsApp Credits
+                  </Label>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      checked={creditUpdate.unlimited_whatsapp}
+                      onCheckedChange={(checked) => setCreditUpdate({
+                        ...creditUpdate,
+                        unlimited_whatsapp: checked
+                      })}
+                    />
+                    <Label className="text-sm">Unlimited</Label>
+                  </div>
+                </div>
+                {!creditUpdate.unlimited_whatsapp && (
+                  <Input
+                    type="number"
+                    value={creditUpdate.whatsapp_credits}
+                    onChange={(e) => setCreditUpdate({
+                      ...creditUpdate,
+                      whatsapp_credits: parseInt(e.target.value) || 0
+                    })}
+                    placeholder="WhatsApp credits"
+                    min="0"
+                  />
+                )}
+              </div>
+
+              {/* Email Credits */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="flex items-center">
+                    <Mail className="w-4 h-4 mr-2 text-blue-600" />
+                    Email Credits
+                  </Label>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      checked={creditUpdate.unlimited_email}
+                      onCheckedChange={(checked) => setCreditUpdate({
+                        ...creditUpdate,
+                        unlimited_email: checked
+                      })}
+                    />
+                    <Label className="text-sm">Unlimited</Label>
+                  </div>
+                </div>
+                {!creditUpdate.unlimited_email && (
+                  <Input
+                    type="number"
+                    value={creditUpdate.email_credits}
+                    onChange={(e) => setCreditUpdate({
+                      ...creditUpdate,
+                      email_credits: parseInt(e.target.value) || 0
+                    })}
+                    placeholder="Email credits"
+                    min="0"
+                  />
+                )}
+              </div>
+
+              {/* Quick Actions */}
+              <div className="space-y-2">
+                <Label className="text-sm text-gray-600">Quick Add:</Label>
+                <div className="flex space-x-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => addCreditsToUser(selectedUserForCredits?.id, 100, 100)}
+                  >
+                    +100 Both
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => addCreditsToUser(selectedUserForCredits?.id, 500, 500)}
+                  >
+                    +500 Both
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => addCreditsToUser(selectedUserForCredits?.id, 1000, 1000)}
+                  >
+                    +1000 Both
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsCreditDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={updateUserCredits}
+                  className="btn-gradient"
+                >
+                  Update Credits
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         {/* Extend Subscription Dialog */}
         <Dialog open={isExtendDialogOpen} onOpenChange={setIsExtendDialogOpen}>
           <DialogContent className="sm:max-w-md">
