@@ -721,7 +721,11 @@ async def get_all_users_with_stats(admin_user: User = Depends(get_admin_user)):
             contacts_count=contacts_count,
             templates_count=templates_count,
             last_login=user.get('last_login'),
-            total_usage=total_usage
+            total_usage=total_usage,
+            whatsapp_credits=user.get('whatsapp_credits', 0),
+            email_credits=user.get('email_credits', 0),
+            unlimited_whatsapp=user.get('unlimited_whatsapp', False),
+            unlimited_email=user.get('unlimited_email', False)
         ))
     
     # Sort by total usage descending
