@@ -289,7 +289,8 @@ async def bulk_upload_contacts(
         
         # Parse Excel file
         try:
-            df = pd.read_excel(io.BytesIO(contents))
+            # Read Excel with specific dtype for whatsapp column to preserve phone numbers
+            df = pd.read_excel(io.BytesIO(contents), dtype={'whatsapp': str})
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Error reading Excel file: {str(e)}")
         
