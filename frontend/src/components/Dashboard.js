@@ -38,6 +38,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchDashboardStats();
+    fetchCredits();
   }, []);
 
   const fetchDashboardStats = async () => {
