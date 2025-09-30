@@ -271,6 +271,103 @@ const ContactsPage = () => {
     setUploading(false);
   };
 
+  const messageTonesOptions = [
+    { value: 'normal', label: 'Normal', description: 'Warm and friendly' },
+    { value: 'business', label: 'Business', description: 'Professional and courteous' },
+    { value: 'formal', label: 'Formal', description: 'Elegant and sophisticated' },
+    { value: 'informal', label: 'Informal', description: 'Casual and relaxed' },
+    { value: 'funny', label: 'Funny', description: 'Light-hearted and amusing' },
+    { value: 'casual', label: 'Casual', description: 'Easy-going and laid-back' }
+  ];
+
+  const handleBulkToneUpdate = async () => {
+    if (selectedContacts.length === 0) {
+      toast.error('Please select contacts first');
+      return;
+    }
+
+    try {
+      const response = await axios.put(`${API}/contacts/bulk-tone-update`, {
+        contact_ids: selectedContacts,
+        message_tone: bulkTone
+      });
+
+      toast.success(`Updated tone for ${response.data.updated_count} contacts`);
+      fetchContacts();
+      setSelectedContacts([]);
+      setShowBulkActions(false);
+    } catch (error) {
+      console.error('Error updating bulk tone:', error);
+      toast.error('Failed to update contact tones');
+    }
+  };
+
+  const handleContactSelect = (contactId) => {
+    setSelectedContacts(prev => {
+      const newSelected = prev.includes(contactId) 
+        ? prev.filter(id => id !== contactId)
+        : [...prev, contactId];
+      
+      setShowBulkActions(newSelected.length > 0);
+      return newSelected;
+    });
+  };
+
+  const generateMessagePreview = async (contact, occasion, messageType) => {
+    try {
+      const response = await axios.post(`${API}/generate-message-preview`, null, {
+        params: {
+          contact_id: contact.id,
+          occasion: occasion,
+          message_type: messageType
+        }
+      });
+
+      setMessagePreview(response.data);
+      setShowMessageDialog(true);
+    } catch (error) {
+      console.error('Error generating message preview:', error);
+      toast.error('Failed to generate message preview');
+    }
+  };
+
+  const uploadImage = async (file, imageType) => {
+    setUploadingImage(true);
+    
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await axios.post(`${API}/upload-image`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      return response.data.image_url;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error('Failed to upload image');
+      return null;
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleImageUpload = async (event, imageType) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const imageUrl = await uploadImage(file, imageType);
+    if (imageUrl) {
+      setFormData(prev => ({
+        ...prev,
+        [imageType]: imageUrl
+      }));
+      toast.success('Image uploaded successfully');
+    }
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return 'Not set';
     const date = new Date(dateString);
