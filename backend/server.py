@@ -371,29 +371,55 @@ async def bulk_upload_contacts(
                     failed_imports.append(row_number)
                     continue
                 
-                # Parse dates
+                # Parse dates with flexible format support
                 birthday_date = None
                 anniversary_date = None
                 
                 if birthday:
                     try:
                         if isinstance(birthday, str):
-                            birthday_date = pd.to_datetime(birthday).date()
+                            birthday = birthday.strip()
+                            # Try DD-MM format first (without year)
+                            if re.match(r'^\d{1,2}-\d{1,2}$', birthday):
+                                day, month = birthday.split('-')
+                                # Use current year as default for birthday without year
+                                current_year = dt.now().year
+                                birthday_date = dt(current_year, int(month), int(day)).date()
+                            # Try DD-MM-YYYY format
+                            elif re.match(r'^\d{1,2}-\d{1,2}-\d{4}$', birthday):
+                                day, month, year = birthday.split('-')
+                                birthday_date = dt(int(year), int(month), int(day)).date()
+                            else:
+                                # Fallback to pandas parsing for other formats
+                                birthday_date = pd.to_datetime(birthday).date()
                         else:
                             birthday_date = birthday.date() if hasattr(birthday, 'date') else birthday
                     except Exception as e:
-                        errors.append(f"Row {row_number}: Invalid birthday date format - {str(e)}")
+                        errors.append(f"Row {row_number}: Invalid birthday date format. Use DD-MM or DD-MM-YYYY format")
                         failed_imports.append(row_number)
                         continue
                 
                 if anniversary:
                     try:
                         if isinstance(anniversary, str):
-                            anniversary_date = pd.to_datetime(anniversary).date()
+                            anniversary = anniversary.strip()
+                            # Try DD-MM format first (without year)
+                            if re.match(r'^\d{1,2}-\d{1,2}$', anniversary):
+                                day, month = anniversary.split('-')
+                                # Use current year as default for anniversary without year
+                                current_year = dt.now().year
+                                anniversary_date = dt(current_year, int(month), int(day)).date()
+                            # Try DD-MM-YYYY format
+                            elif re.match(r'^\d{1,2}-\d{1,2}-\d{4}$', anniversary):
+                                day, month, year = anniversary.split('-')
+                                anniversary_date = dt(int(year), int(month), int(day)).date()
+                            else:
+                                # Fallback to pandas parsing for other formats
+                                anniversary_date = pd.to_datetime(anniversary).date()
                         else:
                             anniversary_date = anniversary.date() if hasattr(anniversary, 'date') else anniversary
                     except Exception as e:
-                        errors.append(f"Row {row_number}: Invalid anniversary date format - {str(e)}")
+                        errors.append(f"Row {row_number}: Invalid anniversary date format. Use DD-MM or DD-MM-YYYY format")
                         failed_imports.append(row_number)
                         continue
                 
