@@ -1083,39 +1083,77 @@ async def update_user_settings(settings_data: UserSettingsCreate, current_user: 
 async def test_whatsapp_config(current_user: User = Depends(get_current_user)):
     settings = await db.user_settings.find_one({"user_id": current_user.id})
     
-    if not settings or not settings.get("whatsapp_phone_number_id") or not settings.get("whatsapp_access_token"):
-        raise HTTPException(status_code=400, detail="WhatsApp configuration not found")
+    if not settings:
+        raise HTTPException(status_code=400, detail="Settings not found")
     
-    # Test WhatsApp API configuration
+    whatsapp_provider = settings.get("whatsapp_provider", "facebook")
+    
     try:
         import requests
         
-        phone_number_id = settings["whatsapp_phone_number_id"]
-        access_token = settings["whatsapp_access_token"]
-        
-        url = f"https://graph.facebook.com/v21.0/{phone_number_id}/messages"
-        headers = {
-            "Authorization": f"Bearer {access_token}",
-            "Content-Type": "application/json"
-        }
-        
-        # Test message payload
-        payload = {
-            "messaging_product": "whatsapp",
-            "to": "1234567890",  # Test number (won't actually send)
-            "type": "text",
-            "text": {
-                "body": "Test configuration - This is a test message to verify WhatsApp API setup."
+        if whatsapp_provider == "facebook":
+            # Test Facebook Graph API
+            phone_number_id = settings.get("whatsapp_phone_number_id")
+            access_token = settings.get("whatsapp_access_token")
+            
+            if not phone_number_id or not access_token:
+                return {"status": "error", "message": "Facebook WhatsApp configuration incomplete"}
+            
+            url = f"https://graph.facebook.com/v21.0/{phone_number_id}/messages"
+            headers = {
+                "Authorization": f"Bearer {access_token}",
+                "Content-Type": "application/json"
             }
-        }
+            
+            # Test message payload
+            payload = {
+                "messaging_product": "whatsapp",
+                "to": "1234567890",  # Test number (won't actually send)
+                "type": "text",
+                "text": {
+                    "body": "Test configuration - Facebook WhatsApp API"
+                }
+            }
+            
+            response = requests.post(url, json=payload, headers=headers)
+            
+            if response.status_code in [200, 400]:  # 400 might be invalid number, but credentials are valid
+                return {"status": "success", "message": "Facebook WhatsApp API configuration is valid", "provider": "facebook"}
+            else:
+                return {"status": "error", "message": f"Facebook WhatsApp API test failed: {response.text}"}
+                
+        elif whatsapp_provider == "digitalsms":
+            # Test DigitalSMS API
+            api_key = settings.get("digitalsms_api_key")
+            
+            if not api_key:
+                return {"status": "error", "message": "DigitalSMS API key not configured"}
+            
+            url = "https://demo.digitalsms.biz/api/"
+            params = {
+                "apikey": api_key,
+                "mobile": "1234567890",  # Test number
+                "msg": "Test configuration - DigitalSMS WhatsApp API"
+            }
+            
+            # Make test request
+            response = requests.get(url, params=params)
+            
+            # DigitalSMS might return different status codes for success
+            if response.status_code == 200:
+                response_text = response.text.lower()
+                # Common success indicators for SMS APIs
+                if "success" in response_text or "sent" in response_text or "ok" in response_text:
+                    return {"status": "success", "message": "DigitalSMS API configuration is valid", "provider": "digitalsms"}
+                elif "invalid" in response_text or "error" in response_text:
+                    return {"status": "error", "message": f"DigitalSMS API test failed: {response.text}"}
+                else:
+                    return {"status": "success", "message": "DigitalSMS API responded successfully", "provider": "digitalsms"}
+            else:
+                return {"status": "error", "message": f"DigitalSMS API test failed: HTTP {response.status_code}"}
         
-        # Make a test request (this will likely fail with invalid number, but will validate credentials)
-        response = requests.post(url, json=payload, headers=headers)
-        
-        if response.status_code in [200, 400]:  # 400 might be invalid number, but credentials are valid
-            return {"status": "success", "message": "WhatsApp API configuration is valid"}
         else:
-            return {"status": "error", "message": f"WhatsApp API test failed: {response.text}"}
+            return {"status": "error", "message": f"Unknown WhatsApp provider: {whatsapp_provider}"}
             
     except Exception as e:
         return {"status": "error", "message": f"WhatsApp API test error: {str(e)}"}
