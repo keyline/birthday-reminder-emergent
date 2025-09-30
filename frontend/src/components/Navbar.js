@@ -158,9 +158,11 @@ const Navbar = () => {
                   <DropdownMenuSeparator />
                 </div>
                 
-                <DropdownMenuItem className="cursor-pointer">
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
+                <DropdownMenuItem asChild>
+                  <Link to="/settings" className="flex items-center cursor-pointer">
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem 
                   className="cursor-pointer text-red-600 focus:text-red-600" 
