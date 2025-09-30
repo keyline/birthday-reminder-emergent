@@ -114,6 +114,32 @@ class BulkUploadResponse(BaseModel):
     errors: List[str]
     imported_contacts: List[Contact]
 
+class UserSettingsCreate(BaseModel):
+    whatsapp_phone_number_id: Optional[str] = None
+    whatsapp_access_token: Optional[str] = None
+    email_api_key: Optional[str] = None
+    sender_email: Optional[str] = None
+    sender_name: Optional[str] = None
+    daily_send_time: Optional[str] = "09:00"  # HH:MM format
+    timezone: Optional[str] = "UTC"
+    execution_report_enabled: bool = True
+    execution_report_email: Optional[str] = None
+
+class UserSettings(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    whatsapp_phone_number_id: Optional[str] = None
+    whatsapp_access_token: Optional[str] = None
+    email_api_key: Optional[str] = None
+    sender_email: Optional[str] = None
+    sender_name: Optional[str] = None
+    daily_send_time: str = "09:00"
+    timezone: str = "UTC"
+    execution_report_enabled: bool = True
+    execution_report_email: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str
