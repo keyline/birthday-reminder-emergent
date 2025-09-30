@@ -74,6 +74,9 @@ class ContactCreate(BaseModel):
     whatsapp: Optional[str] = None
     birthday: Optional[date] = None
     anniversary_date: Optional[date] = None
+    message_tone: str = "normal"
+    whatsapp_image: Optional[str] = None
+    email_image: Optional[str] = None
 
 class Contact(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
