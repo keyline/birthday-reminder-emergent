@@ -370,9 +370,15 @@ const TemplatesPage = () => {
                         {formData.whatsapp_image_url && (
                           <div className="flex items-center space-x-2">
                             <img 
-                              src={`${BACKEND_URL}${formData.whatsapp_image_url}`} 
+                              src={formData.whatsapp_image_url.startsWith('http') 
+                                ? formData.whatsapp_image_url 
+                                : `${BACKEND_URL}${formData.whatsapp_image_url}`} 
                               alt="WhatsApp default" 
                               className="w-8 h-8 rounded object-cover border"
+                              onError={(e) => {
+                                console.error('WhatsApp image failed to load:', formData.whatsapp_image_url);
+                                console.error('Constructed URL:', e.target.src);
+                              }}
                             />
                             <Button
                               type="button"
