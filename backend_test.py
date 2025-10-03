@@ -2595,11 +2595,11 @@ class BirthdayReminderAPITester:
         
         # Test preventing admin from deleting themselves
         self_delete_result = self.run_test("Admin Self-Delete Prevention", "DELETE", f"admin/users/{self.admin_user_id}", 400)
-        if self_delete_result is not None:  # Should fail with 400
+        if self_delete_result is None:  # Should fail with 400, so result should be None
+            self.log_test("Self-Delete Prevention", True, "Admin self-deletion properly prevented")
+        else:
             self.log_test("Self-Delete Prevention", False, "Admin should not be able to delete themselves")
             success = False
-        else:
-            self.log_test("Self-Delete Prevention", True, "Admin self-deletion properly prevented")
         
         # Test 8: User Deletion with Data Cleanup
         print("\n   Testing User Deletion...")
