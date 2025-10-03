@@ -169,14 +169,7 @@ class BulkUploadResponse(BaseModel):
     imported_contacts: List[Contact]
 
 class UserSettingsCreate(BaseModel):
-    # WhatsApp API Provider Selection
-    whatsapp_provider: Optional[str] = "facebook"  # "facebook" or "digitalsms"
-    
-    # Facebook Graph API (existing)
-    whatsapp_phone_number_id: Optional[str] = None
-    whatsapp_access_token: Optional[str] = None
-    
-    # DigitalSMS API (new)
+    # DigitalSMS API
     digitalsms_api_key: Optional[str] = None
     
     # Email settings
