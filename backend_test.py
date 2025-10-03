@@ -3358,8 +3358,67 @@ class BirthdayReminderAPITester:
 
 def main():
     tester = BirthdayReminderAPITester()
-    # Run template image tests specifically for this review request
-    return tester.run_template_image_tests()
+    
+    # Check if specific test is requested
+    if len(sys.argv) > 1:
+        test_name = sys.argv[1]
+        if test_name == "admin":
+            # Run only enhanced admin panel tests
+            print("👑 Starting Enhanced Admin Panel Tests...")
+            print(f"Testing against: {tester.base_url}")
+            print("=" * 60)
+            
+            # Setup user for testing
+            if tester.test_user_registration():
+                # Run enhanced admin panel tests
+                success = tester.test_enhanced_admin_panel()
+                
+                # Print results
+                total_tests = tester.tests_run
+                passed_tests = tester.tests_passed
+                print("=" * 60)
+                print(f"📊 Enhanced Admin Panel Test Results: {passed_tests}/{total_tests} tests passed")
+                print(f"Success Rate: {(passed_tests/total_tests)*100:.1f}%")
+                
+                if passed_tests == total_tests:
+                    print("🎉 All enhanced admin panel tests passed!")
+                    return 0
+                else:
+                    print("⚠️ Some enhanced admin panel tests failed!")
+                    return 1
+        elif test_name == "template_image":
+            # Run template image tests specifically for this review request
+            return tester.run_template_image_tests()
+        else:
+            print(f"Unknown test: {test_name}")
+            return 1
+    else:
+        # Run enhanced admin panel tests by default for this review request
+        print("👑 Starting Enhanced Admin Panel Tests...")
+        print(f"Testing against: {tester.base_url}")
+        print("=" * 60)
+        
+        # Setup user for testing
+        if tester.test_user_registration():
+            # Run enhanced admin panel tests
+            success = tester.test_enhanced_admin_panel()
+            
+            # Print results
+            total_tests = tester.tests_run
+            passed_tests = tester.tests_passed
+            print("=" * 60)
+            print(f"📊 Enhanced Admin Panel Test Results: {passed_tests}/{total_tests} tests passed")
+            print(f"Success Rate: {(passed_tests/total_tests)*100:.1f}%")
+            
+            if passed_tests == total_tests:
+                print("🎉 All enhanced admin panel tests passed!")
+                return 0
+            else:
+                print("⚠️ Some enhanced admin panel tests failed!")
+                return 1
+        else:
+            print("❌ Failed to setup test user")
+            return 1
 
 if __name__ == "__main__":
     sys.exit(main())
