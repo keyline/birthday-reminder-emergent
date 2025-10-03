@@ -479,7 +479,7 @@ const SettingsPage = () => {
                     <div className="flex items-center space-x-3">
                       <Button
                         onClick={testWhatsAppConfig}
-                        disabled={testingWhatsApp || !settings.digitalsms_api_key}
+                        disabled={testingWhatsApp || !settings.digitalsms_api_key || !settings.whatsapp_sender_number}
                         variant="outline"
                         size="sm"
                         data-testid="test-whatsapp-button"
