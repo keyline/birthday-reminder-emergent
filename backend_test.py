@@ -591,6 +591,13 @@ class BirthdayReminderAPITester:
         self.test_generate_message()
         self.test_dashboard_stats()
         
+        # Custom Message tests (NEW)
+        print("\n🔧 Testing Custom Message Functionality...")
+        self.test_custom_message_crud()
+        self.test_send_test_message()
+        self.test_custom_message_error_handling()
+        self.test_custom_message_integration()
+        
         # Admin tests
         self.test_admin_functionality()
         
