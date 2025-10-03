@@ -2428,54 +2428,55 @@ async def get_reminder_logs(
     return [ReminderLog(**parse_from_mongo(log)) for log in logs]
 
 # Enhanced Admin User Management
-@api_router.get("/admin/users")
-async def get_all_users(admin_user: User = Depends(get_admin_user)):
-    """Get all users for admin management"""
-    
-    users = await db.users.find({}).to_list(1000)
-    
-    user_list = []
-    for user in users:
-        user = parse_from_mongo(user)
-        # Don't include password hash in response
-        user.pop("password_hash", None)
-        
-        # Get user's contact count
-        contact_count = await db.contacts.count_documents({"user_id": user["id"]})
-        user["contact_count"] = contact_count
-        
-        # Get user's template count
-        template_count = await db.templates.count_documents({"user_id": user["id"]})
-        user["template_count"] = template_count
-        
-        # Get message usage statistics
-        user_messages = await db.reminder_logs.aggregate([
-            {"$match": {"errors": {"$not": {"$regex": f"user {user['email']}", "$options": "i"}}}},
-            {"$group": {
-                "_id": None,
-                "total_whatsapp": {"$sum": "$whatsapp_sent"},
-                "total_email": {"$sum": "$email_sent"}
-            }}
-        ]).to_list(1)
-        
-        if user_messages:
-            user["total_whatsapp_sent"] = user_messages[0].get("total_whatsapp", 0)
-            user["total_email_sent"] = user_messages[0].get("total_email", 0)
-        else:
-            user["total_whatsapp_sent"] = 0
-            user["total_email_sent"] = 0
-        
-        user_list.append(user)
-    
-    return user_list
+# OLD ADMIN ENDPOINTS - COMMENTED OUT (replaced by new separate admin system)
+# @api_router.get("/admin/users")
+# async def get_all_users_old(admin_user: User = Depends(get_admin_user)):
+#     """Get all users for admin management - OLD ENDPOINT"""
+#     
+#     users = await db.users.find({}).to_list(1000)
+#     
+#     user_list = []
+#     for user in users:
+#         user = parse_from_mongo(user)
+#         # Don't include password hash in response
+#         user.pop("password_hash", None)
+#         
+#         # Get user's contact count
+#         contact_count = await db.contacts.count_documents({"user_id": user["id"]})
+#         user["contact_count"] = contact_count
+#         
+#         # Get user's template count
+#         template_count = await db.templates.count_documents({"user_id": user["id"]})
+#         user["template_count"] = template_count
+#         
+#         # Get message usage statistics
+#         user_messages = await db.reminder_logs.aggregate([
+#             {"$match": {"errors": {"$not": {"$regex": f"user {user['email']}", "$options": "i"}}}},
+#             {"$group": {
+#                 "_id": None,
+#                 "total_whatsapp": {"$sum": "$whatsapp_sent"},
+#                 "total_email": {"$sum": "$email_sent"}
+#             }}
+#         ]).to_list(1)
+#         
+#         if user_messages:
+#             user["total_whatsapp_sent"] = user_messages[0].get("total_whatsapp", 0)
+#             user["total_email_sent"] = user_messages[0].get("total_email", 0)
+#         else:
+#             user["total_whatsapp_sent"] = 0
+#             user["total_email_sent"] = 0
+#         
+#         user_list.append(user)
+#     
+#     return user_list
 
-@api_router.put("/admin/users/{user_id}")
-async def update_user_by_admin(
-    user_id: str, 
-    update_data: dict,
-    admin_user: User = Depends(get_admin_user)
-):
-    """Update any user's information as admin"""
+# @api_router.put("/admin/users/{user_id}")
+# async def update_user_by_admin_old(
+#     user_id: str, 
+#     update_data: dict,
+#     admin_user: User = Depends(get_admin_user)
+# ):
+#     """Update any user's information as admin - OLD ENDPOINT"""
     
     # Validate user exists
     target_user = await db.users.find_one({"id": user_id})
