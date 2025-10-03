@@ -2737,7 +2737,11 @@ class BirthdayReminderAPITester:
         self.test_daily_reminder_error_handling()
         self.test_daily_reminder_integration()
         
-        # Admin tests
+        # Enhanced Admin Panel tests (NEW - Review Request)
+        print("\n👑 Testing Enhanced Admin Panel...")
+        self.test_enhanced_admin_panel()
+        
+        # Admin tests (legacy)
         self.test_admin_functionality()
         
         # Error handling tests
