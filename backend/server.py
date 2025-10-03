@@ -1831,6 +1831,465 @@ logger = logging.getLogger(__name__)
 async def shutdown_db_client():
     client.close()
 
+# Daily Reminder System
+async def get_contact_message_for_reminder(user_id: str, contact_id: str, occasion: str):
+    """Get appropriate message and image for reminder with hierarchy logic"""
+    
+    # Get template defaults for fallback images
+    whatsapp_template = await db.templates.find_one({
+        "user_id": user_id,
+        "type": "whatsapp",
+        "is_default": True
+    })
+    
+    email_template = await db.templates.find_one({
+        "user_id": user_id,
+        "type": "email", 
+        "is_default": True
+    })
+    
+    # Get contact info
+    contact = await db.contacts.find_one({"id": contact_id, "user_id": user_id})
+    if not contact:
+        return None
+    
+    contact = parse_from_mongo(contact)
+    
+    # Get custom messages
+    whatsapp_message_data = await db.custom_messages.find_one({
+        "user_id": user_id,
+        "contact_id": contact_id,
+        "occasion": occasion,
+        "message_type": "whatsapp"
+    })
+    
+    email_message_data = await db.custom_messages.find_one({
+        "user_id": user_id,
+        "contact_id": contact_id,
+        "occasion": occasion,
+        "message_type": "email"
+    })
+    
+    # Generate WhatsApp message and image
+    if whatsapp_message_data:
+        whatsapp_message = whatsapp_message_data["custom_message"]
+        whatsapp_image = (
+            whatsapp_message_data.get("image_url") or 
+            contact.get("whatsapp_image") or
+            (whatsapp_template.get("whatsapp_image_url") if whatsapp_template else None)
+        )
+    else:
+        # Generate AI message
+        try:
+            # Get user for AI generation
+            user = await db.users.find_one({"id": user_id})
+            if user:
+                user = User(**parse_from_mongo(user))
+                message_request = GenerateMessageRequest(
+                    contact_name=contact["name"],
+                    occasion=occasion,
+                    relationship="friend",
+                    tone=contact.get("message_tone", "normal")
+                )
+                ai_message = await generate_message(message_request, user)
+                whatsapp_message = ai_message.message
+            else:
+                whatsapp_message = f"Happy {occasion}, {contact['name']}! 🎉"
+        except:
+            whatsapp_message = f"Happy {occasion}, {contact['name']}! 🎉"
+        
+        whatsapp_image = (
+            contact.get("whatsapp_image") or
+            (whatsapp_template.get("whatsapp_image_url") if whatsapp_template else None)
+        )
+    
+    # Generate Email message and image
+    if email_message_data:
+        email_message = email_message_data["custom_message"]
+        email_image = (
+            email_message_data.get("image_url") or
+            contact.get("email_image") or
+            (email_template.get("email_image_url") if email_template else None)
+        )
+    else:
+        # Generate AI message
+        try:
+            # Get user for AI generation
+            user = await db.users.find_one({"id": user_id})
+            if user:
+                user = User(**parse_from_mongo(user))
+                message_request = GenerateMessageRequest(
+                    contact_name=contact["name"],
+                    occasion=occasion,
+                    relationship="friend",
+                    tone=contact.get("message_tone", "normal")
+                )
+                ai_message = await generate_message(message_request, user)
+                email_message = ai_message.message
+            else:
+                email_message = f"Happy {occasion}, {contact['name']}! 🎉"
+        except:
+            email_message = f"Happy {occasion}, {contact['name']}! 🎉"
+        
+        email_image = (
+            contact.get("email_image") or
+            (email_template.get("email_image_url") if email_template else None)
+        )
+    
+    return {
+        "whatsapp_message": whatsapp_message,
+        "whatsapp_image": whatsapp_image,
+        "email_message": email_message,
+        "email_image": email_image,
+        "contact": contact
+    }
+
+async def send_email_reminder(user_id: str, contact: dict, occasion: str, message: str, image_url: Optional[str] = None):
+    """Send email reminder using Brevo API"""
+    
+    settings = await db.user_settings.find_one({"user_id": user_id})
+    if not settings:
+        return {"status": "error", "message": "Email settings not found"}
+    
+    api_key = settings.get("email_api_key")
+    sender_email = settings.get("sender_email")
+    sender_name = settings.get("sender_name", "ReminderAI")
+    
+    if not api_key or not sender_email:
+        return {"status": "error", "message": "Email configuration incomplete"}
+    
+    try:
+        import requests
+        
+        url = "https://api.brevo.com/v3/smtp/email"
+        headers = {
+            "api-key": api_key,
+            "Content-Type": "application/json"
+        }
+        
+        # Create HTML email content
+        html_content = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h2 style="color: #e11d48; border-bottom: 2px solid #e11d48; padding-bottom: 10px;">
+                    🎉 {occasion.title()} Reminder
+                </h2>
+                <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <div style="background-color: white; padding: 15px; border-radius: 6px; border-left: 4px solid #e11d48;">
+                        {message}
+                    </div>
+                    {f'<img src="{image_url}" style="max-width: 100%; height: auto; margin-top: 15px; border-radius: 6px;" alt="Celebration Image">' if image_url else ''}
+                </div>
+                <p style="font-size: 14px; color: #6b7280; margin-top: 30px;">
+                    Sent with ❤️ by ReminderAI
+                </p>
+            </div>
+        </body>
+        </html>
+        """
+        
+        payload = {
+            "sender": {
+                "name": sender_name,
+                "email": sender_email
+            },
+            "to": [
+                {
+                    "email": contact["email"],
+                    "name": contact["name"]
+                }
+            ],
+            "subject": f"🎉 {contact['name']}'s {occasion.title()} Reminder",
+            "htmlContent": html_content
+        }
+        
+        response = requests.post(url, json=payload, headers=headers)
+        
+        if response.status_code == 201:
+            return {"status": "success", "message": "Email sent successfully"}
+        else:
+            return {"status": "error", "message": f"Email API error: {response.text}"}
+            
+    except Exception as e:
+        return {"status": "error", "message": f"Email sending error: {str(e)}"}
+
+async def send_reminder_messages(user: dict, contact: dict, occasion: str, results: dict):
+    """Send WhatsApp and Email reminders for a contact"""
+    try:
+        # Get messages with image hierarchy
+        message_data = await get_contact_message_for_reminder(user["id"], contact["id"], occasion)
+        if not message_data:
+            results["errors"].append(f"Could not generate message for {contact['name']}")
+            return
+        
+        # Send WhatsApp if configured and credits available
+        if (contact.get("whatsapp") and 
+            user.get("whatsapp_credits", 0) > 0 and
+            not user.get("unlimited_whatsapp", False)):
+            
+            whatsapp_result = await send_whatsapp_message(
+                user_id=user["id"],
+                phone_number=contact["whatsapp"],
+                message=message_data["whatsapp_message"],
+                image_url=message_data["whatsapp_image"]
+            )
+            
+            if whatsapp_result["status"] == "success":
+                results["whatsapp_sent"] += 1
+                results["messages_sent"] += 1
+                # Deduct credit if not unlimited
+                if not user.get("unlimited_whatsapp", False):
+                    await db.users.update_one(
+                        {"id": user["id"]},
+                        {"$inc": {"whatsapp_credits": -1}}
+                    )
+            else:
+                results["errors"].append(f"WhatsApp failed for {contact['name']}: {whatsapp_result['message']}")
+        
+        # Send WhatsApp if unlimited credits
+        elif (contact.get("whatsapp") and user.get("unlimited_whatsapp", False)):
+            whatsapp_result = await send_whatsapp_message(
+                user_id=user["id"],
+                phone_number=contact["whatsapp"],
+                message=message_data["whatsapp_message"],
+                image_url=message_data["whatsapp_image"]
+            )
+            
+            if whatsapp_result["status"] == "success":
+                results["whatsapp_sent"] += 1
+                results["messages_sent"] += 1
+            else:
+                results["errors"].append(f"WhatsApp failed for {contact['name']}: {whatsapp_result['message']}")
+        
+        # Send Email if configured and credits available
+        if (contact.get("email") and 
+            user.get("email_credits", 0) > 0 and
+            not user.get("unlimited_email", False)):
+            
+            email_result = await send_email_reminder(
+                user_id=user["id"],
+                contact=contact,
+                occasion=occasion,
+                message=message_data["email_message"],
+                image_url=message_data["email_image"]
+            )
+            
+            if email_result["status"] == "success":
+                results["email_sent"] += 1  
+                results["messages_sent"] += 1
+                # Deduct credit if not unlimited
+                if not user.get("unlimited_email", False):
+                    await db.users.update_one(
+                        {"id": user["id"]},
+                        {"$inc": {"email_credits": -1}}
+                    )
+            else:
+                results["errors"].append(f"Email failed for {contact['name']}: {email_result['message']}")
+        
+        # Send Email if unlimited credits
+        elif (contact.get("email") and user.get("unlimited_email", False)):
+            email_result = await send_email_reminder(
+                user_id=user["id"],
+                contact=contact,
+                occasion=occasion,
+                message=message_data["email_message"],
+                image_url=message_data["email_image"]
+            )
+            
+            if email_result["status"] == "success":
+                results["email_sent"] += 1
+                results["messages_sent"] += 1
+            else:
+                results["errors"].append(f"Email failed for {contact['name']}: {email_result['message']}")
+                
+    except Exception as e:
+        results["errors"].append(f"Error processing {contact['name']}: {str(e)}")
+
+@api_router.post("/system/daily-reminders")
+async def process_daily_reminders():
+    """Process all daily birthday/anniversary reminders - Internal system endpoint"""
+    
+    execution_time = datetime.now(timezone.utc)
+    today = execution_time.date()
+    
+    results = {
+        "execution_time": execution_time.isoformat(),
+        "date": today.isoformat(),
+        "total_users": 0,
+        "messages_sent": 0,
+        "whatsapp_sent": 0,
+        "email_sent": 0,
+        "errors": []
+    }
+    
+    try:
+        # Get all users with active subscriptions
+        users = await db.users.find({
+            "subscription_status": {"$in": ["active", "trial"]}
+        }).to_list(1000)
+        
+        for user in users:
+            user = parse_from_mongo(user)
+            user_id = user["id"]
+            results["total_users"] += 1
+            
+            try:
+                # Get user settings for send time and timezone
+                settings = await db.user_settings.find_one({"user_id": user_id})
+                if not settings:
+                    continue
+                    
+                user_timezone = settings.get("timezone", "UTC")
+                daily_send_time = settings.get("daily_send_time", "09:00")
+                
+                # Convert to user's timezone and check if it's time to send
+                try:
+                    user_tz = pytz.timezone(user_timezone)
+                    user_now = execution_time.astimezone(user_tz)
+                    
+                    send_hour, send_minute = map(int, daily_send_time.split(":"))
+                    
+                    # Check if current time is within 15-minute window of user's preferred send time
+                    current_minutes = user_now.hour * 60 + user_now.minute
+                    target_minutes = send_hour * 60 + send_minute
+                    
+                    # Allow 15-minute window (since cron runs every 15 minutes)
+                    if abs(current_minutes - target_minutes) > 15:
+                        continue
+                        
+                except Exception as tz_error:
+                    results["errors"].append(f"Timezone error for user {user['email']}: {str(tz_error)}")
+                    continue
+                
+                # Get contacts for this user
+                contacts = await db.contacts.find({"user_id": user_id}).to_list(1000)
+                
+                for contact in contacts:
+                    contact = parse_from_mongo(contact)
+                    
+                    # Check birthday
+                    if contact.get("birthday"):
+                        try:
+                            birthday = datetime.fromisoformat(contact["birthday"]).date()
+                            if birthday.month == today.month and birthday.day == today.day:
+                                await send_reminder_messages(user, contact, "birthday", results)
+                        except Exception as bd_error:
+                            results["errors"].append(f"Birthday parsing error for {contact['name']}: {str(bd_error)}")
+                    
+                    # Check anniversary
+                    if contact.get("anniversary_date"):
+                        try:
+                            anniversary = datetime.fromisoformat(contact["anniversary_date"]).date()
+                            if anniversary.month == today.month and anniversary.day == today.day:
+                                await send_reminder_messages(user, contact, "anniversary", results)
+                        except Exception as ann_error:
+                            results["errors"].append(f"Anniversary parsing error for {contact['name']}: {str(ann_error)}")
+                            
+            except Exception as user_error:
+                results["errors"].append(f"Error processing user {user.get('email', user_id)}: {str(user_error)}")
+        
+        # Log execution results
+        log_entry = ReminderLog(
+            date=today.isoformat(),
+            execution_time=execution_time,
+            total_users=results["total_users"],
+            messages_sent=results["messages_sent"],
+            whatsapp_sent=results["whatsapp_sent"],
+            email_sent=results["email_sent"],
+            errors=results["errors"]
+        )
+        
+        await db.reminder_logs.insert_one(prepare_for_mongo(log_entry.dict()))
+        
+        return results
+        
+    except Exception as e:
+        results["errors"].append(f"System error: {str(e)}")
+        
+        # Still try to log the execution
+        try:
+            log_entry = ReminderLog(
+                date=today.isoformat(),
+                execution_time=execution_time,
+                total_users=results["total_users"],
+                messages_sent=results["messages_sent"],
+                whatsapp_sent=results["whatsapp_sent"],
+                email_sent=results["email_sent"],
+                errors=results["errors"]
+            )
+            await db.reminder_logs.insert_one(prepare_for_mongo(log_entry.dict()))
+        except:
+            pass
+            
+        return results
+
+@api_router.get("/admin/reminder-stats", response_model=DailyReminderStats)
+async def get_reminder_stats(
+    date: Optional[str] = None, 
+    admin_user: User = Depends(get_admin_user)
+):
+    """Get daily reminder execution statistics for admin dashboard"""
+    
+    if not date:
+        date = datetime.now(timezone.utc).date().isoformat()
+    
+    # Get execution logs for the specified date
+    logs = await db.reminder_logs.find({
+        "date": date
+    }).to_list(100)
+    
+    if not logs:
+        return DailyReminderStats(
+            date=date,
+            total_executions=0,
+            total_users_processed=0,
+            total_messages_sent=0,
+            whatsapp_messages=0,
+            email_messages=0,
+            errors=[]
+        )
+    
+    # Aggregate statistics
+    total_users = sum(log.get("total_users", 0) for log in logs)
+    total_messages = sum(log.get("messages_sent", 0) for log in logs)
+    whatsapp_messages = sum(log.get("whatsapp_sent", 0) for log in logs)
+    email_messages = sum(log.get("email_sent", 0) for log in logs)
+    all_errors = []
+    
+    for log in logs:
+        if log.get("errors"):
+            all_errors.extend(log["errors"])
+    
+    return DailyReminderStats(
+        date=date,
+        total_executions=len(logs),
+        total_users_processed=total_users,
+        total_messages_sent=total_messages,
+        whatsapp_messages=whatsapp_messages,
+        email_messages=email_messages,
+        errors=all_errors
+    )
+
+@api_router.get("/admin/reminder-logs")
+async def get_reminder_logs(
+    days: int = 7,
+    admin_user: User = Depends(get_admin_user)
+):
+    """Get reminder execution logs for the past N days"""
+    
+    end_date = datetime.now(timezone.utc).date()
+    start_date = end_date - timedelta(days=days)
+    
+    logs = await db.reminder_logs.find({
+        "date": {
+            "$gte": start_date.isoformat(),
+            "$lte": end_date.isoformat()
+        }
+    }).sort("date", -1).to_list(days * 24)  # Max entries per day
+    
+    return [ReminderLog(**parse_from_mongo(log)) for log in logs]
+
 # Health check
 @api_router.get("/health")
 async def health_check():
