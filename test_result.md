@@ -173,6 +173,30 @@
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
+  
+- task: "User Profile Update Backend API"
+  implemented: true
+  working: "NA"  
+  file: "server.py"
+  stuck_count: 0
+  priority: "high"
+  needs_retesting: true
+  status_history:
+      - working: false
+      - agent: "main" 
+      - comment: "Added PUT /api/user/profile endpoint and GET /api/user/profile endpoint with validation"
+
+- task: "User Profile Edit Frontend"
+  implemented: true
+  working: "NA"
+  file: "SettingsPage.js" 
+  stuck_count: 0
+  priority: "high"
+  needs_retesting: true
+  status_history:
+      - working: false
+      - agent: "main"
+      - comment: "Added editable profile form in Account tab with name, email, phone fields and validation"
 
 ## agent_communication:
     - agent: "main"
