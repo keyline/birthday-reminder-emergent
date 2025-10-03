@@ -37,9 +37,6 @@ const API = `${BACKEND_URL}/api`;
 const SettingsPage = () => {
   const { user } = useAuth();
   const [settings, setSettings] = useState({
-    whatsapp_provider: 'facebook',
-    whatsapp_phone_number_id: '',
-    whatsapp_access_token: '',
     digitalsms_api_key: '',
     email_api_key: '',
     sender_email: '',
