@@ -79,6 +79,18 @@ const ContactsPage = () => {
   const [customMessage, setCustomMessage] = useState('');
   const [generatingAIMessage, setGeneratingAIMessage] = useState(false);
   const [sendingTestMessage, setSendingTestMessage] = useState(false);
+  
+  // New state for message editing
+  const [messageEditDialogOpen, setMessageEditDialogOpen] = useState(false);
+  const [editingMessage, setEditingMessage] = useState({
+    contact: null,
+    messageType: '', // 'whatsapp' or 'email'
+    occasion: '', // 'birthday' or 'anniversary'
+    message: '',
+    imageUrl: null,
+    isDefault: true
+  });
+  const [availableOccasions, setAvailableOccasions] = useState([]);
 
   useEffect(() => {
     fetchContacts();
