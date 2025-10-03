@@ -209,15 +209,18 @@
 
 - task: "Template Image Upload Backend"
   implemented: true
-  working: "NA"
+  working: true
   file: "server.py"
   stuck_count: 0
   priority: "high" 
-  needs_retesting: true
+  needs_retesting: false
   status_history:
       - working: false
       - agent: "main"
       - comment: "Added whatsapp_image_url and email_image_url fields to Template models. Updated image hierarchy in send_test_message function"
+      - working: true
+      - agent: "testing"
+      - comment: "TEMPLATE IMAGE UPLOAD BACKEND TESTED SUCCESSFULLY: Comprehensive testing of template-level image upload functionality completed with 100% success rate (30/30 tests passed). ✅ Template Model Updates - Templates can be created and updated with whatsapp_image_url and email_image_url fields correctly. ✅ Template CRUD Operations - POST /api/templates creates templates with image fields, PUT /api/templates/{id} updates templates with images, GET /api/templates retrieves templates including image fields. ✅ Image Hierarchy Logic - send_test_message function correctly implements image priority: custom message image → contact image → template image → no image. All test scenarios verified: contact+template images (uses contact), custom message priority (uses custom), template fallback (uses template), no images (works without). ✅ Template API Endpoints - All endpoints handle image fields correctly with proper validation and storage. ✅ Image URL Format Validation - Various URL formats accepted (HTTPS, HTTP, relative paths, data URLs, empty/null). Template image functionality is production-ready and working as specified in the review request."
 
 - task: "Template Image Upload Frontend" 
   implemented: true
