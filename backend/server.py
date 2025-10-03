@@ -352,7 +352,6 @@ async def get_current_admin(credentials: HTTPAuthorizationCredentials = Depends(
 
 def generate_math_captcha():
     """Generate a simple math captcha"""
-    import random
     num1 = random.randint(1, 10)
     num2 = random.randint(1, 10)
     captcha_id = str(uuid.uuid4())
