@@ -1449,7 +1449,17 @@ async def send_whatsapp_message(user_id: str, phone_number: str, message: str, i
                 if status == 1:
                     return {"status": "success", "message": f"Message sent successfully. Response: {message_text}"}
                 else:
-                    return {"status": "error", "message": f"DigitalSMS API error (Code: {statuscode}): {message_text} | Debug: {debug_params}"}
+                    # Provide specific error messages for common issues
+                    if statuscode == 403:
+                        error_msg = "Invalid or expired DigitalSMS API key. Please check your API key in Settings."
+                    elif statuscode == 407:
+                        error_msg = "Proxy authentication error. Please check your DigitalSMS API configuration."
+                    elif statuscode == 400:
+                        error_msg = "Invalid request format. Please check phone number and message content."
+                    else:
+                        error_msg = f"DigitalSMS API error (Code: {statuscode}): {message_text}"
+                    
+                    return {"status": "error", "message": error_msg}
                     
             except json.JSONDecodeError:
                 # Fallback to text response parsing
