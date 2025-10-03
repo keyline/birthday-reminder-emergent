@@ -1178,47 +1178,65 @@ async def update_user_settings(settings_data: UserSettingsCreate, current_user: 
 
 @api_router.post("/settings/test-whatsapp")
 async def test_whatsapp_config(current_user: User = Depends(get_current_user)):
+    """Send actual test WhatsApp message to user's phone number"""
     settings = await db.user_settings.find_one({"user_id": current_user.id})
     
     if not settings:
-        raise HTTPException(status_code=400, detail="Settings not found")
+        return {"status": "error", "message": "WhatsApp settings not found"}
+    
+    # Check if required configuration is present
+    api_key = settings.get("digitalsms_api_key")
+    sender_number = settings.get("whatsapp_sender_number")
+    
+    if not api_key:
+        return {"status": "error", "message": "DigitalSMS API key not configured"}
+    
+    if not sender_number:
+        return {"status": "error", "message": "WhatsApp sender phone number not configured"}
+    
+    # Get user's phone number from profile
+    user = await db.users.find_one({"id": current_user.id})
+    if not user:
+        return {"status": "error", "message": "User profile not found"}
+    
+    user_phone = user.get("phone_number")
+    if not user_phone:
+        return {"status": "error", "message": "Please add your phone number in Account settings to receive test messages"}
+    
+    # Validate user's phone number format
+    if len(user_phone) != 10 or not user_phone.isdigit() or user_phone[0] not in ['6', '7', '8', '9']:
+        return {"status": "error", "message": "Invalid phone number in your profile. Please update it in Account settings"}
     
     try:
-        import requests
+        # Send actual test message using our WhatsApp function
+        test_message = f"🧪 WhatsApp Test from ReminderAI\n\n✅ Your DigitalSMS API configuration is working perfectly!\n\nAPI Key: {api_key[:8]}...\nSender Number: {sender_number}\nTest sent at: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')} UTC\n\n🎉 You're all set to send birthday and anniversary reminders!"
         
-        # Test DigitalSMS API
-        api_key = settings.get("digitalsms_api_key")
+        result = await send_whatsapp_message(
+            user_id=current_user.id,
+            phone_number=user_phone,
+            message=test_message
+        )
         
-        if not api_key:
-            return {"status": "error", "message": "DigitalSMS API key not configured"}
-        
-        url = "https://demo.digitalsms.biz/api/"
-        params = {
-            "apikey": api_key,
-            "mobile": "1234567890",  # Test mobile number (won't actually send)
-            "msg": "Test configuration from ReminderAI - Your DigitalSMS API is working correctly!"
-        }
-        
-        # Make test request
-        response = requests.get(url, params=params)
-        
-        # DigitalSMS API response handling
-        if response.status_code == 200:
-            response_text = response.text.strip()
-            
-            # Check for success indicators
-            if any(indicator in response_text.lower() for indicator in ["success", "sent", "ok", "delivered", "queued"]):
-                return {"status": "success", "message": f"DigitalSMS API is valid. Response: {response_text}", "provider": "digitalsms"}
-            elif any(error in response_text.lower() for error in ["invalid", "error", "fail", "unauthorized", "forbidden"]):
-                return {"status": "error", "message": f"DigitalSMS API test failed: {response_text}"}
-            else:
-                # If we get a response but can't determine success/failure, assume it's working
-                return {"status": "success", "message": f"DigitalSMS API responded: {response_text}", "provider": "digitalsms"}
+        if result["status"] == "success":
+            return {
+                "status": "success", 
+                "message": f"Test message sent successfully to {user_phone}! Check your WhatsApp.",
+                "provider": "digitalsms",
+                "details": {
+                    "recipient": user_phone,
+                    "sender": sender_number,
+                    "api_response": result["message"]
+                }
+            }
         else:
-            return {"status": "error", "message": f"DigitalSMS API HTTP error {response.status_code}: {response.text}"}
+            return {
+                "status": "error", 
+                "message": f"Failed to send test message: {result['message']}",
+                "provider": "digitalsms"
+            }
             
     except Exception as e:
-        return {"status": "error", "message": f"WhatsApp API test error: {str(e)}"}
+        return {"status": "error", "message": f"WhatsApp test error: {str(e)}"}
 
 @api_router.post("/settings/test-email")
 async def test_email_config(current_user: User = Depends(get_current_user)):
