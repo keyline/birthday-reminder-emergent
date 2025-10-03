@@ -984,43 +984,7 @@ async def get_admin_dashboard(admin_user: User = Depends(get_admin_user)):
         churn_rate=churn_rate
     )
 
-@api_router.get("/admin/users", response_model=List[UserStats])
-async def get_all_users_with_stats(admin_user: User = Depends(get_admin_user)):
-    users = await db.users.find().to_list(1000)
-    user_stats = []
-    
-    for user in users:
-        user = parse_from_mongo(user)
-        user_id = user['id']
-        
-        # Get user's contact and template counts
-        contacts_count = await db.contacts.count_documents({"user_id": user_id})
-        templates_count = await db.templates.count_documents({"user_id": user_id})
-        
-        # Calculate total usage (contacts + templates)
-        total_usage = contacts_count + templates_count
-        
-        user_stats.append(UserStats(
-            id=user_id,
-            email=user['email'],
-            full_name=user['full_name'],
-            subscription_status=user.get('subscription_status', 'trial'),
-            subscription_expires=user.get('subscription_expires'),
-            is_admin=user.get('is_admin', False),
-            created_at=user['created_at'],
-            contacts_count=contacts_count,
-            templates_count=templates_count,
-            last_login=user.get('last_login'),
-            total_usage=total_usage,
-            whatsapp_credits=user.get('whatsapp_credits', 0),
-            email_credits=user.get('email_credits', 0),
-            unlimited_whatsapp=user.get('unlimited_whatsapp', False),
-            unlimited_email=user.get('unlimited_email', False)
-        ))
-    
-    # Sort by total usage descending
-    user_stats.sort(key=lambda x: x.total_usage, reverse=True)
-    return user_stats
+# Duplicate endpoint removed - using enhanced version below
 
 @api_router.put("/admin/users/{user_id}/subscription")
 async def update_user_subscription(user_id: str, subscription_status: str, admin_user: User = Depends(get_admin_user)):
