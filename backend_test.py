@@ -2106,6 +2106,10 @@ class BirthdayReminderAPITester:
         self.test_image_hierarchy_logic()
         self.test_template_image_api_endpoints()
         
+        # WhatsApp Image Handling Fix tests (NEW - Review Request)
+        print("\n📱 Testing WhatsApp Image Handling Fix...")
+        self.test_whatsapp_image_handling_fix()
+        
         # Daily Reminder System tests (NEW - Review Request)
         print("\n⏰ Testing Daily Reminder System...")
         self.test_daily_reminder_main_processing()
