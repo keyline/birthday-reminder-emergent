@@ -2084,7 +2084,8 @@ async def send_reminder_messages(user: dict, contact: dict, occasion: str, resul
                 user_id=user["id"],
                 phone_number=contact["whatsapp"],
                 message=message_data["whatsapp_message"],
-                image_url=message_data["whatsapp_image"]
+                image_url=message_data["whatsapp_image"],
+                occasion=occasion
             )
             
             if whatsapp_result["status"] == "success":
