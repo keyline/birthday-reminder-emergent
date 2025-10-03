@@ -1423,8 +1423,16 @@ async def send_whatsapp_message(user_id: str, phone_number: str, message: str, i
                     pass
         # If no valid image, don't include img1 parameter (send text-only message)
         
+        # Log request details for debugging (remove img1 from logs for brevity)
+        debug_params = {k: v for k, v in params.items() if k != "img1"}
+        debug_params["has_image"] = "img1" in params
+        print(f"DigitalSMS API Request - URL: {url}, Params: {debug_params}")
+        
         # Make API request (GET method as per documentation)
         response = requests.get(url, params=params, timeout=30)
+        
+        # Log response for debugging
+        print(f"DigitalSMS API Response - Status: {response.status_code}, Body: {response.text[:200]}...")
         
         if response.status_code == 200:
             try:
@@ -1437,7 +1445,7 @@ async def send_whatsapp_message(user_id: str, phone_number: str, message: str, i
                 if status == 1:
                     return {"status": "success", "message": f"Message sent successfully. Response: {message_text}"}
                 else:
-                    return {"status": "error", "message": f"DigitalSMS API error (Code: {statuscode}): {message_text}"}
+                    return {"status": "error", "message": f"DigitalSMS API error (Code: {statuscode}): {message_text} | Debug: {debug_params}"}
                     
             except json.JSONDecodeError:
                 # Fallback to text response parsing
@@ -1447,12 +1455,12 @@ async def send_whatsapp_message(user_id: str, phone_number: str, message: str, i
                 if any(indicator in response_text.lower() for indicator in ["success", "sent", "ok", "delivered", "queued"]):
                     return {"status": "success", "message": f"Message sent via DigitalSMS API. Response: {response_text}"}
                 elif any(error in response_text.lower() for error in ["invalid", "error", "fail", "unauthorized", "forbidden", "insufficient"]):
-                    return {"status": "error", "message": f"DigitalSMS API error: {response_text}"}
+                    return {"status": "error", "message": f"DigitalSMS API error: {response_text} | Debug: {debug_params}"}
                 else:
                     # If response is unclear, assume success if HTTP 200
                     return {"status": "success", "message": f"Message sent via DigitalSMS API. Server response: {response_text}"}
         else:
-            return {"status": "error", "message": f"DigitalSMS API HTTP error {response.status_code}: {response.text}"}
+            return {"status": "error", "message": f"DigitalSMS API HTTP error {response.status_code}: {response.text} | Debug: {debug_params}"}
             
     except Exception as e:
         return {"status": "error", "message": f"WhatsApp sending error: {str(e)}"}
