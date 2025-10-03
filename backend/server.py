@@ -2341,6 +2341,55 @@ async def get_reminder_logs(
     
     return [ReminderLog(**parse_from_mongo(log)) for log in logs]
 
+# Admin Setup Route (for initial setup only)
+@api_router.post("/setup-admin")
+async def setup_admin_user():
+    """Setup john@example.com as super admin - for initial setup only"""
+    
+    admin_email = "john@example.com"
+    admin_password = "admin123"
+    
+    # Check if admin already exists
+    existing_admin = await db.users.find_one({"email": admin_email})
+    
+    if existing_admin:
+        # Update existing user to be admin
+        await db.users.update_one(
+            {"email": admin_email},
+            {
+                "$set": {
+                    "is_admin": True,
+                    "unlimited_whatsapp": True,
+                    "unlimited_email": True,
+                    "whatsapp_credits": 99999,
+                    "email_credits": 99999,
+                    "subscription_status": "active"
+                }
+            }
+        )
+        return {"message": "Existing user updated with super admin privileges", "email": admin_email}
+    else:
+        # Create new admin user
+        hashed_password = hash_password(admin_password)
+        admin_user = User(
+            email=admin_email,
+            full_name="Super Admin",
+            phone_number=None,
+            is_admin=True,
+            subscription_status="active",
+            whatsapp_credits=99999,
+            email_credits=99999,
+            unlimited_whatsapp=True,
+            unlimited_email=True
+        )
+        
+        admin_dict = admin_user.dict()
+        admin_dict["password_hash"] = hashed_password
+        admin_dict = prepare_for_mongo(admin_dict)
+        
+        await db.users.insert_one(admin_dict)
+        return {"message": "Super admin user created successfully", "email": admin_email, "password": admin_password}
+
 # Health check
 @api_router.get("/health")
 async def health_check():
