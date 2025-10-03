@@ -92,8 +92,8 @@ const AdminPage = () => {
     setUpdatingUser(userId);
     
     try {
-      const response = await axios.put(`${API}/admin/users/${userId}/subscription`, null, {
-        params: { subscription_status: newStatus }
+      const response = await axios.put(`${API}/admin/users/${userId}`, {
+        subscription_status: newStatus
       });
       
       toast.success(`User subscription updated to ${newStatus}!`);
