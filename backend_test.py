@@ -883,6 +883,9 @@ class BirthdayReminderAPITester:
         # User Profile tests (NEW)
         self.test_user_profile_functionality()
         
+        # Enhanced Indian Phone Number Validation tests (FOCUSED)
+        self.test_indian_phone_number_validation()
+        
         # Admin tests
         self.test_admin_functionality()
         
