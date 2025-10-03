@@ -207,6 +207,30 @@
       - agent: "main"
       - comment: "Added editable profile form in Account tab with name, email, phone fields and validation"
 
+- task: "Template Image Upload Backend"
+  implemented: true
+  working: "NA"
+  file: "server.py"
+  stuck_count: 0
+  priority: "high" 
+  needs_retesting: true
+  status_history:
+      - working: false
+      - agent: "main"
+      - comment: "Added whatsapp_image_url and email_image_url fields to Template models. Updated image hierarchy in send_test_message function"
+
+- task: "Template Image Upload Frontend" 
+  implemented: true
+  working: "NA"
+  file: "TemplatesPage.js"
+  stuck_count: 0
+  priority: "high"
+  needs_retesting: true
+  status_history:
+      - working: false
+      - agent: "main"
+      - comment: "Added image upload functionality to template creation/editing form. Added image indicators to template cards showing default images"
+
 - task: "DigitalSMS WhatsApp API Integration"
   implemented: true
   working: true
