@@ -627,16 +627,14 @@ class BirthdayReminderAPITester:
                                 f"Should have been rejected but got: {result}")
                     success = False
         
-        # Test null phone number explicitly
+        # Test null phone number explicitly - this should fail with 400 (no valid fields to update)
         null_phone_update = {"phone_number": None}
-        result = self.run_test("Null Phone Number", "PUT", "user/profile", 200, null_phone_update)
-        if not result:
-            success = False
-        elif result.get('phone_number') is not None:
-            self.log_test("Verify Null Phone", False, f"Null phone should remain None: {result.get('phone_number')}")
-            success = False
+        result = self.run_test("Null Phone Number", "PUT", "user/profile", 400, null_phone_update)
+        if result is None:  # Should fail with 400
+            self.log_test("Verify Null Phone Rejection", True, "Null phone correctly rejected (no valid fields)")
         else:
-            self.log_test("Verify Null Phone", True, "Null phone number handled correctly")
+            self.log_test("Verify Null Phone Rejection", False, f"Should have been rejected but got: {result}")
+            success = False
         
         return success
 
