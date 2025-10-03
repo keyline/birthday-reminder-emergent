@@ -76,25 +76,68 @@ const LoginPage = () => {
     <div className="min-h-screen flex">
       {/* Left side - Hero Section */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-rose-500 via-pink-500 to-orange-400 relative overflow-hidden">
-        <div className="absolute inset-0 bg-black/20" />
+        <div className="absolute inset-0 bg-black/30" />
         
-        {/* Floating elements */}
+        {/* Celebration Images Banner */}
+        <div className="absolute inset-0 flex">
+          {/* Birthday Balloons */}
+          <div className="absolute top-0 right-0 w-48 h-48 opacity-20">
+            <img 
+              src="https://images.unsplash.com/photo-1530103862676-de8c9debad1d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njl8MHwxfHNlYXJjaHwxfHxiaXJ0aGRheSUyMGNlbGVicmF0aW9ufGVufDB8fHx8MTc1OTQ4ODk0Nnww&ixlib=rb-4.1.0&q=85&w=400&h=400&fit=crop" 
+              alt="Birthday celebration" 
+              className="w-full h-full object-cover rounded-full"
+            />
+          </div>
+          
+          {/* Birthday Cake */}
+          <div className="absolute top-20 left-0 w-40 h-40 opacity-25">
+            <img 
+              src="https://images.unsplash.com/photo-1729870526122-0de9a7113dc6?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njl8MHwxfHNlYXJjaHwyfHxiaXJ0aGRheSUyMGNlbGVicmF0aW9ufGVufDB8fHx8MTc1OTQ4ODk0Nnww&ixlib=rb-4.1.0&q=85&w=400&h=400&fit=crop" 
+              alt="Birthday cake" 
+              className="w-full h-full object-cover rounded-2xl"
+            />
+          </div>
+          
+          {/* Anniversary Balloons */}
+          <div className="absolute bottom-10 right-10 w-32 h-32 opacity-20">
+            <img 
+              src="https://images.unsplash.com/photo-1599073499036-dc27fc297dc9?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NjZ8MHwxfHNlYXJjaHwyfHxhbm5pdmVyc2FyeSUyMGNlbGVicmF0aW9ufGVufDB8fHx8MTc1OTQ4ODk1MXww&ixlib=rb-4.1.0&q=85&w=400&h=400&fit=crop" 
+              alt="Anniversary celebration" 
+              className="w-full h-full object-cover rounded-full"
+            />
+          </div>
+        </div>
+        
+        {/* Floating Icon Elements */}
         <div className="absolute top-20 left-20 animate-float">
-          <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-            <Heart className="w-8 h-8 text-white" />
+          <div className="w-16 h-16 bg-white/30 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/20">
+            <Heart className="w-8 h-8 text-white drop-shadow-lg" />
           </div>
         </div>
         
         <div className="absolute top-40 right-32 animate-float" style={{ animationDelay: '1s' }}>
-          <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-            <Calendar className="w-6 h-6 text-white" />
+          <div className="w-12 h-12 bg-white/30 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/20">
+            <Calendar className="w-6 h-6 text-white drop-shadow-lg" />
           </div>
         </div>
         
         <div className="absolute bottom-40 left-32 animate-float" style={{ animationDelay: '2s' }}>
-          <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-            <Sparkles className="w-7 h-7 text-white" />
+          <div className="w-14 h-14 bg-white/30 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/20">
+            <Sparkles className="w-7 h-7 text-white drop-shadow-lg" />
           </div>
+        </div>
+        
+        {/* Additional Celebration Elements */}
+        <div className="absolute top-32 right-48 animate-bounce" style={{ animationDelay: '0.5s' }}>
+          <div className="text-4xl">🎉</div>
+        </div>
+        
+        <div className="absolute bottom-32 left-48 animate-bounce" style={{ animationDelay: '1.5s' }}>
+          <div className="text-3xl">🎂</div>
+        </div>
+        
+        <div className="absolute top-52 left-16 animate-bounce" style={{ animationDelay: '2.5s' }}>
+          <div className="text-3xl">💕</div>
         </div>
         
         <div className="relative z-10 flex flex-col justify-center items-start p-16 text-white">
