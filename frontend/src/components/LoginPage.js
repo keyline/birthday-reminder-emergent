@@ -128,16 +128,24 @@ const LoginPage = () => {
         </div>
         
         {/* Additional Celebration Elements */}
-        <div className="absolute top-32 right-48 animate-bounce" style={{ animationDelay: '0.5s' }}>
-          <div className="text-4xl">🎉</div>
+        <div className="absolute top-32 right-48 celebrate-bounce" style={{ animationDelay: '0.5s' }}>
+          <div className="text-4xl drop-shadow-lg">🎉</div>
         </div>
         
-        <div className="absolute bottom-32 left-48 animate-bounce" style={{ animationDelay: '1.5s' }}>
-          <div className="text-3xl">🎂</div>
+        <div className="absolute bottom-32 left-48 celebrate-bounce" style={{ animationDelay: '1.5s' }}>
+          <div className="text-3xl drop-shadow-lg">🎂</div>
         </div>
         
-        <div className="absolute top-52 left-16 animate-bounce" style={{ animationDelay: '2.5s' }}>
-          <div className="text-3xl">💕</div>
+        <div className="absolute top-52 left-16 celebrate-bounce" style={{ animationDelay: '2.5s' }}>
+          <div className="text-3xl drop-shadow-lg">💕</div>
+        </div>
+        
+        <div className="absolute top-48 right-20 sparkle-effect" style={{ animationDelay: '3s' }}>
+          <div className="text-2xl drop-shadow-lg">✨</div>
+        </div>
+        
+        <div className="absolute bottom-48 left-20 sparkle-effect" style={{ animationDelay: '4s' }}>
+          <div className="text-2xl drop-shadow-lg">🎈</div>
         </div>
         
         <div className="relative z-20 flex flex-col justify-center items-start p-16 text-white">
