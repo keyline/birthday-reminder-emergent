@@ -149,13 +149,20 @@ function App() {
               element={user ? <TemplatesPage /> : <Navigate to="/login" />}
             />
             <Route
-              path="/admin"
-              element={user?.is_admin ? <AdminPage /> : <Navigate to="/dashboard" />}
-            />
-            <Route
               path="/settings"
               element={user ? <SettingsPage /> : <Navigate to="/login" />}
             />
+            
+            {/* Separate Admin Routes */}
+            <Route
+              path="/admin/login"
+              element={<AdminLoginPage />}
+            />
+            <Route
+              path="/admin/dashboard"
+              element={<AdminDashboard />}
+            />
+            
             <Route
               path="/"
               element={<Navigate to={user ? "/dashboard" : "/login"} />}
