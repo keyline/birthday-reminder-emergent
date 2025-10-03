@@ -139,6 +139,28 @@ class CustomMessageRequest(BaseModel):
 class MessageResponse(BaseModel):
     message: str
 
+class CustomMessage(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    contact_id: str
+    occasion: str  # "birthday" or "anniversary"
+    message_type: str  # "whatsapp" or "email"
+    custom_message: str
+    image_url: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class CustomMessageCreate(BaseModel):
+    contact_id: str
+    occasion: str
+    message_type: str
+    custom_message: str
+    image_url: Optional[str] = None
+
+class TestMessageRequest(BaseModel):
+    contact_id: str
+    occasion: str
+
 class BulkUploadResponse(BaseModel):
     total_rows: int
     successful_imports: int
