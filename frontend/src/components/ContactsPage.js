@@ -440,6 +440,182 @@ const ContactsPage = () => {
     return events.sort((a, b) => a.days - b.days);
   };
 
+  // Message editing handlers
+  const handleMessageEdit = (contact, messageType) => {
+    // Determine available occasions for this contact
+    const occasions = [];
+    if (contact.birthday) occasions.push('birthday');
+    if (contact.anniversary_date) occasions.push('anniversary');
+    
+    if (occasions.length === 0) {
+      toast.error('This contact has no birthday or anniversary date set');
+      return;
+    }
+    
+    setAvailableOccasions(occasions);
+    setEditingMessage({
+      contact: contact,
+      messageType: messageType,
+      occasion: occasions[0], // Default to first available occasion
+      message: '',
+      imageUrl: null,
+      isDefault: true
+    });
+    setMessageEditDialogOpen(true);
+    
+    // Load existing custom message or generate default
+    loadCustomMessage(contact.id, occasions[0], messageType);
+  };
+
+  const loadCustomMessage = async (contactId, occasion, messageType) => {
+    try {
+      const response = await axios.get(`${API}/custom-messages/${contactId}/${occasion}/${messageType}`);
+      setEditingMessage(prev => ({
+        ...prev,
+        message: response.data.custom_message,
+        imageUrl: response.data.image_url,
+        isDefault: response.data.is_default || false
+      }));
+    } catch (error) {
+      console.error('Error loading custom message:', error);
+      toast.error('Failed to load message');
+    }
+  };
+
+  const handleRegenerateMessage = async () => {
+    if (!editingMessage.contact) return;
+    
+    setGeneratingAIMessage(true);
+    try {
+      const response = await axios.post(`${API}/generate-message`, {
+        contact_name: editingMessage.contact.name,
+        occasion: editingMessage.occasion,
+        relationship: 'friend',
+        tone: editingMessage.contact.message_tone || 'normal'
+      });
+      
+      setEditingMessage(prev => ({
+        ...prev,
+        message: response.data.message,
+        isDefault: false
+      }));
+      
+      toast.success('New message generated!');
+    } catch (error) {
+      console.error('Error generating message:', error);
+      toast.error('Failed to generate message');
+    } finally {
+      setGeneratingAIMessage(false);
+    }
+  };
+
+  const handleSaveCustomMessage = async () => {
+    if (!editingMessage.contact || !editingMessage.message.trim()) {
+      toast.error('Message cannot be empty');
+      return;
+    }
+    
+    try {
+      await axios.post(`${API}/custom-messages`, {
+        contact_id: editingMessage.contact.id,
+        occasion: editingMessage.occasion,
+        message_type: editingMessage.messageType,
+        custom_message: editingMessage.message,
+        image_url: editingMessage.imageUrl
+      });
+      
+      toast.success('Message saved successfully!');
+      setMessageEditDialogOpen(false);
+    } catch (error) {
+      console.error('Error saving message:', error);
+      toast.error('Failed to save message');
+    }
+  };
+
+  const handleSendTest = async (contact) => {
+    // Determine available occasions for this contact
+    const occasions = [];
+    if (contact.birthday) occasions.push('birthday');
+    if (contact.anniversary_date) occasions.push('anniversary');
+    
+    if (occasions.length === 0) {
+      toast.error('This contact has no birthday or anniversary date set');
+      return;
+    }
+    
+    setSendingTestMessage(true);
+    try {
+      const response = await axios.post(`${API}/send-test-message`, {
+        contact_id: contact.id,
+        occasion: occasions[0] // Use first available occasion
+      });
+      
+      const results = response.data.results;
+      let successCount = 0;
+      let messages = [];
+      
+      if (results.whatsapp?.status === 'success') {
+        successCount++;
+        messages.push('✅ WhatsApp test sent');
+      } else if (results.whatsapp?.status === 'error') {
+        messages.push(`❌ WhatsApp: ${results.whatsapp.message}`);
+      }
+      
+      if (results.email?.status === 'success') {
+        successCount++;
+        messages.push('✅ Email test sent');
+      } else if (results.email?.status === 'error') {
+        messages.push(`❌ Email: ${results.email.message}`);
+      }
+      
+      if (successCount > 0) {
+        toast.success(`Test messages sent for ${contact.name}!`, {
+          description: messages.join('\n'),
+          duration: 5000
+        });
+      } else {
+        toast.error('Failed to send test messages', {
+          description: messages.join('\n'),
+          duration: 8000
+        });
+      }
+    } catch (error) {
+      console.error('Error sending test messages:', error);
+      toast.error('Failed to send test messages');
+    } finally {
+      setSendingTestMessage(false);
+    }
+  };
+
+  const handleMessageImageUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await axios.post(`${API}/upload-image`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      setEditingMessage(prev => ({
+        ...prev,
+        imageUrl: response.data.image_url
+      }));
+      
+      toast.success('Image uploaded successfully');
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error('Failed to upload image');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   const filteredContacts = contacts.filter(contact =>
     contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (contact.email && contact.email.toLowerCase().includes(searchTerm.toLowerCase()))
