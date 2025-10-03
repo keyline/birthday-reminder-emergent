@@ -140,16 +140,25 @@ const LoginPage = () => {
           <div className="text-3xl">💕</div>
         </div>
         
-        <div className="relative z-10 flex flex-col justify-center items-start p-16 text-white">
-          <h1 className="text-5xl font-bold mb-6 leading-tight">
+        <div className="relative z-20 flex flex-col justify-center items-start p-16 text-white">
+          <div className="mb-4">
+            <span className="inline-flex items-center px-4 py-2 bg-white/20 rounded-full text-sm font-medium backdrop-blur-sm border border-white/30">
+              <Sparkles className="w-4 h-4 mr-2" />
+              Celebrate Every Special Day
+            </span>
+          </div>
+          
+          <h1 className="text-6xl font-bold mb-6 leading-tight">
             Never Miss A
-            <span className="block gradient-text bg-gradient-to-r from-yellow-200 to-white bg-clip-text text-transparent">
-              Special Moment
+            <span className="block gradient-text bg-gradient-to-r from-yellow-200 via-orange-200 to-white bg-clip-text text-transparent drop-shadow-lg">
+              Special Moment 🎉
             </span>
           </h1>
           
-          <p className="text-xl mb-8 text-white/90 max-w-md leading-relaxed">
-            Automatically send personalized birthday and anniversary messages to your loved ones with AI-powered customization.
+          <p className="text-xl mb-8 text-white/95 max-w-md leading-relaxed font-light">
+            Transform birthdays and anniversaries into unforgettable celebrations with 
+            <span className="font-semibold text-yellow-200"> AI-powered personalized messages</span> 
+            sent automatically via WhatsApp & Email.
           </p>
           
           <div className="space-y-4">
