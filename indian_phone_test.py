@@ -191,8 +191,8 @@ class IndianPhoneValidationTester:
             ("   ", 200, None, "Whitespace only"),
             
             # Very long numbers with valid prefixes
-            ("+919876543210123", 400, "Very long with +91"),
-            ("919876543210123", 400, "Very long with 91"),
+            ("+919876543210123", 400, None, "Very long with +91"),
+            ("919876543210123", 400, None, "Very long with 91"),
         ]
         
         for phone, expected_status, expected_cleaned, description in edge_tests:
