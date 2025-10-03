@@ -2454,6 +2454,7 @@ class BirthdayReminderAPITester:
             # Verify response structure
             if isinstance(users_result, list) and len(users_result) > 0:
                 first_user = users_result[0]
+                print(f"   First user fields: {list(first_user.keys())}")
                 expected_fields = ['id', 'email', 'full_name', 'contact_count', 'template_count']
                 missing_fields = [field for field in expected_fields if field not in first_user]
                 if missing_fields:
