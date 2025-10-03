@@ -106,28 +106,28 @@
 
 ## backend:
   - task: "Custom Message Model and APIs"
-    implemented: false
+    implemented: true
     working: "NA"
     file: "server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: false
         - agent: "main"
-        - comment: "Need to add CustomMessage model and CRUD endpoints for storing contact-specific messages"
+        - comment: "Added CustomMessage model, CustomMessageCreate, and CRUD endpoints for storing contact-specific messages"
   
   - task: "Test Message Sending API"
-    implemented: false
+    implemented: true
     working: "NA"
     file: "server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: false
         - agent: "main"
-        - comment: "Need to add endpoint to send test messages to user's own contact info"
+        - comment: "Added /send-test-message endpoint to send test messages to user's contact info via WhatsApp and Email"
 
 ## frontend:
   - task: "Contact List Icons (WhatsApp, Email, Test)"
