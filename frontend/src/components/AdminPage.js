@@ -61,6 +61,16 @@ const AdminPage = () => {
     unlimited_whatsapp: false,
     unlimited_email: false
   });
+  
+  // User credential management state
+  const [isUserEditDialogOpen, setIsUserEditDialogOpen] = useState(false);
+  const [selectedUserForEdit, setSelectedUserForEdit] = useState(null);
+  const [userEditForm, setUserEditForm] = useState({
+    full_name: '',
+    email: '',
+    phone_number: '',
+    password: ''
+  });
 
   useEffect(() => {
     Promise.all([fetchDashboardStats(), fetchUsers()]);
