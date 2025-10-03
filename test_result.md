@@ -107,27 +107,33 @@
 ## backend:
   - task: "Custom Message Model and APIs"
     implemented: true
-    working: "NA"
+    working: true
     file: "server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: false
         - agent: "main"
         - comment: "Added CustomMessage model, CustomMessageCreate, and CRUD endpoints for storing contact-specific messages"
+        - working: true
+        - agent: "testing"
+        - comment: "TESTED SUCCESSFULLY: All CRUD operations working perfectly. POST /api/custom-messages creates/updates messages, GET /api/custom-messages/{contact_id} retrieves all messages, GET /api/custom-messages/{contact_id}/{occasion}/{message_type} gets specific message or AI-generated default, DELETE /api/custom-messages/{contact_id}/{occasion}/{message_type} removes messages. Integration with contacts and AI message generation working correctly. Error handling for invalid contact IDs working properly."
   
   - task: "Test Message Sending API"
     implemented: true
-    working: "NA"
+    working: true
     file: "server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: false
         - agent: "main"
         - comment: "Added /send-test-message endpoint to send test messages to user's contact info via WhatsApp and Email"
+        - working: true
+        - agent: "testing"
+        - comment: "TESTED SUCCESSFULLY: POST /api/send-test-message endpoint working correctly. Accepts contact_id and occasion, retrieves custom messages or generates AI defaults, attempts to send via WhatsApp and Email APIs. Returns proper status for both channels. WhatsApp/Email show 'error' status as expected since APIs not configured in test environment, but endpoint logic and response structure are correct."
 
 ## frontend:
   - task: "Contact List Icons (WhatsApp, Email, Test)"
