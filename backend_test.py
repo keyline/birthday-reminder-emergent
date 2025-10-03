@@ -617,13 +617,13 @@ class BirthdayReminderAPITester:
                     self.log_test(f"Verify Edge Case Result: {test_case['description']}", True, 
                                 f"Correctly handled: {test_case['expected']}")
             else:
-                if result is None:  # Should fail with expected status
-                    self.log_test(f"Verify Edge Case Rejection: {test_case['description']}", True, 
-                                "Correctly rejected")
-                else:
+                if result is not None:  # Should fail
                     self.log_test(f"Verify Edge Case Rejection: {test_case['description']}", False, 
                                 f"Should have been rejected but got: {result}")
                     success = False
+                else:
+                    self.log_test(f"Verify Edge Case Rejection: {test_case['description']}", True, 
+                                "Correctly rejected")
         
         # Test null phone number explicitly - this should fail with 400 (no valid fields to update)
         null_phone_update = {"phone_number": None}
