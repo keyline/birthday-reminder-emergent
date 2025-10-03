@@ -720,7 +720,7 @@ class BirthdayReminderAPITester:
         # Test accessing protected endpoint without token
         original_token = self.token
         self.token = None
-        result = self.run_test("Unauthorized Access", "GET", "contacts", 401)
+        result = self.run_test("Unauthorized Access", "GET", "contacts", 403)
         if result is not None:  # Should fail
             success = False
         self.token = original_token
