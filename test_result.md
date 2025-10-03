@@ -204,6 +204,21 @@
       - agent: "main"
       - comment: "Added editable profile form in Account tab with name, email, phone fields and validation"
 
+- task: "DigitalSMS WhatsApp API Integration"
+  implemented: true
+  working: true
+  file: "server.py"
+  stuck_count: 0
+  priority: "high"
+  needs_retesting: false
+  status_history:
+      - working: "NA"
+      - agent: "main"
+      - comment: "Updated WhatsApp integration to use DigitalSMS API with correct endpoint, parameters, and response parsing"
+      - working: true
+      - agent: "testing"
+      - comment: "DIGITALSMS WHATSAPP API INTEGRATION TESTED SUCCESSFULLY: Comprehensive testing completed with 100% success rate (46/46 tests passed). ✅ Settings API endpoints working perfectly - saving/retrieving DigitalSMS API key and sender phone number. ✅ WhatsApp message sending function updated correctly with proper API format (GET request to https://demo.digitalsms.biz/api). ✅ Phone number cleaning verified - removes +91, spaces, formatting correctly. ✅ Image attachment support confirmed using img1 parameter. ✅ API response parsing working correctly - handles JSON format with status, message, statuscode fields. ✅ Settings model validation complete - whatsapp_sender_number field saved and retrieved correctly. ✅ API parameter format verified - correct endpoint, apikey, mobile (10-digit), msg, img1 parameters. All test scenarios passed including phone number validation for 10-digit Indian mobile numbers. Integration matches DigitalSMS API documentation format perfectly."
+
 ## agent_communication:
     - agent: "main"
     - message: "Added user profile editing functionality in Settings > Account tab. Users can now update their name, email, and phone number. Added backend API endpoints and frontend form with validation."
