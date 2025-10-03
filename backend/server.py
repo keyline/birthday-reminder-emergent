@@ -2482,39 +2482,39 @@ async def get_reminder_logs(
 #     target_user = await db.users.find_one({"id": user_id})
 #     if not target_user:
 #         raise HTTPException(status_code=404, detail="User not found")
-    
-    # Prepare update fields
-    update_fields = {}
-    
-    # Allow admin to update basic info
-    if "full_name" in update_data:
-        update_fields["full_name"] = update_data["full_name"]
-    
-    if "email" in update_data:
-        # Check if email is already taken by another user
-        existing_user = await db.users.find_one({
-            "email": update_data["email"].lower(),
-            "id": {"$ne": user_id}
-        })
-        if existing_user:
-            raise HTTPException(status_code=400, detail="Email address is already in use")
-        update_fields["email"] = update_data["email"].lower()
-    
-    if "phone_number" in update_data:
-        update_fields["phone_number"] = update_data["phone_number"]
-    
-    # Allow admin to update password
-    if "password" in update_data:
-        hashed_password = hash_password(update_data["password"])
-        update_fields["password_hash"] = hashed_password
-    
-    # Allow admin to update admin status
-    if "is_admin" in update_data:
-        update_fields["is_admin"] = update_data["is_admin"]
-    
-    # Allow admin to update subscription
-    if "subscription_status" in update_data:
-        update_fields["subscription_status"] = update_data["subscription_status"]
+#     
+#     # Prepare update fields
+#     update_fields = {}
+#     
+#     # Allow admin to update basic info
+#     if "full_name" in update_data:
+#         update_fields["full_name"] = update_data["full_name"]
+#     
+#     if "email" in update_data:
+#         # Check if email is already taken by another user
+#         existing_user = await db.users.find_one({
+#             "email": update_data["email"].lower(),
+#             "id": {"$ne": user_id}
+#         })
+#         if existing_user:
+#             raise HTTPException(status_code=400, detail="Email address is already in use")
+#         update_fields["email"] = update_data["email"].lower()
+#     
+#     if "phone_number" in update_data:
+#         update_fields["phone_number"] = update_data["phone_number"]
+#     
+#     # Allow admin to update password
+#     if "password" in update_data:
+#         hashed_password = hash_password(update_data["password"])
+#         update_fields["password_hash"] = hashed_password
+#     
+#     # Allow admin to update admin status
+#     if "is_admin" in update_data:
+#         update_fields["is_admin"] = update_data["is_admin"]
+#     
+#     # Allow admin to update subscription
+#     if "subscription_status" in update_data:
+#         update_fields["subscription_status"] = update_data["subscription_status"]
     
     # Allow admin to update credits
     if "whatsapp_credits" in update_data:
