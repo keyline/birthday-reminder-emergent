@@ -106,6 +106,51 @@ const SettingsPage = () => {
     }
   };
 
+  const fetchProfile = async () => {
+    try {
+      const response = await axios.get(`${API}/user/profile`);
+      setProfileData({
+        full_name: response.data.full_name || '',
+        email: response.data.email || '',
+        phone_number: response.data.phone_number || ''
+      });
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      toast.error('Failed to load profile data');
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    setSavingProfile(true);
+    
+    try {
+      const response = await axios.put(`${API}/user/profile`, {
+        full_name: profileData.full_name.trim(),
+        email: profileData.email.trim(),
+        phone_number: profileData.phone_number.trim() || null
+      });
+      
+      toast.success('Profile updated successfully!');
+      setEditingProfile(false);
+      
+      // Update the user context if possible
+      // Note: This depends on your auth context implementation
+      // You might need to refresh the page or update the auth context
+      
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast.error(error.response?.data?.detail || 'Failed to update profile');
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  const handleCancelProfileEdit = () => {
+    // Reset profile data to original values
+    fetchProfile();
+    setEditingProfile(false);
+  };
+
   const handleSaveSettings = async () => {
     setSaving(true);
     
