@@ -2726,8 +2726,6 @@ async def setup_first_admin():
         raise HTTPException(status_code=400, detail="Admin already exists. Cannot create another admin.")
     
     # Generate random credentials
-    import secrets
-    import string
     username = "admin"
     password = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(12))
     
