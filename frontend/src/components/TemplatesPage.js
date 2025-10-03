@@ -95,7 +95,9 @@ const TemplatesPage = () => {
       type: template.type || 'email',
       subject: template.subject || '',
       content: template.content || '',
-      is_default: template.is_default || false
+      is_default: template.is_default || false,
+      whatsapp_image_url: template.whatsapp_image_url || '',
+      email_image_url: template.email_image_url || ''
     });
     setIsDialogOpen(true);
   };
