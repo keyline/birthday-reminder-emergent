@@ -686,12 +686,15 @@ const TemplatesPage = () => {
                           <MessageCircle className="w-3 h-3 text-green-600" />
                           <span className="text-xs text-green-600 font-medium">WhatsApp</span>
                           <img 
-                            src={`${BACKEND_URL}${template.whatsapp_image_url}`} 
+                            src={template.whatsapp_image_url.startsWith('http') 
+                              ? template.whatsapp_image_url 
+                              : `${BACKEND_URL}${template.whatsapp_image_url}`} 
                             alt="WhatsApp default" 
                             className="w-8 h-8 rounded object-cover border border-green-300"
                             onError={(e) => {
                               e.target.style.display = 'none';
-                              console.log('WhatsApp image failed to load:', template.whatsapp_image_url);
+                              console.error('WhatsApp template image failed to load:', template.whatsapp_image_url);
+                              console.error('Constructed URL:', e.target.src);
                             }}
                           />
                         </div>
@@ -703,12 +706,15 @@ const TemplatesPage = () => {
                           <Mail className="w-3 h-3 text-blue-600" />
                           <span className="text-xs text-blue-600 font-medium">Email</span>
                           <img 
-                            src={`${BACKEND_URL}${template.email_image_url}`} 
+                            src={template.email_image_url.startsWith('http') 
+                              ? template.email_image_url 
+                              : `${BACKEND_URL}${template.email_image_url}`} 
                             alt="Email default" 
                             className="w-8 h-8 rounded object-cover border border-blue-300"
                             onError={(e) => {
                               e.target.style.display = 'none';
-                              console.log('Email image failed to load:', template.email_image_url);
+                              console.error('Email template image failed to load:', template.email_image_url);
+                              console.error('Constructed URL:', e.target.src);
                             }}
                           />
                         </div>
