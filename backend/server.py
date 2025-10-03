@@ -347,8 +347,12 @@ async def get_current_admin(credentials: HTTPAuthorizationCredentials = Depends(
             raise HTTPException(status_code=401, detail="Admin not found")
         
         return AdminUser(**admin)
-    except JWTError:
+    except JWTError as e:
+        print(f"JWT Error in get_current_admin: {str(e)}")
         raise HTTPException(status_code=401, detail="Could not validate admin credentials")
+    except Exception as e:
+        print(f"Error in get_current_admin: {str(e)}")
+        raise HTTPException(status_code=401, detail=f"Authentication error: {str(e)}")
 
 def generate_math_captcha():
     """Generate a simple math captcha"""
