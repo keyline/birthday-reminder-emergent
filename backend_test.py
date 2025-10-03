@@ -1,7 +1,7 @@
 import requests
 import sys
 import json
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 import time
 
 class BirthdayReminderAPITester:
