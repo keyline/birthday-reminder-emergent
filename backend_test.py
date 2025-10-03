@@ -793,6 +793,9 @@ class BirthdayReminderAPITester:
         self.test_custom_message_error_handling()
         self.test_custom_message_integration()
         
+        # User Profile tests (NEW)
+        self.test_user_profile_functionality()
+        
         # Admin tests
         self.test_admin_functionality()
         
