@@ -79,6 +79,7 @@ const SettingsPage = () => {
   useEffect(() => {
     fetchSettings();
     fetchCredits();
+    fetchProfile();
   }, []);
 
   const fetchSettings = async () => {
