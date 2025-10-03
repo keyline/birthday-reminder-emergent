@@ -2757,21 +2757,25 @@ async def setup_first_admin():
         "warning": "Please save these credentials securely. This is the only time the password will be displayed."
     }
 
-@api_router.post("/admin-auth/login", response_model=AdminTokenResponse)
-async def admin_login(login_data: AdminLogin):
+@api_router.post("/admin-auth/login")
+async def admin_login(
+    username: str,
+    password: str,
+    captcha_id: str,
+    captcha_answer: str
+):
     """Admin login with captcha verification"""
-    # Verify captcha
-    if not verify_captcha(login_data.captcha_answer, login_data.captcha_answer):
-        # For math captcha, the answer is directly provided
-        pass  # We'll verify below
+    # Verify captcha first
+    if not verify_captcha(captcha_id, captcha_answer):
+        raise HTTPException(status_code=400, detail="Invalid or expired captcha")
     
     # Find admin by username
-    admin = await db.admins.find_one({"username": login_data.username})
+    admin = await db.admins.find_one({"username": username})
     if not admin:
         raise HTTPException(status_code=401, detail="Invalid username or password")
     
     # Verify password
-    if not verify_password(login_data.password, admin["password_hash"]):
+    if not verify_password(password, admin["password_hash"]):
         raise HTTPException(status_code=401, detail="Invalid username or password")
     
     # Create access token
