@@ -185,6 +185,55 @@ const AdminPage = () => {
     }
   };
 
+  // New user credential management functions
+  const openUserEditDialog = (user) => {
+    setSelectedUserForEdit(user);
+    setUserEditForm({
+      full_name: user.full_name || '',
+      email: user.email || '',
+      phone_number: user.phone_number || '',
+      password: '' // Always empty for security
+    });
+    setIsUserEditDialogOpen(true);
+  };
+
+  const updateUserCredentials = async () => {
+    try {
+      // Only send fields that have values
+      const updateData = {};
+      if (userEditForm.full_name.trim()) updateData.full_name = userEditForm.full_name.trim();
+      if (userEditForm.email.trim()) updateData.email = userEditForm.email.trim();
+      if (userEditForm.phone_number.trim()) updateData.phone_number = userEditForm.phone_number.trim();
+      if (userEditForm.password.trim()) updateData.password = userEditForm.password.trim();
+
+      await axios.put(`${API}/admin/users/${selectedUserForEdit.id}`, updateData);
+      
+      toast.success('User credentials updated successfully!');
+      fetchUsers();
+      setIsUserEditDialogOpen(false);
+      setSelectedUserForEdit(null);
+      setUserEditForm({ full_name: '', email: '', phone_number: '', password: '' });
+    } catch (error) {
+      console.error('Error updating user credentials:', error);
+      toast.error(error.response?.data?.detail || 'Failed to update user credentials');
+    }
+  };
+
+  const deleteUser = async (userId, userEmail) => {
+    if (!window.confirm(`Are you sure you want to delete user ${userEmail}? This will permanently delete all their data.`)) {
+      return;
+    }
+
+    try {
+      await axios.delete(`${API}/admin/users/${userId}`);
+      toast.success(`User ${userEmail} deleted successfully`);
+      fetchUsers();
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast.error(error.response?.data?.detail || 'Failed to delete user');
+    }
+  };
+
   const deleteUser = async (userId, userName) => {
     if (window.confirm(`Are you sure you want to delete ${userName}? This will permanently delete all their data including contacts and templates.`)) {
       try {
