@@ -1264,11 +1264,15 @@ class BirthdayReminderAPITester:
             # Set invalid phone number in user profile - this should fail with 400
             invalid_profile = {"phone_number": phone_test["phone"]}
             profile_result = self.run_test(f"Set Invalid Phone: {phone_test['description']}", "PUT", "user/profile", 400, invalid_profile)
-            # The API returns 400 and our test framework expects None for failures (which means the 400 was correctly returned)
-            if profile_result is None:  # Should fail with 400
-                self.log_test(f"Invalid Phone Rejected at Profile Level: {phone_test['description']}", True, "Profile correctly rejected invalid phone")
+            # When we expect 400 and get 400, run_test returns the error response JSON (not None)
+            # This means the validation worked correctly
+            if profile_result is not None and 'detail' in profile_result:  # Got expected 400 error
+                self.log_test(f"Invalid Phone Rejected at Profile Level: {phone_test['description']}", True, f"Profile correctly rejected: {profile_result.get('detail', '')}")
+            elif profile_result is None:  # Unexpected error
+                self.log_test(f"Invalid Phone Test Error: {phone_test['description']}", False, "Unexpected error during profile update test")
+                success = False
             else:
-                self.log_test(f"Invalid Phone Validation Failed: {phone_test['description']}", False, "Profile should have rejected invalid phone with 400 status")
+                self.log_test(f"Invalid Phone Validation Failed: {phone_test['description']}", False, "Profile should have rejected invalid phone")
                 success = False
         
         # Test Scenario 5: Test with complete settings and valid user phone number (should attempt to send)
