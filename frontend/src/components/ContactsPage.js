@@ -1067,6 +1067,182 @@ const ContactsPage = () => {
             </p>
           </div>
         )}
+        
+        {/* Message Editing Dialog */}
+        <Dialog open={messageEditDialogOpen} onOpenChange={setMessageEditDialogOpen}>
+          <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center">
+                {editingMessage.messageType === 'whatsapp' ? (
+                  <MessageSquare className="w-5 h-5 mr-2 text-green-600" />
+                ) : (
+                  <Mail className="w-5 h-5 mr-2 text-blue-600" />
+                )}
+                Edit {editingMessage.messageType === 'whatsapp' ? 'WhatsApp' : 'Email'} Message
+              </DialogTitle>
+              <DialogDescription>
+                Customize the {editingMessage.occasion} message for {editingMessage.contact?.name}
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-6">
+              {/* Occasion Selection */}
+              {availableOccasions.length > 1 && (
+                <div className="space-y-2">
+                  <Label>Occasion</Label>
+                  <Select 
+                    value={editingMessage.occasion} 
+                    onValueChange={(value) => {
+                      setEditingMessage(prev => ({ ...prev, occasion: value }));
+                      loadCustomMessage(editingMessage.contact.id, value, editingMessage.messageType);
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableOccasions.map(occasion => (
+                        <SelectItem key={occasion} value={occasion}>
+                          {occasion.charAt(0).toUpperCase() + occasion.slice(1)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              
+              {/* Message Input */}
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <Label>Message</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRegenerateMessage}
+                    disabled={generatingAIMessage}
+                    className="text-xs"
+                  >
+                    {generatingAIMessage ? (
+                      <>
+                        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-rose-600 mr-1"></div>
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-3 h-3 mr-1" />
+                        Regenerate with AI
+                      </>
+                    )}
+                  </Button>
+                </div>
+                <Textarea
+                  value={editingMessage.message}
+                  onChange={(e) => setEditingMessage(prev => ({ ...prev, message: e.target.value }))}
+                  placeholder="Enter your custom message..."
+                  rows={6}
+                  className="resize-none"
+                />
+                {editingMessage.isDefault && (
+                  <p className="text-xs text-gray-500">
+                    💡 This is an AI-generated default message. You can edit it or regenerate a new one.
+                  </p>
+                )}
+              </div>
+              
+              {/* Image Upload */}
+              <div className="space-y-2">
+                <Label>Attach Image (Optional)</Label>
+                <div className="flex items-center space-x-4">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleMessageImageUpload}
+                    className="hidden"
+                    id="message-image-upload"
+                    disabled={uploadingImage}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => document.getElementById('message-image-upload').click()}
+                    disabled={uploadingImage}
+                    className="text-sm"
+                  >
+                    {uploadingImage ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-rose-600 mr-2"></div>
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <Image className="w-4 h-4 mr-2" />
+                        {editingMessage.imageUrl ? 'Change Image' : 'Upload Image'}
+                      </>
+                    )}
+                  </Button>
+                  
+                  {editingMessage.imageUrl && (
+                    <div className="flex items-center space-x-2">
+                      <img 
+                        src={`${BACKEND_URL}${editingMessage.imageUrl}`} 
+                        alt="Message attachment" 
+                        className="w-10 h-10 rounded object-cover"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setEditingMessage(prev => ({ ...prev, imageUrl: null }))}
+                        className="text-red-500 hover:text-red-700 h-6 w-6 p-0"
+                      >
+                        <XCircle className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {/* Preview */}
+              {editingMessage.message && (
+                <div className="space-y-2">
+                  <Label>Message Preview</Label>
+                  <div className="bg-gray-50 p-4 rounded-lg border">
+                    <div className="bg-white p-3 rounded shadow-sm">
+                      <p className="text-sm whitespace-pre-wrap">{editingMessage.message}</p>
+                      {editingMessage.imageUrl && (
+                        <img 
+                          src={`${BACKEND_URL}${editingMessage.imageUrl}`} 
+                          alt="Message attachment" 
+                          className="mt-3 max-w-full h-auto rounded"
+                        />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Actions */}
+              <div className="flex justify-end space-x-3 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setMessageEditDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleSaveCustomMessage}
+                  className="btn-gradient"
+                  disabled={!editingMessage.message?.trim()}
+                >
+                  Save Message
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
