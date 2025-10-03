@@ -1238,7 +1238,8 @@ async def test_whatsapp_config(current_user: User = Depends(get_current_user)):
         result = await send_whatsapp_message(
             user_id=current_user.id,
             phone_number=user_phone,
-            message=test_message
+            message=test_message,
+            occasion="birthday"  # Default for test messages
         )
         
         if result["status"] == "success":
