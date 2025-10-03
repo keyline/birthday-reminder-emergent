@@ -3,6 +3,8 @@ import sys
 import json
 from datetime import datetime, date, timedelta
 import time
+import io
+from PIL import Image
 
 class BirthdayReminderAPITester:
     def __init__(self, base_url="https://birthday-buddy-16.preview.emergentagent.com"):
