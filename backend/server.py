@@ -2515,38 +2515,38 @@ async def get_reminder_logs(
 #     # Allow admin to update subscription
 #     if "subscription_status" in update_data:
 #         update_fields["subscription_status"] = update_data["subscription_status"]
-    
-    # Allow admin to update credits
-    if "whatsapp_credits" in update_data:
-        update_fields["whatsapp_credits"] = update_data["whatsapp_credits"]
-    
-    if "email_credits" in update_data:
-        update_fields["email_credits"] = update_data["email_credits"]
-    
-    if "unlimited_whatsapp" in update_data:
-        update_fields["unlimited_whatsapp"] = update_data["unlimited_whatsapp"]
-    
-    if "unlimited_email" in update_data:
-        update_fields["unlimited_email"] = update_data["unlimited_email"]
-    
-    if not update_fields:
-        raise HTTPException(status_code=400, detail="No valid fields to update")
-    
-    # Update user
-    result = await db.users.update_one(
-        {"id": user_id},
-        {"$set": update_fields}
-    )
-    
-    if result.modified_count == 0:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    # Get updated user
-    updated_user = await db.users.find_one({"id": user_id})
-    updated_user = parse_from_mongo(updated_user)
-    updated_user.pop("password_hash", None)  # Don't return password hash
-    
-    return {"message": "User updated successfully", "user": updated_user}
+#     
+#     # Allow admin to update credits
+#     if "whatsapp_credits" in update_data:
+#         update_fields["whatsapp_credits"] = update_data["whatsapp_credits"]
+#     
+#     if "email_credits" in update_data:
+#         update_fields["email_credits"] = update_data["email_credits"]
+#     
+#     if "unlimited_whatsapp" in update_data:
+#         update_fields["unlimited_whatsapp"] = update_data["unlimited_whatsapp"]
+#     
+#     if "unlimited_email" in update_data:
+#         update_fields["unlimited_email"] = update_data["unlimited_email"]
+#     
+#     if not update_fields:
+#         raise HTTPException(status_code=400, detail="No valid fields to update")
+#     
+#     # Update user
+#     result = await db.users.update_one(
+#         {"id": user_id},
+#         {"$set": update_fields}
+#     )
+#     
+#     if result.modified_count == 0:
+#         raise HTTPException(status_code=404, detail="User not found")
+#     
+#     # Get updated user
+#     updated_user = await db.users.find_one({"id": user_id})
+#     updated_user = parse_from_mongo(updated_user)
+#     updated_user.pop("password_hash", None)  # Don't return password hash
+#     
+#     return {"message": "User updated successfully", "user": updated_user}
 
 @api_router.delete("/admin/users/{user_id}")
 async def delete_user_by_admin(
