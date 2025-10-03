@@ -502,7 +502,7 @@ const SettingsPage = () => {
                         ) : (
                           <TestTube className="w-4 h-4 mr-2" />
                         )}
-                        Test Configuration
+                        Send Test Message
                       </Button>
 
                       {whatsappTestResult && (
