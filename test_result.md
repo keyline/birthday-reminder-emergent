@@ -101,3 +101,75 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+## user_problem_statement: "In the contact list, display three icons: WhatsApp, Email, and Test. When the WhatsApp or Email icon is clicked, open a popup showing a default message template. The user can edit or regenerate the message using AI, then save it. The customized message will be stored separately for each contact and channel (WhatsApp and Email). The user can also attach an image with the message. When the Test icon is clicked, a test message will be sent to the user's own phone (via WhatsApp) and email for preview."
+
+## backend:
+  - task: "Custom Message Model and APIs"
+    implemented: false
+    working: "NA"
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+        - agent: "main"
+        - comment: "Need to add CustomMessage model and CRUD endpoints for storing contact-specific messages"
+  
+  - task: "Test Message Sending API"
+    implemented: false
+    working: "NA"
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+        - agent: "main"
+        - comment: "Need to add endpoint to send test messages to user's own contact info"
+
+## frontend:
+  - task: "Contact List Icons (WhatsApp, Email, Test)"
+    implemented: false
+    working: "NA"
+    file: "ContactsPage.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+        - agent: "main"
+        - comment: "Add three action icons to each contact card in the contact list"
+        
+  - task: "Message Editing Popup Modal"
+    implemented: false
+    working: "NA"
+    file: "ContactsPage.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+        - agent: "main"
+        - comment: "Create popup for editing/regenerating messages with image attachment support"
+
+## metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 0
+  run_ui: false
+
+## test_plan:
+  current_focus:
+    - "Custom Message Model and APIs"
+    - "Test Message Sending API"
+    - "Contact List Icons (WhatsApp, Email, Test)"
+    - "Message Editing Popup Modal"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+## agent_communication:
+    - agent: "main"
+    - message: "Starting implementation of contact messaging features with three icons and custom message storage per contact per channel"
