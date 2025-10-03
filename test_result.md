@@ -269,7 +269,7 @@
 
 ## agent_communication:
     - agent: "main"
-    - message: "Added template-level image upload functionality. Templates now support default WhatsApp and Email images. Updated image hierarchy: contact custom -> template default. Enhanced TemplatesPage UI with image upload fields and indicators."
+    - message: "Implemented complete Daily Reminder System for production deployment. Added timezone-aware processing, credit management, message hierarchy, admin monitoring, cron job setup scripts, and comprehensive deployment guides for various platforms."
     - agent: "testing"
     - message: "DAILY REMINDER SYSTEM TESTING INITIATED: Added Daily Reminder System tasks to test_result.md for comprehensive testing. Focus on: 1) POST /api/system/daily-reminders - Main reminder processing with timezone handling, time windows, message generation, credit management, 2) GET /api/admin/reminder-stats - Admin statistics endpoint, 3) GET /api/admin/reminder-logs - Admin logs endpoint. Will test all scenarios including timezone handling, credit management, error handling, and integration testing."
     - agent: "testing"
