@@ -435,9 +435,15 @@ const TemplatesPage = () => {
                         {formData.email_image_url && (
                           <div className="flex items-center space-x-2">
                             <img 
-                              src={`${BACKEND_URL}${formData.email_image_url}`} 
+                              src={formData.email_image_url.startsWith('http') 
+                                ? formData.email_image_url 
+                                : `${BACKEND_URL}${formData.email_image_url}`} 
                               alt="Email default" 
                               className="w-8 h-8 rounded object-cover border"
+                              onError={(e) => {
+                                console.error('Email image failed to load:', formData.email_image_url);
+                                console.error('Constructed URL:', e.target.src);
+                              }}
                             />
                             <Button
                               type="button"
