@@ -168,9 +168,6 @@
 
 ## test_plan:
   current_focus:
-    - "Daily Reminder System - Main Processing Endpoint"
-    - "Daily Reminder System - Admin Statistics Endpoint"
-    - "Daily Reminder System - Admin Logs Endpoint"
     - "Contact List Icons (WhatsApp, Email, Test)"
     - "Message Editing Popup Modal"
   stuck_tasks: []
@@ -179,6 +176,9 @@
   completed_tests:
     - "DigitalSMS WhatsApp API Integration"
     - "WhatsApp Test Configuration API"
+    - "Daily Reminder System - Main Processing Endpoint"
+    - "Daily Reminder System - Admin Statistics Endpoint"
+    - "Daily Reminder System - Admin Logs Endpoint"
   
 - task: "User Profile Update Backend API"
   implemented: true
