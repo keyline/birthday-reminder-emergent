@@ -1201,6 +1201,14 @@ class BirthdayReminderAPITester:
         # Enhanced Indian Phone Number Validation tests (FOCUSED)
         self.test_indian_phone_number_validation()
         
+        # DigitalSMS WhatsApp API Integration tests (NEW)
+        print("\n📱 Testing DigitalSMS WhatsApp API Integration...")
+        self.test_digitalsms_settings_api()
+        self.test_whatsapp_message_sending()
+        self.test_whatsapp_api_format_verification()
+        self.test_digitalsms_response_parsing()
+        self.test_settings_model_validation()
+        
         # Admin tests
         self.test_admin_functionality()
         
