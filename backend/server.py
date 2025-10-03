@@ -1471,7 +1471,8 @@ async def send_test_whatsapp_message(phone_number: str, current_user: User = Dep
     result = await send_whatsapp_message(
         user_id=current_user.id,
         phone_number=clean_phone,
-        message=f"🎉 Test message from ReminderAI! Your WhatsApp API configuration is working perfectly. This message was sent to {phone_number}."
+        message=f"🎉 Test message from ReminderAI! Your WhatsApp API configuration is working perfectly. This message was sent to {phone_number}.",
+        occasion="birthday"  # Default for test messages
     )
     return result
 
