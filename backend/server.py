@@ -2341,6 +2341,249 @@ async def get_reminder_logs(
     
     return [ReminderLog(**parse_from_mongo(log)) for log in logs]
 
+# Enhanced Admin User Management
+@api_router.get("/admin/users")
+async def get_all_users(admin_user: User = Depends(get_admin_user)):
+    """Get all users for admin management"""
+    
+    users = await db.users.find({}).to_list(1000)
+    
+    user_list = []
+    for user in users:
+        user = parse_from_mongo(user)
+        # Don't include password hash in response
+        user.pop("password_hash", None)
+        
+        # Get user's contact count
+        contact_count = await db.contacts.count_documents({"user_id": user["id"]})
+        user["contact_count"] = contact_count
+        
+        # Get user's template count
+        template_count = await db.templates.count_documents({"user_id": user["id"]})
+        user["template_count"] = template_count
+        
+        # Get message usage statistics
+        user_messages = await db.reminder_logs.aggregate([
+            {"$match": {"errors": {"$not": {"$regex": f"user {user['email']}", "$options": "i"}}}},
+            {"$group": {
+                "_id": None,
+                "total_whatsapp": {"$sum": "$whatsapp_sent"},
+                "total_email": {"$sum": "$email_sent"}
+            }}
+        ]).to_list(1)
+        
+        if user_messages:
+            user["total_whatsapp_sent"] = user_messages[0].get("total_whatsapp", 0)
+            user["total_email_sent"] = user_messages[0].get("total_email", 0)
+        else:
+            user["total_whatsapp_sent"] = 0
+            user["total_email_sent"] = 0
+        
+        user_list.append(user)
+    
+    return user_list
+
+@api_router.put("/admin/users/{user_id}")
+async def update_user_by_admin(
+    user_id: str, 
+    update_data: dict,
+    admin_user: User = Depends(get_admin_user)
+):
+    """Update any user's information as admin"""
+    
+    # Validate user exists
+    target_user = await db.users.find_one({"id": user_id})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Prepare update fields
+    update_fields = {}
+    
+    # Allow admin to update basic info
+    if "full_name" in update_data:
+        update_fields["full_name"] = update_data["full_name"]
+    
+    if "email" in update_data:
+        # Check if email is already taken by another user
+        existing_user = await db.users.find_one({
+            "email": update_data["email"].lower(),
+            "id": {"$ne": user_id}
+        })
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Email address is already in use")
+        update_fields["email"] = update_data["email"].lower()
+    
+    if "phone_number" in update_data:
+        update_fields["phone_number"] = update_data["phone_number"]
+    
+    # Allow admin to update password
+    if "password" in update_data:
+        hashed_password = hash_password(update_data["password"])
+        update_fields["password_hash"] = hashed_password
+    
+    # Allow admin to update admin status
+    if "is_admin" in update_data:
+        update_fields["is_admin"] = update_data["is_admin"]
+    
+    # Allow admin to update subscription
+    if "subscription_status" in update_data:
+        update_fields["subscription_status"] = update_data["subscription_status"]
+    
+    # Allow admin to update credits
+    if "whatsapp_credits" in update_data:
+        update_fields["whatsapp_credits"] = update_data["whatsapp_credits"]
+    
+    if "email_credits" in update_data:
+        update_fields["email_credits"] = update_data["email_credits"]
+    
+    if "unlimited_whatsapp" in update_data:
+        update_fields["unlimited_whatsapp"] = update_data["unlimited_whatsapp"]
+    
+    if "unlimited_email" in update_data:
+        update_fields["unlimited_email"] = update_data["unlimited_email"]
+    
+    if not update_fields:
+        raise HTTPException(status_code=400, detail="No valid fields to update")
+    
+    # Update user
+    result = await db.users.update_one(
+        {"id": user_id},
+        {"$set": update_fields}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Get updated user
+    updated_user = await db.users.find_one({"id": user_id})
+    updated_user = parse_from_mongo(updated_user)
+    updated_user.pop("password_hash", None)  # Don't return password hash
+    
+    return {"message": "User updated successfully", "user": updated_user}
+
+@api_router.delete("/admin/users/{user_id}")
+async def delete_user_by_admin(
+    user_id: str,
+    admin_user: User = Depends(get_admin_user)
+):
+    """Delete a user and all their data"""
+    
+    # Prevent admin from deleting themselves
+    if user_id == admin_user.id:
+        raise HTTPException(status_code=400, detail="Cannot delete your own admin account")
+    
+    # Check if user exists
+    target_user = await db.users.find_one({"id": user_id})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Delete user's data
+    await db.contacts.delete_many({"user_id": user_id})
+    await db.templates.delete_many({"user_id": user_id})
+    await db.custom_messages.delete_many({"user_id": user_id})
+    await db.user_settings.delete_many({"user_id": user_id})
+    
+    # Delete user
+    await db.users.delete_one({"id": user_id})
+    
+    return {"message": f"User {target_user['email']} and all associated data deleted successfully"}
+
+@api_router.get("/admin/platform-stats")
+async def get_platform_stats(admin_user: User = Depends(get_admin_user)):
+    """Get comprehensive platform statistics for admin dashboard"""
+    
+    # User statistics
+    total_users = await db.users.count_documents({})
+    active_users = await db.users.count_documents({"subscription_status": "active"})
+    trial_users = await db.users.count_documents({"subscription_status": "trial"})
+    admin_users = await db.users.count_documents({"is_admin": True})
+    
+    # Content statistics
+    total_contacts = await db.contacts.count_documents({})
+    total_templates = await db.templates.count_documents({})
+    total_custom_messages = await db.custom_messages.count_documents({})
+    
+    # Message statistics from logs
+    total_logs = await db.reminder_logs.count_documents({})
+    
+    # Aggregate message statistics
+    message_stats = await db.reminder_logs.aggregate([
+        {
+            "$group": {
+                "_id": None,
+                "total_whatsapp_sent": {"$sum": "$whatsapp_sent"},
+                "total_email_sent": {"$sum": "$email_sent"},
+                "total_messages": {"$sum": "$messages_sent"}
+            }
+        }
+    ]).to_list(1)
+    
+    if message_stats:
+        whatsapp_sent = message_stats[0]["total_whatsapp_sent"]
+        email_sent = message_stats[0]["total_email_sent"]
+        total_messages_sent = message_stats[0]["total_messages"]
+    else:
+        whatsapp_sent = 0
+        email_sent = 0
+        total_messages_sent = 0
+    
+    # Recent activity (last 7 days)
+    end_date = datetime.now(timezone.utc).date()
+    start_date = end_date - timedelta(days=7)
+    
+    recent_messages = await db.reminder_logs.aggregate([
+        {
+            "$match": {
+                "date": {
+                    "$gte": start_date.isoformat(),
+                    "$lte": end_date.isoformat()
+                }
+            }
+        },
+        {
+            "$group": {
+                "_id": None,
+                "recent_whatsapp": {"$sum": "$whatsapp_sent"},
+                "recent_email": {"$sum": "$email_sent"},
+                "recent_executions": {"$sum": 1}
+            }
+        }
+    ]).to_list(1)
+    
+    if recent_messages:
+        recent_whatsapp = recent_messages[0]["recent_whatsapp"]
+        recent_email = recent_messages[0]["recent_email"]
+        recent_executions = recent_messages[0]["recent_executions"]
+    else:
+        recent_whatsapp = 0
+        recent_email = 0
+        recent_executions = 0
+    
+    return {
+        "users": {
+            "total": total_users,
+            "active": active_users,
+            "trial": trial_users,
+            "admin": admin_users
+        },
+        "content": {
+            "contacts": total_contacts,
+            "templates": total_templates,
+            "custom_messages": total_custom_messages
+        },
+        "messages": {
+            "total_sent": total_messages_sent,
+            "whatsapp_sent": whatsapp_sent,
+            "email_sent": email_sent,
+            "recent_whatsapp": recent_whatsapp,
+            "recent_email": recent_email,
+            "recent_executions": recent_executions
+        },
+        "system": {
+            "total_reminder_logs": total_logs
+        }
+    }
+
 # Admin Setup Route (for initial setup only)
 @api_router.post("/setup-admin")
 async def setup_admin_user():
