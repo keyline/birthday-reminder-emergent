@@ -2587,11 +2587,11 @@ class BirthdayReminderAPITester:
             
             duplicate_email_data = {"email": user1['email']}
             result = self.run_test("Duplicate Email Update", "PUT", f"admin/users/{user2['id']}", 400, duplicate_email_data)
-            if result is not None:  # Should fail with 400
+            if result is None:  # Should fail with 400, so result should be None
+                self.log_test("Duplicate Email Validation", True, "Duplicate email properly rejected")
+            else:
                 self.log_test("Duplicate Email Validation", False, "Should prevent duplicate email updates")
                 success = False
-            else:
-                self.log_test("Duplicate Email Validation", True, "Duplicate email properly rejected")
         
         # Test preventing admin from deleting themselves
         self_delete_result = self.run_test("Admin Self-Delete Prevention", "DELETE", f"admin/users/{self.admin_user_id}", 400)
