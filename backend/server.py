@@ -1398,7 +1398,7 @@ async def send_whatsapp_message(user_id: str, phone_number: str, message: str, i
             "msg": message
         }
         
-        # Add image if provided (using img1 parameter as per documentation)
+        # Add image only if we have a valid custom image (don't always force an image)
         if image_url and image_url.strip():
             # Convert relative URL to absolute if needed
             if image_url.startswith('/'):
@@ -1406,25 +1406,22 @@ async def send_whatsapp_message(user_id: str, phone_number: str, message: str, i
             elif image_url.startswith('http'):
                 absolute_image_url = image_url
             else:
-                # Use default celebration image if image_url is not a valid URL
-                absolute_image_url = get_default_celebration_image(occasion)
+                # Skip image if not a valid URL format
+                absolute_image_url = None
             
-            # Validate URL before sending  
-            try:
-                import requests
-                # Quick HEAD request to check if image is accessible
-                head_response = requests.head(absolute_image_url, timeout=5)
-                if head_response.status_code == 200:
-                    params["img1"] = absolute_image_url
-                else:
-                    # Use default celebration image if original is not accessible
-                    params["img1"] = get_default_celebration_image(occasion)
-            except:
-                # If validation fails, use default celebration image
-                params["img1"] = get_default_celebration_image(occasion)
-        else:
-            # No image provided, use default celebration image
-            params["img1"] = get_default_celebration_image(occasion)
+            # Only add image if we have a valid URL and it's accessible
+            if absolute_image_url:
+                try:
+                    import requests
+                    # Quick HEAD request to check if image is accessible
+                    head_response = requests.head(absolute_image_url, timeout=5)
+                    if head_response.status_code == 200:
+                        params["img1"] = absolute_image_url
+                    # If image is not accessible, don't include img1 parameter
+                except:
+                    # If validation fails, don't include img1 parameter
+                    pass
+        # If no valid image, don't include img1 parameter (send text-only message)
         
         # Make API request (GET method as per documentation)
         response = requests.get(url, params=params, timeout=30)
