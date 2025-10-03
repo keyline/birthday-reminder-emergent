@@ -272,7 +272,16 @@ const TemplatesPage = () => {
                     <Label htmlFor="template-type">Type *</Label>
                     <Select 
                       value={formData.type} 
-                      onValueChange={(value) => setFormData({ ...formData, type: value })}
+                      onValueChange={(value) => {
+                        // Clear irrelevant image when type changes
+                        const updatedFormData = { ...formData, type: value };
+                        if (value === 'whatsapp') {
+                          updatedFormData.email_image_url = ''; // Clear email image for WhatsApp template
+                        } else if (value === 'email') {
+                          updatedFormData.whatsapp_image_url = ''; // Clear WhatsApp image for Email template
+                        }
+                        setFormData(updatedFormData);
+                      }}
                     >
                       <SelectTrigger data-testid="template-type-select">
                         <SelectValue placeholder="Select type" />
