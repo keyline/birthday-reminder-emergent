@@ -196,6 +196,7 @@ class UserSettings(BaseModel):
     
     # DigitalSMS API
     digitalsms_api_key: Optional[str] = None
+    whatsapp_sender_number: Optional[str] = None  # 10-digit sender phone number
     
     # Email settings
     email_api_key: Optional[str] = None
