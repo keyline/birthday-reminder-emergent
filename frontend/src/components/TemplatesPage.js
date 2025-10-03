@@ -653,29 +653,42 @@ const TemplatesPage = () => {
                     </div>
                   </div>
                   
-                  {/* Image Indicators */}
-                  {(template.whatsapp_image_url || template.email_image_url) && (
-                    <div className="flex items-center space-x-3 pt-2">
-                      <p className="text-xs font-medium text-gray-600">Default Images:</p>
-                      {template.whatsapp_image_url && (
-                        <div className="flex items-center space-x-1">
+                  {/* Image Indicator - Only show relevant image based on template type */}
+                  {((template.type === 'whatsapp' && template.whatsapp_image_url) || 
+                    (template.type === 'email' && template.email_image_url)) && (
+                    <div className="flex items-center space-x-2 pt-2">
+                      <p className="text-xs font-medium text-gray-600">Default Image:</p>
+                      
+                      {/* WhatsApp Image - Only show for WhatsApp templates */}
+                      {template.type === 'whatsapp' && template.whatsapp_image_url && (
+                        <div className="flex items-center space-x-2 bg-green-50 px-2 py-1 rounded-lg border border-green-200">
                           <MessageCircle className="w-3 h-3 text-green-600" />
-                          <span className="text-xs text-green-600">WhatsApp</span>
+                          <span className="text-xs text-green-600 font-medium">WhatsApp</span>
                           <img 
                             src={`${BACKEND_URL}${template.whatsapp_image_url}`} 
                             alt="WhatsApp default" 
-                            className="w-6 h-6 rounded object-cover border"
+                            className="w-8 h-8 rounded object-cover border border-green-300"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              console.log('WhatsApp image failed to load:', template.whatsapp_image_url);
+                            }}
                           />
                         </div>
                       )}
-                      {template.email_image_url && (
-                        <div className="flex items-center space-x-1">
+                      
+                      {/* Email Image - Only show for Email templates */}
+                      {template.type === 'email' && template.email_image_url && (
+                        <div className="flex items-center space-x-2 bg-blue-50 px-2 py-1 rounded-lg border border-blue-200">
                           <Mail className="w-3 h-3 text-blue-600" />
-                          <span className="text-xs text-blue-600">Email</span>
+                          <span className="text-xs text-blue-600 font-medium">Email</span>
                           <img 
                             src={`${BACKEND_URL}${template.email_image_url}`} 
                             alt="Email default" 
-                            className="w-6 h-6 rounded object-cover border"
+                            className="w-8 h-8 rounded object-cover border border-blue-300"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              console.log('Email image failed to load:', template.email_image_url);
+                            }}
                           />
                         </div>
                       )}
