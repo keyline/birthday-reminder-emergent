@@ -822,11 +822,12 @@ const SettingsPage = () => {
                           data-testid="profile-phone-input"
                           type="tel"
                           value={profileData.phone_number}
-                          onChange={(e) => setProfileData({ ...profileData, phone_number: e.target.value })}
-                          placeholder="Enter your phone number (e.g., +1234567890)"
+                          onChange={handlePhoneNumberChange}
+                          placeholder="Enter 10-digit mobile number (e.g., 9876543210)"
+                          maxLength={10}
                         />
                         <p className="text-xs text-gray-500">
-                          Include country code for international numbers
+                          Indian mobile numbers only. Must be 10 digits starting with 6, 7, 8, or 9. +91 will be automatically removed.
                         </p>
                       </div>
                     </div>
