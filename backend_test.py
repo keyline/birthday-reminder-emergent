@@ -2400,6 +2400,262 @@ class BirthdayReminderAPITester:
         
         return success
 
+    def test_enhanced_admin_panel(self):
+        """Test Enhanced Admin Panel functionality with super admin capabilities"""
+        print("\n👑 Testing Enhanced Admin Panel Functionality...")
+        success = True
+        
+        # Test 1: Setup Admin User
+        print("\n   Testing Admin Setup...")
+        result = self.run_test("Setup Admin User", "POST", "setup-admin", 200)
+        if not result:
+            success = False
+            return success
+        else:
+            print(f"   Admin setup result: {result.get('message', 'No message')}")
+            admin_email = result.get('email', 'john@example.com')
+            admin_password = result.get('password', 'admin123')
+        
+        # Test 2: Admin Login
+        print("\n   Testing Admin Login...")
+        admin_login_data = {
+            "email": admin_email,
+            "password": admin_password
+        }
+        
+        login_result = self.run_test("Admin Login", "POST", "auth/login", 200, admin_login_data)
+        if not login_result:
+            success = False
+            return success
+        
+        # Store admin credentials
+        self.admin_token = login_result.get('access_token')
+        self.admin_user_id = login_result.get('user', {}).get('id')
+        admin_user = login_result.get('user', {})
+        
+        # Verify admin privileges
+        if not admin_user.get('is_admin', False):
+            self.log_test("Admin Privileges Verification", False, "User is not marked as admin")
+            success = False
+        else:
+            self.log_test("Admin Privileges Verification", True, "User has admin privileges")
+        
+        # Store original token and switch to admin token
+        original_token = self.token
+        self.token = self.admin_token
+        
+        # Test 3: Admin Routes Access - GET /api/admin/users
+        print("\n   Testing Admin User Management...")
+        users_result = self.run_test("Get All Users (Admin)", "GET", "admin/users", 200)
+        if not users_result:
+            success = False
+        else:
+            print(f"   Retrieved {len(users_result)} users")
+            # Verify response structure
+            if isinstance(users_result, list) and len(users_result) > 0:
+                first_user = users_result[0]
+                expected_fields = ['id', 'email', 'full_name', 'contact_count', 'template_count']
+                missing_fields = [field for field in expected_fields if field not in first_user]
+                if missing_fields:
+                    self.log_test("User Response Structure", False, f"Missing fields: {missing_fields}")
+                    success = False
+                else:
+                    self.log_test("User Response Structure", True, "All expected fields present")
+        
+        # Test 4: Platform Statistics
+        print("\n   Testing Platform Statistics...")
+        stats_result = self.run_test("Get Platform Stats", "GET", "admin/platform-stats", 200)
+        if not stats_result:
+            success = False
+        else:
+            # Verify stats structure
+            expected_sections = ['users', 'content', 'messages']
+            missing_sections = [section for section in expected_sections if section not in stats_result]
+            if missing_sections:
+                self.log_test("Platform Stats Structure", False, f"Missing sections: {missing_sections}")
+                success = False
+            else:
+                self.log_test("Platform Stats Structure", True, "All expected sections present")
+                
+                # Print some stats
+                users_stats = stats_result.get('users', {})
+                content_stats = stats_result.get('content', {})
+                message_stats = stats_result.get('messages', {})
+                
+                print(f"   Users: Total={users_stats.get('total', 0)}, Active={users_stats.get('active', 0)}, Trial={users_stats.get('trial', 0)}, Admin={users_stats.get('admin', 0)}")
+                print(f"   Content: Contacts={content_stats.get('contacts', 0)}, Templates={content_stats.get('templates', 0)}")
+                print(f"   Messages: Total Sent={message_stats.get('total_sent', 0)}, WhatsApp={message_stats.get('whatsapp_sent', 0)}, Email={message_stats.get('email_sent', 0)}")
+        
+        # Test 5: User Management - Update User
+        print("\n   Testing User Management - Update User...")
+        if users_result and len(users_result) > 0:
+            # Find a non-admin user to update
+            target_user = None
+            for user in users_result:
+                if not user.get('is_admin', False) and user.get('id') != self.admin_user_id:
+                    target_user = user
+                    break
+            
+            if target_user:
+                target_user_id = target_user['id']
+                
+                # Test updating user credentials and info
+                update_data = {
+                    "full_name": "Updated by Admin",
+                    "email": f"updated_by_admin_{int(time.time())}@example.com",
+                    "phone_number": "9876543210",
+                    "whatsapp_credits": 500,
+                    "email_credits": 300,
+                    "subscription_status": "active"
+                }
+                
+                update_result = self.run_test("Update User by Admin", "PUT", f"admin/users/{target_user_id}", 200, update_data)
+                if not update_result:
+                    success = False
+                else:
+                    updated_user = update_result.get('user', {})
+                    # Verify updates
+                    if updated_user.get('full_name') == update_data['full_name']:
+                        self.log_test("User Update Verification", True, "User successfully updated by admin")
+                    else:
+                        self.log_test("User Update Verification", False, "User update failed")
+                        success = False
+                
+                # Test promoting user to admin
+                admin_promotion_data = {"is_admin": True}
+                promotion_result = self.run_test("Promote User to Admin", "PUT", f"admin/users/{target_user_id}", 200, admin_promotion_data)
+                if promotion_result:
+                    promoted_user = promotion_result.get('user', {})
+                    if promoted_user.get('is_admin', False):
+                        self.log_test("Admin Promotion", True, "User successfully promoted to admin")
+                        
+                        # Demote back to regular user
+                        demotion_data = {"is_admin": False}
+                        self.run_test("Demote User from Admin", "PUT", f"admin/users/{target_user_id}", 200, demotion_data)
+                    else:
+                        self.log_test("Admin Promotion", False, "User promotion to admin failed")
+                        success = False
+                
+                # Test credit management
+                credit_update_data = {
+                    "whatsapp_credits": 1000,
+                    "email_credits": 800,
+                    "unlimited_whatsapp": True,
+                    "unlimited_email": False
+                }
+                
+                credit_result = self.run_test("Update User Credits", "PUT", f"admin/users/{target_user_id}", 200, credit_update_data)
+                if credit_result:
+                    updated_user = credit_result.get('user', {})
+                    if (updated_user.get('whatsapp_credits') == 1000 and 
+                        updated_user.get('unlimited_whatsapp') == True):
+                        self.log_test("Credit Management", True, "User credits updated successfully")
+                    else:
+                        self.log_test("Credit Management", False, "Credit update failed")
+                        success = False
+        
+        # Test 6: Error Handling - Non-admin access
+        print("\n   Testing Admin Protection...")
+        # Switch back to regular user token
+        self.token = original_token
+        
+        # Try to access admin endpoints with regular user
+        result = self.run_test("Non-admin Access to Users", "GET", "admin/users", 403)
+        if result is not None:  # Should fail with 403
+            self.log_test("Admin Protection - Users Endpoint", False, "Non-admin user should not access admin endpoints")
+            success = False
+        else:
+            self.log_test("Admin Protection - Users Endpoint", True, "Admin endpoint properly protected")
+        
+        result = self.run_test("Non-admin Access to Stats", "GET", "admin/platform-stats", 403)
+        if result is not None:  # Should fail with 403
+            self.log_test("Admin Protection - Stats Endpoint", False, "Non-admin user should not access admin endpoints")
+            success = False
+        else:
+            self.log_test("Admin Protection - Stats Endpoint", True, "Admin endpoint properly protected")
+        
+        # Switch back to admin token for remaining tests
+        self.token = self.admin_token
+        
+        # Test 7: Error Handling - Invalid operations
+        print("\n   Testing Error Handling...")
+        
+        # Test duplicate email validation
+        if users_result and len(users_result) >= 2:
+            user1 = users_result[0]
+            user2 = users_result[1]
+            
+            duplicate_email_data = {"email": user1['email']}
+            result = self.run_test("Duplicate Email Update", "PUT", f"admin/users/{user2['id']}", 400, duplicate_email_data)
+            if result is not None:  # Should fail with 400
+                self.log_test("Duplicate Email Validation", False, "Should prevent duplicate email updates")
+                success = False
+            else:
+                self.log_test("Duplicate Email Validation", True, "Duplicate email properly rejected")
+        
+        # Test preventing admin from deleting themselves
+        self_delete_result = self.run_test("Admin Self-Delete Prevention", "DELETE", f"admin/users/{self.admin_user_id}", 400)
+        if self_delete_result is not None:  # Should fail with 400
+            self.log_test("Self-Delete Prevention", False, "Admin should not be able to delete themselves")
+            success = False
+        else:
+            self.log_test("Self-Delete Prevention", True, "Admin self-deletion properly prevented")
+        
+        # Test 8: User Deletion with Data Cleanup
+        print("\n   Testing User Deletion...")
+        if users_result and len(users_result) > 1:
+            # Find a non-admin user to delete (not the current admin)
+            target_user_for_deletion = None
+            for user in users_result:
+                if (not user.get('is_admin', False) and 
+                    user.get('id') != self.admin_user_id and
+                    user.get('email') != admin_email):
+                    target_user_for_deletion = user
+                    break
+            
+            if target_user_for_deletion:
+                target_id = target_user_for_deletion['id']
+                target_email = target_user_for_deletion['email']
+                
+                delete_result = self.run_test("Delete User with Data Cleanup", "DELETE", f"admin/users/{target_id}", 200)
+                if not delete_result:
+                    success = False
+                else:
+                    # Verify user is actually deleted
+                    verify_result = self.run_test("Verify User Deletion", "GET", "admin/users", 200)
+                    if verify_result:
+                        remaining_users = [u for u in verify_result if u.get('id') == target_id]
+                        if len(remaining_users) == 0:
+                            self.log_test("User Deletion Verification", True, f"User {target_email} successfully deleted")
+                        else:
+                            self.log_test("User Deletion Verification", False, "User was not actually deleted")
+                            success = False
+        
+        # Test 9: Invalid user operations
+        print("\n   Testing Invalid Operations...")
+        
+        # Test updating non-existent user
+        invalid_update_data = {"full_name": "Non-existent User"}
+        result = self.run_test("Update Non-existent User", "PUT", "admin/users/invalid-user-id", 404, invalid_update_data)
+        if result is not None:  # Should fail with 404
+            self.log_test("Non-existent User Update", False, "Should return 404 for non-existent user")
+            success = False
+        else:
+            self.log_test("Non-existent User Update", True, "Non-existent user update properly handled")
+        
+        # Test deleting non-existent user
+        result = self.run_test("Delete Non-existent User", "DELETE", "admin/users/invalid-user-id", 404)
+        if result is not None:  # Should fail with 404
+            self.log_test("Non-existent User Deletion", False, "Should return 404 for non-existent user")
+            success = False
+        else:
+            self.log_test("Non-existent User Deletion", True, "Non-existent user deletion properly handled")
+        
+        # Restore original token
+        self.token = original_token
+        
+        return success
+
     def run_all_tests(self):
         """Run all tests in sequence"""
         print("🚀 Starting Birthday Reminder API Tests...")
