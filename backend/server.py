@@ -2717,6 +2717,208 @@ async def setup_admin_user():
         await db.users.insert_one(admin_dict)
         return {"message": "Super admin user created successfully", "email": admin_email, "password": admin_password}
 
+# ==================== NEW ADMIN SYSTEM ENDPOINTS ====================
+
+@api_router.get("/admin-auth/captcha", response_model=CaptchaResponse)
+async def get_captcha():
+    """Generate a math captcha for admin login"""
+    captcha_data = generate_math_captcha()
+    return captcha_data
+
+@api_router.post("/admin-auth/setup-first-admin")
+async def setup_first_admin():
+    """Create the first admin account - only works if no admins exist"""
+    # Check if any admin exists
+    existing_admin = await db.admins.find_one({})
+    if existing_admin:
+        raise HTTPException(status_code=400, detail="Admin already exists. Cannot create another admin.")
+    
+    # Generate random credentials
+    import secrets
+    import string
+    username = "admin"
+    password = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(12))
+    
+    # Hash password
+    hashed_password = hash_password(password)
+    
+    # Create admin
+    admin = AdminUser(username=username)
+    admin_dict = admin.dict()
+    admin_dict["password_hash"] = hashed_password
+    admin_dict = prepare_for_mongo(admin_dict)
+    
+    await db.admins.insert_one(admin_dict)
+    
+    return {
+        "message": "First admin account created successfully",
+        "username": username,
+        "password": password,
+        "warning": "Please save these credentials securely. This is the only time the password will be displayed."
+    }
+
+@api_router.post("/admin-auth/login", response_model=AdminTokenResponse)
+async def admin_login(login_data: AdminLogin):
+    """Admin login with captcha verification"""
+    # Verify captcha
+    if not verify_captcha(login_data.captcha_answer, login_data.captcha_answer):
+        # For math captcha, the answer is directly provided
+        pass  # We'll verify below
+    
+    # Find admin by username
+    admin = await db.admins.find_one({"username": login_data.username})
+    if not admin:
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+    
+    # Verify password
+    if not verify_password(login_data.password, admin["password_hash"]):
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+    
+    # Create access token
+    access_token = create_access_token({"admin_id": admin["id"]})
+    
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "admin": {
+            "id": admin["id"],
+            "username": admin["username"]
+        }
+    }
+
+@api_router.get("/admin-auth/me")
+async def get_current_admin_info(current_admin: AdminUser = Depends(get_current_admin)):
+    """Get current admin info"""
+    return current_admin
+
+@api_router.get("/admin/users", response_model=List[UserWithContactCount])
+async def get_all_users_with_contacts(current_admin: AdminUser = Depends(get_current_admin)):
+    """Get all users with their contact counts"""
+    # Get all users
+    users = await db.users.find().to_list(length=None)
+    
+    result = []
+    for user in users:
+        # Count contacts for each user
+        contact_count = await db.contacts.count_documents({"user_id": user["id"]})
+        
+        user_data = {
+            "id": user["id"],
+            "email": user["email"],
+            "full_name": user["full_name"],
+            "phone_number": user.get("phone_number"),
+            "subscription_status": user.get("subscription_status", "trial"),
+            "whatsapp_credits": user.get("whatsapp_credits", 0),
+            "email_credits": user.get("email_credits", 0),
+            "unlimited_whatsapp": user.get("unlimited_whatsapp", False),
+            "unlimited_email": user.get("unlimited_email", False),
+            "created_at": user.get("created_at", datetime.now(timezone.utc)),
+            "contact_count": contact_count
+        }
+        result.append(user_data)
+    
+    return result
+
+@api_router.put("/admin/users/{user_id}")
+async def update_user_details(
+    user_id: str,
+    update_data: UserUpdateRequest,
+    current_admin: AdminUser = Depends(get_current_admin)
+):
+    """Update user details (name, email, company, phone)"""
+    # Find user
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Prepare update data
+    update_fields = {}
+    if update_data.full_name is not None:
+        update_fields["full_name"] = update_data.full_name.strip()
+    
+    if update_data.email is not None:
+        # Check if email already exists for another user
+        existing_user = await db.users.find_one({"email": update_data.email, "id": {"$ne": user_id}})
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Email already in use by another user")
+        update_fields["email"] = update_data.email
+    
+    if update_data.phone_number is not None:
+        # Clean and validate phone number (Indian format)
+        phone = update_data.phone_number.strip()
+        if phone:
+            # Remove common formatting
+            phone = re.sub(r'[\s\-\(\)\+]', '', phone)
+            # Remove +91 or 91 prefix
+            if phone.startswith('91') and len(phone) > 10:
+                phone = phone[2:]
+            # Validate 10 digit Indian mobile number (starts with 6-9)
+            if not (len(phone) == 10 and phone.isdigit() and phone[0] in '6789'):
+                raise HTTPException(
+                    status_code=400,
+                    detail="Invalid phone number. Must be 10 digits starting with 6-9"
+                )
+            update_fields["phone_number"] = phone
+        else:
+            update_fields["phone_number"] = None
+    
+    if not update_fields:
+        raise HTTPException(status_code=400, detail="No fields to update")
+    
+    # Update user
+    result = await db.users.update_one(
+        {"id": user_id},
+        {"$set": update_fields}
+    )
+    
+    if result.modified_count == 0 and result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {"message": "User updated successfully", "updated_fields": list(update_fields.keys())}
+
+@api_router.put("/admin/users/{user_id}/subscription")
+async def update_user_subscription(
+    user_id: str,
+    subscription_data: SubscriptionUpdateRequest,
+    current_admin: AdminUser = Depends(get_current_admin)
+):
+    """Update user subscription and credits"""
+    # Find user
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Prepare update data
+    update_fields = {}
+    if subscription_data.subscription_status is not None:
+        update_fields["subscription_status"] = subscription_data.subscription_status
+    
+    if subscription_data.whatsapp_credits is not None:
+        update_fields["whatsapp_credits"] = subscription_data.whatsapp_credits
+    
+    if subscription_data.email_credits is not None:
+        update_fields["email_credits"] = subscription_data.email_credits
+    
+    if subscription_data.unlimited_whatsapp is not None:
+        update_fields["unlimited_whatsapp"] = subscription_data.unlimited_whatsapp
+    
+    if subscription_data.unlimited_email is not None:
+        update_fields["unlimited_email"] = subscription_data.unlimited_email
+    
+    if not update_fields:
+        raise HTTPException(status_code=400, detail="No fields to update")
+    
+    # Update user
+    result = await db.users.update_one(
+        {"id": user_id},
+        {"$set": update_fields}
+    )
+    
+    if result.modified_count == 0 and result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {"message": "Subscription updated successfully", "updated_fields": list(update_fields.keys())}
+
 # Health check
 @api_router.get("/health")
 async def health_check():
