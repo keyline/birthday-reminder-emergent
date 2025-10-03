@@ -1820,8 +1820,8 @@ async def upload_image(file: UploadFile = File(...), current_user: User = Depend
     with open(file_path, "wb") as buffer:
         buffer.write(file_content)
     
-    # Return file URL
-    file_url = f"/uploads/images/{unique_filename}"
+    # Return full file URL with domain
+    file_url = f"https://birthday-buddy-16.preview.emergentagent.com/uploads/images/{unique_filename}"
     return {"image_url": file_url, "filename": unique_filename}
 
 @api_router.put("/contacts/{contact_id}/images")
