@@ -322,8 +322,15 @@ def prepare_for_mongo(data):
 
 def parse_from_mongo(item):
     if isinstance(item, dict):
+        # Handle MongoDB ObjectId conversion
+        if '_id' in item:
+            del item['_id']  # Remove MongoDB _id field
+        
         for key, value in item.items():
-            if key in ['birthday', 'anniversary_date'] and isinstance(value, str):
+            # Convert ObjectId to string if present
+            if hasattr(value, '__class__') and value.__class__.__name__ == 'ObjectId':
+                item[key] = str(value)
+            elif key in ['birthday', 'anniversary_date'] and isinstance(value, str):
                 try:
                     item[key] = datetime.fromisoformat(value).date()
                 except:
