@@ -41,6 +41,9 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30 * 24 * 60  # 30 days
 # LLM settings
 EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY')
 
+# Admin Captcha Storage (in-memory, for production use Redis)
+captcha_store = {}
+
 # Create the main app without a prefix
 app = FastAPI(title="Birthday Reminder SaaS")
 
