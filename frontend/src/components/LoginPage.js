@@ -169,7 +169,7 @@ const LoginPage = () => {
             sent automatically via WhatsApp & Email.
           </p>
           
-          <div className="space-y-4 bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+          <div className="space-y-4 feature-card-glow rounded-2xl p-6">
             <div className="flex items-center space-x-4">
               <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center">
                 <CheckCircle className="w-5 h-5 text-white" />
