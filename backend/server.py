@@ -167,6 +167,25 @@ class TestMessageRequest(BaseModel):
     contact_id: str
     occasion: str
 
+class ReminderLog(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    date: str  # YYYY-MM-DD format
+    execution_time: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    total_users: int = 0
+    messages_sent: int = 0
+    whatsapp_sent: int = 0
+    email_sent: int = 0
+    errors: List[str] = []
+
+class DailyReminderStats(BaseModel):
+    date: str
+    total_executions: int
+    total_users_processed: int
+    total_messages_sent: int
+    whatsapp_messages: int
+    email_messages: int
+    errors: List[str]
+
 class UserProfileUpdate(BaseModel):
     full_name: Optional[str] = None
     email: Optional[EmailStr] = None
