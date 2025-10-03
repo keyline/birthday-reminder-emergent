@@ -150,6 +150,7 @@ const SettingsPage = () => {
     // Reset profile data to original values
     fetchProfile();
     setEditingProfile(false);
+    setPhoneValidationError('');
   };
 
   const cleanPhoneNumber = (phone) => {
