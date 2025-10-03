@@ -219,20 +219,7 @@ const AdminPage = () => {
     }
   };
 
-  const deleteUser = async (userId, userEmail) => {
-    if (!window.confirm(`Are you sure you want to delete user ${userEmail}? This will permanently delete all their data.`)) {
-      return;
-    }
-
-    try {
-      await axios.delete(`${API}/admin/users/${userId}`);
-      toast.success(`User ${userEmail} deleted successfully`);
-      fetchUsers();
-    } catch (error) {
-      console.error('Error deleting user:', error);
-      toast.error(error.response?.data?.detail || 'Failed to delete user');
-    }
-  };
+  // deleteUser function is defined below to avoid duplicate
 
   const deleteUser = async (userId, userName) => {
     if (window.confirm(`Are you sure you want to delete ${userName}? This will permanently delete all their data including contacts and templates.`)) {
