@@ -197,6 +197,7 @@
     - "Daily Reminder System - Main Processing Endpoint"
     - "Daily Reminder System - Admin Statistics Endpoint"
     - "Daily Reminder System - Admin Logs Endpoint"
+    - "Image Upload URL Fix for Templates and Contacts"
   
 - task: "User Profile Update Backend API"
   implemented: true
