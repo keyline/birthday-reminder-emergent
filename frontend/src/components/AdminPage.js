@@ -141,7 +141,7 @@ const AdminPage = () => {
 
   const updateUserCredits = async () => {
     try {
-      await axios.put(`${API}/admin/users/${selectedUserForCredits.id}/credits`, creditUpdate);
+      await axios.put(`${API}/admin/users/${selectedUserForCredits.id}`, creditUpdate);
       toast.success('User credits updated successfully!');
       fetchUsers();
       setIsCreditDialogOpen(false);
