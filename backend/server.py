@@ -2484,6 +2484,10 @@ async def delete_user_by_admin(
     if not target_user:
         raise HTTPException(status_code=404, detail="User not found")
     
+    # Don't allow deleting admin users (except self-deletion is already prevented above)
+    if target_user.get('is_admin', False):
+        raise HTTPException(status_code=400, detail="Cannot delete admin users")
+    
     # Delete user's data
     await db.contacts.delete_many({"user_id": user_id})
     await db.templates.delete_many({"user_id": user_id})
