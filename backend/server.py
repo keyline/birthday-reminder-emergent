@@ -162,6 +162,11 @@ class TestMessageRequest(BaseModel):
     contact_id: str
     occasion: str
 
+class UserProfileUpdate(BaseModel):
+    full_name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    phone_number: Optional[str] = None
+
 class BulkUploadResponse(BaseModel):
     total_rows: int
     successful_imports: int
