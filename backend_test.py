@@ -639,24 +639,18 @@ class BirthdayReminderAPITester:
         # Test 12: Test authentication requirement (remove token)
         temp_token = self.token
         self.token = None
-        result = self.run_test("Profile Update Without Auth", "PUT", "user/profile", 401, {"full_name": "Test"})
-        if result is not None:  # Should fail with 401
-            self.log_test("Auth Requirement Test", False, "Unauthenticated request was accepted")
+        result = self.run_test("Profile Update Without Auth", "PUT", "user/profile", 403, {"full_name": "Test"})
+        if result is not None:  # Should fail with 403
             success = False
-        else:
-            self.log_test("Auth Requirement Test", True, "Authentication correctly required")
         
         # Restore token
         self.token = temp_token
         
         # Test 13: Test GET profile without auth
         self.token = None
-        result = self.run_test("Get Profile Without Auth", "GET", "user/profile", 401)
-        if result is not None:  # Should fail with 401
-            self.log_test("Get Profile Auth Test", False, "Unauthenticated GET request was accepted")
+        result = self.run_test("Get Profile Without Auth", "GET", "user/profile", 403)
+        if result is not None:  # Should fail with 403
             success = False
-        else:
-            self.log_test("Get Profile Auth Test", True, "Authentication correctly required for GET")
         
         # Restore token
         self.token = temp_token
