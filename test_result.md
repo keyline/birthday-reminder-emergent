@@ -221,6 +221,21 @@
       - agent: "testing"
       - comment: "DIGITALSMS WHATSAPP API INTEGRATION TESTED SUCCESSFULLY: Comprehensive testing completed with 100% success rate (46/46 tests passed). ✅ Settings API endpoints working perfectly - saving/retrieving DigitalSMS API key and sender phone number. ✅ WhatsApp message sending function updated correctly with proper API format (GET request to https://demo.digitalsms.biz/api). ✅ Phone number cleaning verified - removes +91, spaces, formatting correctly. ✅ Image attachment support confirmed using img1 parameter. ✅ API response parsing working correctly - handles JSON format with status, message, statuscode fields. ✅ Settings model validation complete - whatsapp_sender_number field saved and retrieved correctly. ✅ API parameter format verified - correct endpoint, apikey, mobile (10-digit), msg, img1 parameters. All test scenarios passed including phone number validation for 10-digit Indian mobile numbers. Integration matches DigitalSMS API documentation format perfectly."
 
+  - task: "WhatsApp Test Configuration API"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "Added POST /api/settings/test-whatsapp endpoint to send real test WhatsApp messages to user's phone number with comprehensive validation"
+        - working: true
+        - agent: "testing"
+        - comment: "WHATSAPP TEST CONFIGURATION TESTED SUCCESSFULLY: Comprehensive testing of POST /api/settings/test-whatsapp endpoint completed with 100% success rate (45/45 tests passed). ✅ Missing API key validation - correctly returns error when DigitalSMS API key not configured. ✅ Missing sender number validation - correctly returns error when WhatsApp sender phone number not configured. ✅ Missing user phone validation - correctly returns error when user has no phone number in profile with instruction to add in Account settings. ✅ Invalid phone format validation - profile correctly rejects invalid phone numbers (wrong starting digits 0-5, wrong length, non-digits) with appropriate 400 errors. ✅ Valid phone acceptance - correctly accepts 10-digit numbers starting with 6-9. ✅ Complete configuration test - attempts to send actual WhatsApp message using send_whatsapp_message function with proper test message content including API details and timestamp. ✅ Error handling - properly handles DigitalSMS API communication errors and returns structured responses with status, message, provider, and details fields. ✅ Phone number validation requirements verified - enforces 10 digits starting with 6-9 as per Indian mobile number standards. All validation scenarios working perfectly with appropriate error messages and response structures."
+
 ## agent_communication:
     - agent: "main"
     - message: "Added user profile editing functionality in Settings > Account tab. Users can now update their name, email, and phone number. Added backend API endpoints and frontend form with validation."
