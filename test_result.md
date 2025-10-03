@@ -176,6 +176,6 @@
 
 ## agent_communication:
     - agent: "main"
-    - message: "Updated settings to remove Facebook Graph API option per user request. Removed Facebook provider from both frontend SettingsPage and backend UserSettings models. Now only uses DigitalSMS API for WhatsApp messaging. Services need restart to apply changes."
+    - message: "Added user profile editing functionality in Settings > Account tab. Users can now update their name, email, and phone number. Added backend API endpoints and frontend form with validation."
     - agent: "testing"
     - message: "BACKEND TESTING COMPLETED SUCCESSFULLY: All custom message functionality is working perfectly. Comprehensive testing performed on all CRUD operations, test message sending, AI integration, error handling, and various scenarios with different occasions (birthday/anniversary) and message types (WhatsApp/Email). All 18 focused tests passed with 100% success rate. Backend APIs are production-ready. WhatsApp/Email sending shows expected 'error' status due to unconfigured APIs in test environment, but endpoint logic is correct."
