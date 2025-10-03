@@ -72,6 +72,13 @@ const ContactsPage = () => {
   const [viewMode, setViewMode] = useState('card'); // 'card' or 'grid'
   const [filterBy, setFilterBy] = useState('all'); // 'all', 'birthday', 'anniversary', 'both'
   const [sortBy, setSortBy] = useState('name'); // 'name', 'created', 'birthday', 'anniversary'
+  const [messageDialogOpen, setMessageDialogOpen] = useState(false);
+  const [selectedContact, setSelectedContact] = useState(null);
+  const [selectedMessageType, setSelectedMessageType] = useState(''); // 'whatsapp' or 'email'
+  const [selectedOccasion, setSelectedOccasion] = useState(''); // 'birthday' or 'anniversary'
+  const [customMessage, setCustomMessage] = useState('');
+  const [generatingAIMessage, setGeneratingAIMessage] = useState(false);
+  const [sendingTestMessage, setSendingTestMessage] = useState(false);
 
   useEffect(() => {
     fetchContacts();
