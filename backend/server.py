@@ -340,6 +340,64 @@ def create_access_token(data: dict):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
+async def get_current_admin(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Verify admin authentication"""
+    try:
+        token = credentials.credentials
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        admin_id: str = payload.get("admin_id")
+        if admin_id is None:
+            raise HTTPException(status_code=401, detail="Invalid admin credentials")
+        
+        admin = await db.admins.find_one({"id": admin_id})
+        if not admin:
+            raise HTTPException(status_code=401, detail="Admin not found")
+        
+        return AdminUser(**admin)
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Could not validate admin credentials")
+
+def generate_math_captcha():
+    """Generate a simple math captcha"""
+    import random
+    num1 = random.randint(1, 10)
+    num2 = random.randint(1, 10)
+    captcha_id = str(uuid.uuid4())
+    answer = num1 + num2
+    
+    # Store captcha with 5 minute expiration
+    captcha_store[captcha_id] = {
+        "answer": answer,
+        "created_at": datetime.now(timezone.utc)
+    }
+    
+    # Clean old captchas
+    current_time = datetime.now(timezone.utc)
+    expired_keys = [
+        key for key, value in captcha_store.items()
+        if (current_time - value["created_at"]).total_seconds() > 300
+    ]
+    for key in expired_keys:
+        del captcha_store[key]
+    
+    return {
+        "captcha_id": captcha_id,
+        "question": f"What is {num1} + {num2}?"
+    }
+
+def verify_captcha(captcha_id: str, answer: str) -> bool:
+    """Verify captcha answer"""
+    if captcha_id not in captcha_store:
+        return False
+    
+    stored_data = captcha_store[captcha_id]
+    is_valid = str(stored_data["answer"]) == answer
+    
+    # Remove captcha after verification attempt
+    del captcha_store[captcha_id]
+    
+    return is_valid
+
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     try:
         token = credentials.credentials
