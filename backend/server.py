@@ -1316,7 +1316,7 @@ async def deduct_credits(message_type: str, count: int = 1, current_user: User =
 
 # WhatsApp Message Sending Functions
 async def send_whatsapp_message(user_id: str, phone_number: str, message: str, image_url: Optional[str] = None):
-    """Send WhatsApp message using DigitalSMS API"""
+    """Send WhatsApp message using DigitalSMS API according to official documentation"""
     settings = await db.user_settings.find_one({"user_id": user_id})
     
     if not settings:
@@ -1330,37 +1330,58 @@ async def send_whatsapp_message(user_id: str, phone_number: str, message: str, i
         if not api_key:
             return {"status": "error", "message": "DigitalSMS API key not configured"}
         
-        url = "https://demo.digitalsms.biz/api/"
+        # DigitalSMS API endpoint as per documentation
+        url = "https://demo.digitalsms.biz/api"
         
-        # Prepare message - if image is provided, include it as a link in the text
-        final_message = message
+        # Clean phone number - DigitalSMS expects 10-digit Indian mobile number
+        clean_phone = phone_number.replace("+91", "").replace("+", "").replace(" ", "").replace("-", "")
+        if len(clean_phone) > 10:
+            clean_phone = clean_phone[-10:]  # Take last 10 digits
+        
+        # Prepare API parameters according to DigitalSMS documentation
+        params = {
+            "apikey": api_key,
+            "mobile": clean_phone,
+            "msg": message
+        }
+        
+        # Add image if provided (using img1 parameter as per documentation)
         if image_url:
             # Convert relative URL to absolute if needed
             if image_url.startswith('/'):
-                # Assume it's a local upload, convert to full URL
-                final_message = f"{message}\n\n📷 Image: https://birthday-buddy-16.preview.emergentagent.com{image_url}"
+                absolute_image_url = f"https://birthday-buddy-16.preview.emergentagent.com{image_url}"
             else:
-                final_message = f"{message}\n\n📷 Image: {image_url}"
+                absolute_image_url = image_url
+            params["img1"] = absolute_image_url
         
-        params = {
-            "apikey": api_key,
-            "mobile": phone_number,
-            "msg": final_message
-        }
-        
-        response = requests.get(url, params=params)
+        # Make API request (GET method as per documentation)
+        response = requests.get(url, params=params, timeout=30)
         
         if response.status_code == 200:
-            response_text = response.text.strip()
-            
-            # Check for success indicators in DigitalSMS response
-            if any(indicator in response_text.lower() for indicator in ["success", "sent", "ok", "delivered", "queued"]):
-                return {"status": "success", "message": f"Message sent via DigitalSMS API. Response: {response_text}"}
-            elif any(error in response_text.lower() for error in ["invalid", "error", "fail", "unauthorized", "forbidden", "insufficient"]):
-                return {"status": "error", "message": f"DigitalSMS API error: {response_text}"}
-            else:
-                # If response is unclear, log it but assume success if HTTP 200
-                return {"status": "success", "message": f"Message sent via DigitalSMS API. Server response: {response_text}"}
+            try:
+                # Try to parse JSON response
+                response_data = response.json()
+                status = response_data.get("status", 0)
+                message_text = response_data.get("message", "")
+                statuscode = response_data.get("statuscode", "")
+                
+                if status == 1:
+                    return {"status": "success", "message": f"Message sent successfully. Response: {message_text}"}
+                else:
+                    return {"status": "error", "message": f"DigitalSMS API error (Code: {statuscode}): {message_text}"}
+                    
+            except json.JSONDecodeError:
+                # Fallback to text response parsing
+                response_text = response.text.strip()
+                
+                # Check for success indicators
+                if any(indicator in response_text.lower() for indicator in ["success", "sent", "ok", "delivered", "queued"]):
+                    return {"status": "success", "message": f"Message sent via DigitalSMS API. Response: {response_text}"}
+                elif any(error in response_text.lower() for error in ["invalid", "error", "fail", "unauthorized", "forbidden", "insufficient"]):
+                    return {"status": "error", "message": f"DigitalSMS API error: {response_text}"}
+                else:
+                    # If response is unclear, assume success if HTTP 200
+                    return {"status": "success", "message": f"Message sent via DigitalSMS API. Server response: {response_text}"}
         else:
             return {"status": "error", "message": f"DigitalSMS API HTTP error {response.status_code}: {response.text}"}
             
