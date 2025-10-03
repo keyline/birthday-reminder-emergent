@@ -1693,7 +1693,8 @@ async def send_test_message(request: TestMessageRequest, current_user: User = De
             user_id=current_user.id,
             phone_number=contact["whatsapp"],
             message=test_whatsapp_message,
-            image_url=whatsapp_image
+            image_url=whatsapp_image,
+            occasion=request.occasion
         )
         results["whatsapp"] = whatsapp_result
     
