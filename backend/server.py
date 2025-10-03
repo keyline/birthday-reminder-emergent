@@ -359,6 +359,61 @@ async def login(login_data: UserLogin):
 async def get_me(current_user: User = Depends(get_current_user)):
     return current_user
 
+# User Profile Routes
+@api_router.put("/user/profile", response_model=User)
+async def update_user_profile(profile_data: UserProfileUpdate, current_user: User = Depends(get_current_user)):
+    """Update user profile information"""
+    update_fields = {}
+    
+    # Only update fields that are provided
+    if profile_data.full_name is not None:
+        update_fields["full_name"] = profile_data.full_name.strip()
+    
+    if profile_data.email is not None:
+        # Check if email is already taken by another user
+        existing_user = await db.users.find_one({
+            "email": str(profile_data.email).lower(), 
+            "id": {"$ne": current_user.id}
+        })
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Email address is already in use")
+        update_fields["email"] = str(profile_data.email).lower()
+    
+    if profile_data.phone_number is not None:
+        # Basic phone number validation
+        phone = profile_data.phone_number.strip()
+        if phone and not phone.replace("+", "").replace("-", "").replace(" ", "").replace("(", "").replace(")", "").isdigit():
+            raise HTTPException(status_code=400, detail="Invalid phone number format")
+        update_fields["phone_number"] = phone if phone else None
+    
+    if not update_fields:
+        raise HTTPException(status_code=400, detail="No valid fields to update")
+    
+    # Update user in database
+    result = await db.users.update_one(
+        {"id": current_user.id},
+        {"$set": update_fields}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Fetch and return updated user
+    updated_user = await db.users.find_one({"id": current_user.id})
+    if not updated_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return User(**parse_from_mongo(updated_user))
+
+@api_router.get("/user/profile", response_model=User)
+async def get_user_profile(current_user: User = Depends(get_current_user)):
+    """Get current user profile"""
+    user = await db.users.find_one({"id": current_user.id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return User(**parse_from_mongo(user))
+
 # Contact Routes
 @api_router.post("/contacts", response_model=Contact)
 async def create_contact(contact_data: ContactCreate, current_user: User = Depends(get_current_user)):
