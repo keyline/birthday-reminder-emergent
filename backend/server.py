@@ -112,6 +112,8 @@ class Template(BaseModel):
     subject: Optional[str] = None
     content: str
     is_default: bool = False
+    whatsapp_image_url: Optional[str] = None  # Default WhatsApp image
+    email_image_url: Optional[str] = None     # Default Email image
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class GenerateMessageRequest(BaseModel):
