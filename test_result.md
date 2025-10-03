@@ -105,6 +105,21 @@
 ## user_problem_statement: "In the contact list, display three icons: WhatsApp, Email, and Test. When the WhatsApp or Email icon is clicked, open a popup showing a default message template. The user can edit or regenerate the message using AI, then save it. The customized message will be stored separately for each contact and channel (WhatsApp and Email). The user can also attach an image with the message. When the Test icon is clicked, a test message will be sent to the user's own phone (via WhatsApp) and email for preview."
 
 ## backend:
+  - task: "Image Upload URL Fix for Templates and Contacts"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "Added POST /api/upload-image endpoint that returns full URLs with domain name for proper frontend display"
+        - working: true
+        - agent: "testing"
+        - comment: "IMAGE UPLOAD URL FIX TESTED SUCCESSFULLY: Comprehensive testing of image upload functionality completed with 100% success rate (22/22 tests passed). ✅ IMAGE UPLOAD ENDPOINT - POST /api/upload-image correctly returns full URLs with https://birthday-buddy-16.preview.emergentagent.com domain name. Response format verified: {image_url: 'https://birthday-buddy-16.preview.emergentagent.com/uploads/images/filename', filename: 'unique_filename'}. ✅ URL FORMAT VERIFICATION - All returned URLs contain correct domain and path structure (/uploads/images/). ✅ MULTIPLE IMAGE FORMATS - Successfully tested JPEG, PNG, GIF, and WEBP formats, all returning proper full URLs. ✅ IMAGE ACCESSIBILITY - Uploaded images are accessible via returned URLs through static file serving. ✅ TEMPLATE INTEGRATION - WhatsApp and Email templates correctly save and retrieve full image URLs. Template creation/update with whatsapp_image_url and email_image_url fields working perfectly. ✅ VALIDATION & SECURITY - Proper file type validation (rejects non-images), file size limits (5MB), authentication requirements, and error handling. ✅ STATIC FILE SERVING - Images served correctly via /uploads mount point. All test scenarios from review request verified and working as specified."
+
   - task: "Custom Message Model and APIs"
     implemented: true
     working: true
