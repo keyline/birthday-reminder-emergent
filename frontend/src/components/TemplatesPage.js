@@ -126,9 +126,41 @@ const TemplatesPage = () => {
       type: 'email',
       subject: '',
       content: '',
-      is_default: false
+      is_default: false,
+      whatsapp_image_url: '',
+      email_image_url: ''
     });
     setEditingTemplate(null);
+  };
+
+  const handleImageUpload = async (event, imageType) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    try {
+      const formDataUpload = new FormData();
+      formDataUpload.append('file', file);
+
+      const response = await axios.post(`${API}/upload-image`, formDataUpload, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      const imageUrl = response.data.image_url;
+      setFormData(prev => ({
+        ...prev,
+        [imageType]: imageUrl
+      }));
+      
+      toast.success('Image uploaded successfully');
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error('Failed to upload image');
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const getTemplateIcon = (type) => {
