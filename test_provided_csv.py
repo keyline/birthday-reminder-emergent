@@ -3,7 +3,7 @@ import pandas as pd
 import io
 
 # Test with the provided CSV file
-BACKEND_URL = "https://birthday-buddy-16.preview.emergentagent.com"
+BACKEND_URL = "https://remindhub-5.preview.emergentagent.com"
 API_URL = f"{BACKEND_URL}/api"
 
 # Register and login

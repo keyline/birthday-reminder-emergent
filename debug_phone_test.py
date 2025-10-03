@@ -8,7 +8,7 @@ import time
 import json
 
 def debug_phone_test():
-    base_url = "https://birthday-buddy-16.preview.emergentagent.com"
+    base_url = "https://remindhub-5.preview.emergentagent.com"
     api_url = f"{base_url}/api"
     
     # Create test user

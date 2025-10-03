@@ -7,7 +7,7 @@ import io
 from PIL import Image
 
 class BirthdayReminderAPITester:
-    def __init__(self, base_url="https://birthday-buddy-16.preview.emergentagent.com"):
+    def __init__(self, base_url="https://remindhub-5.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.token = None
@@ -2110,7 +2110,7 @@ class BirthdayReminderAPITester:
                 filename = result.get('filename', '')
                 
                 # Verify URL format contains full domain
-                expected_domain = "https://birthday-buddy-16.preview.emergentagent.com"
+                expected_domain = "https://remindhub-5.preview.emergentagent.com"
                 if image_url.startswith(expected_domain):
                     self.log_test("Image Upload - Full URL Format", True, f"URL contains correct domain: {image_url}")
                     
@@ -2159,7 +2159,7 @@ class BirthdayReminderAPITester:
                 if response.status_code == 200:
                     result = response.json()
                     image_url = result.get('image_url', '')
-                    if image_url.startswith("https://birthday-buddy-16.preview.emergentagent.com"):
+                    if image_url.startswith("https://remindhub-5.preview.emergentagent.com"):
                         self.log_test(f"Image Upload - {fmt['format']} Format", True, f"Successfully uploaded {fmt['format']} image")
                     else:
                         self.log_test(f"Image Upload - {fmt['format']} Format", False, f"Invalid URL format for {fmt['format']}")
@@ -2300,10 +2300,10 @@ class BirthdayReminderAPITester:
                     whatsapp_url = template.get('whatsapp_image_url', '')
                     email_url = template.get('email_image_url', '')
                     
-                    if whatsapp_url and not whatsapp_url.startswith("https://birthday-buddy-16.preview.emergentagent.com"):
+                    if whatsapp_url and not whatsapp_url.startswith("https://remindhub-5.preview.emergentagent.com"):
                         all_urls_valid = False
                         break
-                    if email_url and not email_url.startswith("https://birthday-buddy-16.preview.emergentagent.com"):
+                    if email_url and not email_url.startswith("https://remindhub-5.preview.emergentagent.com"):
                         all_urls_valid = False
                         break
                 

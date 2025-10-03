@@ -7,7 +7,7 @@ import requests
 import time
 
 def test_indian_phone_validation():
-    base_url = "https://birthday-buddy-16.preview.emergentagent.com"
+    base_url = "https://remindhub-5.preview.emergentagent.com"
     api_url = f"{base_url}/api"
     
     # Create test user

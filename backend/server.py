@@ -1377,7 +1377,7 @@ async def send_whatsapp_message(user_id: str, phone_number: str, message: str, i
         # if image_url and image_url.strip():
         #     # Convert relative URL to absolute if needed
         #     if image_url.startswith('/'):
-        #         absolute_image_url = f"https://birthday-buddy-16.preview.emergentagent.com{image_url}"
+        #         absolute_image_url = f"https://remindhub-5.preview.emergentagent.com{image_url}"
         #     elif image_url.startswith('http'):
         #         absolute_image_url = image_url
         #     else:
@@ -1792,7 +1792,7 @@ async def upload_image(file: UploadFile = File(...), current_user: User = Depend
         buffer.write(file_content)
     
     # Return full file URL with domain
-    file_url = f"https://birthday-buddy-16.preview.emergentagent.com/uploads/images/{unique_filename}"
+    file_url = f"https://remindhub-5.preview.emergentagent.com/uploads/images/{unique_filename}"
     return {"image_url": file_url, "filename": unique_filename}
 
 @api_router.put("/contacts/{contact_id}/images")

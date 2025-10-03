@@ -7,7 +7,7 @@ import requests
 import time
 
 def check_template_types():
-    base_url = "https://birthday-buddy-16.preview.emergentagent.com"
+    base_url = "https://remindhub-5.preview.emergentagent.com"
     api_url = f"{base_url}/api"
     
     # Register user

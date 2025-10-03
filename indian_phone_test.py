@@ -10,7 +10,7 @@ import json
 import time
 
 class IndianPhoneValidationTester:
-    def __init__(self, base_url="https://birthday-buddy-16.preview.emergentagent.com"):
+    def __init__(self, base_url="https://remindhub-5.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.token = None

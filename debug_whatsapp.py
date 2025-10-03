@@ -3,7 +3,7 @@ import pandas as pd
 import io
 
 # Test with a single valid contact
-BACKEND_URL = "https://birthday-buddy-16.preview.emergentagent.com"
+BACKEND_URL = "https://remindhub-5.preview.emergentagent.com"
 API_URL = f"{BACKEND_URL}/api"
 
 # First register and login
