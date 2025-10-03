@@ -2293,3 +2293,6 @@ async def get_reminder_logs(
 @api_router.get("/health")
 async def health_check():
     return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
+
+# Include the router in the main app (after all endpoints are defined)
+app.include_router(api_router)
