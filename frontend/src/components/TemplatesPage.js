@@ -311,6 +311,131 @@ const TemplatesPage = () => {
                   />
                 </div>
                 
+                {/* Image Upload Section */}
+                <div className="space-y-4 p-4 bg-gray-50 rounded-lg border">
+                  <h4 className="text-sm font-medium text-gray-700 flex items-center">
+                    <Image className="w-4 h-4 mr-2" />
+                    Default Images (Optional)
+                  </h4>
+                  <p className="text-xs text-gray-500">
+                    These images will be used by default if no custom image is set for individual contacts
+                  </p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* WhatsApp Image Upload */}
+                    <div className="space-y-2">
+                      <Label htmlFor="whatsapp-image-upload" className="text-sm">
+                        WhatsApp Default Image
+                      </Label>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleImageUpload(e, 'whatsapp_image_url')}
+                          className="hidden"
+                          id="whatsapp-image-upload"
+                          disabled={uploadingImage}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => document.getElementById('whatsapp-image-upload').click()}
+                          disabled={uploadingImage}
+                          className="text-xs"
+                        >
+                          {uploadingImage ? (
+                            <>
+                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-600 mr-1"></div>
+                              Uploading...
+                            </>
+                          ) : (
+                            <>
+                              <Image className="w-3 h-3 mr-1" />
+                              {formData.whatsapp_image_url ? 'Change' : 'Upload'}
+                            </>
+                          )}
+                        </Button>
+                        
+                        {formData.whatsapp_image_url && (
+                          <div className="flex items-center space-x-2">
+                            <img 
+                              src={`${BACKEND_URL}${formData.whatsapp_image_url}`} 
+                              alt="WhatsApp default" 
+                              className="w-8 h-8 rounded object-cover border"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setFormData(prev => ({ ...prev, whatsapp_image_url: '' }))}
+                              className="text-red-500 hover:text-red-700 h-6 w-6 p-0"
+                            >
+                              <XCircle className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Email Image Upload */}
+                    <div className="space-y-2">
+                      <Label htmlFor="email-image-upload" className="text-sm">
+                        Email Default Image
+                      </Label>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleImageUpload(e, 'email_image_url')}
+                          className="hidden"
+                          id="email-image-upload"
+                          disabled={uploadingImage}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => document.getElementById('email-image-upload').click()}
+                          disabled={uploadingImage}
+                          className="text-xs"
+                        >
+                          {uploadingImage ? (
+                            <>
+                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-600 mr-1"></div>
+                              Uploading...
+                            </>
+                          ) : (
+                            <>
+                              <Image className="w-3 h-3 mr-1" />
+                              {formData.email_image_url ? 'Change' : 'Upload'}
+                            </>
+                          )}
+                        </Button>
+                        
+                        {formData.email_image_url && (
+                          <div className="flex items-center space-x-2">
+                            <img 
+                              src={`${BACKEND_URL}${formData.email_image_url}`} 
+                              alt="Email default" 
+                              className="w-8 h-8 rounded object-cover border"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setFormData(prev => ({ ...prev, email_image_url: '' }))}
+                              className="text-red-500 hover:text-red-700 h-6 w-6 p-0"
+                            >
+                              <XCircle className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
                 <div className="flex items-center space-x-2">
                   <Switch
                     id="is-default"
