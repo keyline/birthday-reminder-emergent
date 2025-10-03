@@ -1389,13 +1389,32 @@ async def send_whatsapp_message(user_id: str, phone_number: str, message: str, i
         }
         
         # Add image if provided (using img1 parameter as per documentation)
-        if image_url:
+        if image_url and image_url.strip():
             # Convert relative URL to absolute if needed
             if image_url.startswith('/'):
                 absolute_image_url = f"https://birthday-buddy-16.preview.emergentagent.com{image_url}"
-            else:
+            elif image_url.startswith('http'):
                 absolute_image_url = image_url
-            params["img1"] = absolute_image_url
+            else:
+                # Use default celebration image if image_url is not a valid URL
+                absolute_image_url = "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njl8MHwxfHNlYXJjaHwxfHxiaXJ0aGRheSUyMGNlbGVicmF0aW9ufGVufDB8fHx8MTc1OTQ4ODk0Nnww&ixlib=rb-4.1.0&q=85&w=400&h=400&fit=crop"
+            
+            # Validate URL before sending
+            try:
+                import requests
+                # Quick HEAD request to check if image is accessible
+                head_response = requests.head(absolute_image_url, timeout=5)
+                if head_response.status_code == 200:
+                    params["img1"] = absolute_image_url
+                else:
+                    # Use default celebration image if original is not accessible
+                    params["img1"] = "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njl8MHwxfHNlYXJjaHwxfHxiaXJ0aGRheSUyMGNlbGVicmF0aW9ufGVufDB8fHx8MTc1OTQ4ODk0Nnww&ixlib=rb-4.1.0&q=85&w=400&h=400&fit=crop"
+            except:
+                # If validation fails, use default celebration image
+                params["img1"] = "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njl8MHwxfHNlYXJjaHwxfHxiaXJ0aGRheSUyMGNlbGVicmF0aW9ufGVufDB8fHx8MTc1OTQ4ODk0Nnww&ixlib=rb-4.1.0&q=85&w=400&h=400&fit=crop"
+        else:
+            # No image provided, use default celebration image
+            params["img1"] = "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njl8MHwxfHNlYXJjaHwxfHxiaXJ0aGRheSUyMGNlbGVicmF0aW9ufGVufDB8fHx8MTc1OTQ4ODk0Nnww&ixlib=rb-4.1.0&q=85&w=400&h=400&fit=crop"
         
         # Make API request (GET method as per documentation)
         response = requests.get(url, params=params, timeout=30)
