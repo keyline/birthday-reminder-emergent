@@ -101,6 +101,8 @@ class TemplateCreate(BaseModel):
     subject: Optional[str] = None
     content: str
     is_default: bool = False
+    whatsapp_image_url: Optional[str] = None  # Default WhatsApp image
+    email_image_url: Optional[str] = None     # Default Email image
 
 class Template(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
