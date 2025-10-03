@@ -60,6 +60,15 @@ const SettingsPage = () => {
     unlimited_whatsapp: false,
     unlimited_email: false
   });
+  
+  // Profile state
+  const [profileData, setProfileData] = useState({
+    full_name: '',
+    email: '',
+    phone_number: ''
+  });
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
 
   const timezones = [
     'UTC', 'America/New_York', 'America/Los_Angeles', 'America/Chicago',
