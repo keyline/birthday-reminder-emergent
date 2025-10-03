@@ -1232,9 +1232,9 @@ class BirthdayReminderAPITester:
         }
         self.run_test("Setup Complete Settings", "PUT", "settings", 200, complete_settings)
         
-        # Remove user's phone number
-        profile_no_phone = {"phone_number": None}
-        self.run_test("Remove User Phone Number", "PUT", "user/profile", 200, {"full_name": "Test User No Phone"})  # Update something else to avoid null field error
+        # Remove user's phone number by setting it to empty string
+        profile_no_phone = {"phone_number": ""}
+        self.run_test("Remove User Phone Number", "PUT", "user/profile", 200, profile_no_phone)
         
         result = self.run_test("Test WhatsApp - Missing User Phone", "POST", "settings/test-whatsapp", 200)
         if result:
