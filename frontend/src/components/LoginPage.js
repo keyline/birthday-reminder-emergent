@@ -81,29 +81,29 @@ const LoginPage = () => {
         {/* Celebration Images Banner */}
         <div className="absolute inset-0 flex">
           {/* Birthday Balloons */}
-          <div className="absolute top-0 right-0 w-48 h-48 opacity-20">
+          <div className="absolute top-0 right-0 w-48 h-48 opacity-30 hero-image">
             <img 
               src="https://images.unsplash.com/photo-1530103862676-de8c9debad1d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njl8MHwxfHNlYXJjaHwxfHxiaXJ0aGRheSUyMGNlbGVicmF0aW9ufGVufDB8fHx8MTc1OTQ4ODk0Nnww&ixlib=rb-4.1.0&q=85&w=400&h=400&fit=crop" 
               alt="Birthday celebration" 
-              className="w-full h-full object-cover rounded-full"
+              className="w-full h-full object-cover rounded-full shadow-2xl border-4 border-white/20"
             />
           </div>
           
           {/* Birthday Cake */}
-          <div className="absolute top-20 left-0 w-40 h-40 opacity-25">
+          <div className="absolute top-20 left-0 w-40 h-40 opacity-35 hero-image">
             <img 
               src="https://images.unsplash.com/photo-1729870526122-0de9a7113dc6?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njl8MHwxfHNlYXJjaHwyfHxiaXJ0aGRheSUyMGNlbGVicmF0aW9ufGVufDB8fHx8MTc1OTQ4ODk0Nnww&ixlib=rb-4.1.0&q=85&w=400&h=400&fit=crop" 
               alt="Birthday cake" 
-              className="w-full h-full object-cover rounded-2xl"
+              className="w-full h-full object-cover rounded-2xl shadow-2xl border-2 border-white/30"
             />
           </div>
           
           {/* Anniversary Balloons */}
-          <div className="absolute bottom-10 right-10 w-32 h-32 opacity-20">
+          <div className="absolute bottom-10 right-10 w-32 h-32 opacity-25 hero-image">
             <img 
               src="https://images.unsplash.com/photo-1599073499036-dc27fc297dc9?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NjZ8MHwxfHNlYXJjaHwyfHxhbm5pdmVyc2FyeSUyMGNlbGVicmF0aW9ufGVufDB8fHx8MTc1OTQ4ODk1MXww&ixlib=rb-4.1.0&q=85&w=400&h=400&fit=crop" 
               alt="Anniversary celebration" 
-              className="w-full h-full object-cover rounded-full"
+              className="w-full h-full object-cover rounded-full shadow-xl border-3 border-white/25"
             />
           </div>
         </div>
