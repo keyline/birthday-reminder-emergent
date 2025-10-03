@@ -379,7 +379,7 @@ const SettingsPage = () => {
                     </div>
 
                     <div className="text-xs text-gray-500">
-                      Provider: {settings.whatsapp_provider === 'facebook' ? 'Facebook Graph API' : 'DigitalSMS API'}
+                      Provider: DigitalSMS API
                     </div>
                   </div>
 
