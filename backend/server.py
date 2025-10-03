@@ -1357,8 +1357,17 @@ async def deduct_credits(message_type: str, count: int = 1, current_user: User =
         "credits_remaining": new_credits
     }
 
+# Default celebration images
+def get_default_celebration_image(occasion: str = "birthday") -> str:
+    """Get default celebration image based on occasion"""
+    default_images = {
+        "birthday": "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njl8MHwxfHNlYXJjaHwxfHxiaXJ0aGRheSUyMGNlbGVicmF0aW9ufGVufDB8fHx8MTc1OTQ4ODk0Nnww&ixlib=rb-4.1.0&q=85&w=400&h=400&fit=crop",
+        "anniversary": "https://images.unsplash.com/photo-1599073499036-dc27fc297dc9?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NjZ8MHwxfHNlYXJjaHwyfHxhbm5pdmVyc2FyeSUyMGNlbGVicmF0aW9ufGVufDB8fHx8MTc1OTQ4ODk1MXww&ixlib=rb-4.1.0&q=85&w=400&h=400&fit=crop",
+    }
+    return default_images.get(occasion.lower(), default_images["birthday"])
+
 # WhatsApp Message Sending Functions
-async def send_whatsapp_message(user_id: str, phone_number: str, message: str, image_url: Optional[str] = None):
+async def send_whatsapp_message(user_id: str, phone_number: str, message: str, image_url: Optional[str] = None, occasion: str = "birthday"):
     """Send WhatsApp message using DigitalSMS API according to official documentation"""
     settings = await db.user_settings.find_one({"user_id": user_id})
     
