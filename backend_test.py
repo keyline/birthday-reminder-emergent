@@ -583,15 +583,13 @@ class BirthdayReminderAPITester:
         for test_case in invalid_indian_numbers:
             phone_update = {"phone_number": test_case["phone"]}
             result = self.run_test(f"Invalid Indian Phone: {test_case['description']}", "PUT", "user/profile", 400, phone_update)
-            # The run_test method returns None when the expected status matches (which is what we want for 400)
-            # It only returns data when the test passes with expected status
-            if result is None:  # This means 400 was returned as expected
-                self.log_test(f"Verify Rejection: {test_case['description']}", True, 
-                            "Correctly rejected invalid number")
-            else:
+            if result is not None:  # Should fail with 400, so result should be None
                 self.log_test(f"Verify Rejection: {test_case['description']}", False, 
                             f"Should have been rejected but got: {result}")
                 success = False
+            else:
+                self.log_test(f"Verify Rejection: {test_case['description']}", True, 
+                            "Correctly rejected invalid number")
         
         # Edge Cases
         edge_cases = [
