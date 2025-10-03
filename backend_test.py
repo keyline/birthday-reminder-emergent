@@ -605,10 +605,7 @@ class BirthdayReminderAPITester:
             duplicate_email = {"email": duplicate_user_data["email"]}
             result = self.run_test("Duplicate Email Test", "PUT", "user/profile", 400, duplicate_email)
             if result is not None:  # Should fail with 400
-                self.log_test("Duplicate Email Validation", False, "Duplicate email was accepted")
                 success = False
-            else:
-                self.log_test("Duplicate Email Validation", True, "Duplicate email correctly rejected")
         
         # Test 10: Update all fields together
         timestamp3 = int(time.time()) + 2
