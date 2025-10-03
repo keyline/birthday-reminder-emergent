@@ -826,6 +826,45 @@ const ContactsPage = () => {
                       </div>
                     )}
                   </div>
+                  
+                  {/* Action Icons */}
+                  <div className="flex justify-center space-x-3 pt-3 border-t border-gray-100">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleMessageEdit(contact, 'whatsapp')}
+                      className="h-10 px-3 hover:bg-green-50 hover:text-green-600 hover:border-green-300"
+                      title="Edit WhatsApp Message"
+                      data-testid={`whatsapp-message-${contact.id}`}
+                    >
+                      <MessageSquare className="w-4 h-4 mr-1" />
+                      <span className="text-xs">WhatsApp</span>
+                    </Button>
+                    
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleMessageEdit(contact, 'email')}
+                      className="h-10 px-3 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"
+                      title="Edit Email Message"
+                      data-testid={`email-message-${contact.id}`}
+                    >
+                      <Mail className="w-4 h-4 mr-1" />
+                      <span className="text-xs">Email</span>
+                    </Button>
+                    
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleSendTest(contact)}
+                      className="h-10 px-3 hover:bg-purple-50 hover:text-purple-600 hover:border-purple-300"
+                      title="Send Test Messages"
+                      data-testid={`test-message-${contact.id}`}
+                    >
+                      <Volume2 className="w-4 h-4 mr-1" />
+                      <span className="text-xs">Test</span>
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))}
