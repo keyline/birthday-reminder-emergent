@@ -499,6 +499,145 @@ class BirthdayReminderAPITester:
         
         return success
 
+    def test_indian_phone_number_validation(self):
+        """Test enhanced Indian phone number validation for user profile updates"""
+        if not self.token:
+            self.log_test("Indian Phone Number Validation", False, "No auth token available")
+            return False
+        
+        success = True
+        print("\n🇮🇳 Testing Enhanced Indian Phone Number Validation...")
+        
+        # Valid Indian Phone Number Tests
+        valid_indian_numbers = [
+            # Valid 10-digit numbers starting with 6, 7, 8, 9
+            {"phone": "9876543210", "expected": "9876543210", "description": "Valid 10-digit starting with 9"},
+            {"phone": "8765432109", "expected": "8765432109", "description": "Valid 10-digit starting with 8"},
+            {"phone": "7654321098", "expected": "7654321098", "description": "Valid 10-digit starting with 7"},
+            {"phone": "6543210987", "expected": "6543210987", "description": "Valid 10-digit starting with 6"},
+            
+            # Numbers with +91 prefix (should be cleaned)
+            {"phone": "+919876543210", "expected": "9876543210", "description": "Number with +91 prefix"},
+            {"phone": "+918765432109", "expected": "8765432109", "description": "Another +91 prefix number"},
+            
+            # Numbers with 91 prefix (should be cleaned)
+            {"phone": "919876543210", "expected": "9876543210", "description": "Number with 91 prefix (12 digits)"},
+            {"phone": "918765432109", "expected": "8765432109", "description": "Another 91 prefix number"},
+            
+            # Numbers with spaces and formatting (should be cleaned)
+            {"phone": "+91 98765 43210", "expected": "9876543210", "description": "Number with +91 and spaces"},
+            {"phone": "91 8765 432 109", "expected": "8765432109", "description": "Number with 91 and spaces"},
+            {"phone": " 9876543210 ", "expected": "9876543210", "description": "Number with leading/trailing spaces"},
+            
+            # Numbers with dashes and parentheses (should be cleaned)
+            {"phone": "98765-43210", "expected": "9876543210", "description": "Number with dashes"},
+            {"phone": "(987) 654-3210", "expected": "9876543210", "description": "Number with parentheses and dashes"},
+            {"phone": "+91-98765-43210", "expected": "9876543210", "description": "Number with +91 and dashes"},
+            {"phone": "91-(876)-543-2109", "expected": "8765432109", "description": "Number with 91, parentheses and dashes"},
+        ]
+        
+        for test_case in valid_indian_numbers:
+            phone_update = {"phone_number": test_case["phone"]}
+            result = self.run_test(f"Valid Indian Phone: {test_case['description']}", "PUT", "user/profile", 200, phone_update)
+            if not result:
+                success = False
+            elif result.get('phone_number') != test_case['expected']:
+                self.log_test(f"Verify Cleaned Phone: {test_case['description']}", False, 
+                            f"Expected: {test_case['expected']}, Got: {result.get('phone_number')}")
+                success = False
+            else:
+                self.log_test(f"Verify Cleaned Phone: {test_case['description']}", True, 
+                            f"Correctly cleaned to: {test_case['expected']}")
+        
+        # Invalid Indian Phone Number Tests
+        invalid_indian_numbers = [
+            # Numbers not starting with 6-9
+            {"phone": "5876543210", "description": "Number starting with 5 (invalid)"},
+            {"phone": "4876543210", "description": "Number starting with 4 (invalid)"},
+            {"phone": "3876543210", "description": "Number starting with 3 (invalid)"},
+            {"phone": "2876543210", "description": "Number starting with 2 (invalid)"},
+            {"phone": "1876543210", "description": "Number starting with 1 (invalid)"},
+            {"phone": "0876543210", "description": "Number starting with 0 (invalid)"},
+            {"phone": "1234567890", "description": "Number starting with 1 (invalid)"},
+            
+            # Numbers with wrong length
+            {"phone": "98765", "description": "Too short (5 digits)"},
+            {"phone": "987654321", "description": "Too short (9 digits)"},
+            {"phone": "98765432101", "description": "Too long (11 digits)"},
+            {"phone": "987654321012", "description": "Too long (12 digits)"},
+            {"phone": "+9198765432101", "description": "Too long with +91 prefix (13 digits total)"},
+            
+            # Numbers with non-digit characters
+            {"phone": "98765abc10", "description": "Contains letters"},
+            {"phone": "9876543@10", "description": "Contains special characters"},
+            {"phone": "9876.543.210", "description": "Contains dots (not allowed)"},
+            {"phone": "9876#543210", "description": "Contains hash symbol"},
+            
+            # Edge cases with prefixes
+            {"phone": "+9198765", "description": "Too short even with +91"},
+            {"phone": "9198765", "description": "Too short with 91 prefix"},
+            {"phone": "+915876543210", "description": "+91 prefix with invalid starting digit 5"},
+            {"phone": "915876543210", "description": "91 prefix with invalid starting digit 5"},
+        ]
+        
+        for test_case in invalid_indian_numbers:
+            phone_update = {"phone_number": test_case["phone"]}
+            result = self.run_test(f"Invalid Indian Phone: {test_case['description']}", "PUT", "user/profile", 400, phone_update)
+            if result is not None:  # Should fail with 400
+                self.log_test(f"Verify Rejection: {test_case['description']}", False, 
+                            f"Should have been rejected but got: {result}")
+                success = False
+            else:
+                self.log_test(f"Verify Rejection: {test_case['description']}", True, 
+                            "Correctly rejected invalid number")
+        
+        # Edge Cases
+        edge_cases = [
+            # Empty/null phone numbers (should be accepted and set to None)
+            {"phone": "", "expected": None, "status": 200, "description": "Empty string"},
+            {"phone": "   ", "expected": None, "status": 200, "description": "Whitespace only"},
+            
+            # Very long numbers with valid prefixes
+            {"phone": "+919876543210123", "expected": None, "status": 400, "description": "Very long with +91"},
+            {"phone": "919876543210123", "expected": None, "status": 400, "description": "Very long with 91"},
+        ]
+        
+        for test_case in edge_cases:
+            phone_update = {"phone_number": test_case["phone"]}
+            result = self.run_test(f"Edge Case: {test_case['description']}", "PUT", "user/profile", test_case["status"], phone_update)
+            
+            if test_case["status"] == 200:
+                if not result:
+                    success = False
+                elif result.get('phone_number') != test_case['expected']:
+                    self.log_test(f"Verify Edge Case Result: {test_case['description']}", False, 
+                                f"Expected: {test_case['expected']}, Got: {result.get('phone_number')}")
+                    success = False
+                else:
+                    self.log_test(f"Verify Edge Case Result: {test_case['description']}", True, 
+                                f"Correctly handled: {test_case['expected']}")
+            else:
+                if result is not None:  # Should fail
+                    self.log_test(f"Verify Edge Case Rejection: {test_case['description']}", False, 
+                                f"Should have been rejected but got: {result}")
+                    success = False
+                else:
+                    self.log_test(f"Verify Edge Case Rejection: {test_case['description']}", True, 
+                                "Correctly rejected")
+        
+        # Test null phone number explicitly
+        null_phone_update = {"phone_number": None}
+        result = self.run_test("Null Phone Number", "PUT", "user/profile", 200, null_phone_update)
+        if not result:
+            success = False
+        elif result.get('phone_number') is not None:
+            self.log_test("Verify Null Phone", False, f"Null phone should remain None: {result.get('phone_number')}")
+            success = False
+        else:
+            self.log_test("Verify Null Phone", True, "Null phone number handled correctly")
+        
+        return success
+
     def test_user_profile_functionality(self):
         """Test user profile GET and PUT endpoints with comprehensive validation"""
         if not self.token:
@@ -532,41 +671,7 @@ class BirthdayReminderAPITester:
         else:
             self.log_test("Verify Name Update", True, "Full name updated successfully")
         
-        # Test 3: Update phone number only (valid format)
-        phone_update = {"phone_number": "+1-555-123-4567"}
-        result = self.run_test("Update Phone Number Valid", "PUT", "user/profile", 200, phone_update)
-        if not result:
-            success = False
-        elif result.get('phone_number') != phone_update['phone_number']:
-            self.log_test("Verify Phone Update", False, f"Phone not updated correctly: {result.get('phone_number')}")
-            success = False
-        else:
-            self.log_test("Verify Phone Update", True, "Phone number updated successfully")
-        
-        # Test 4: Update phone number with different valid format
-        phone_update2 = {"phone_number": "(555) 987-6543"}
-        result = self.run_test("Update Phone Number Format 2", "PUT", "user/profile", 200, phone_update2)
-        if not result:
-            success = False
-        
-        # Test 5: Update phone number to empty (should set to None)
-        phone_empty = {"phone_number": ""}
-        result = self.run_test("Update Phone Number Empty", "PUT", "user/profile", 200, phone_empty)
-        if not result:
-            success = False
-        elif result.get('phone_number') is not None:
-            self.log_test("Verify Empty Phone", False, f"Empty phone should be None: {result.get('phone_number')}")
-            success = False
-        else:
-            self.log_test("Verify Empty Phone", True, "Empty phone number set to None")
-        
-        # Test 6: Test invalid phone number format
-        invalid_phone = {"phone_number": "invalid-phone-123abc"}
-        result = self.run_test("Invalid Phone Number Format", "PUT", "user/profile", 400, invalid_phone)
-        if result is not None:  # Should fail with 400
-            success = False
-        
-        # Test 7: Update email only (need to use unique email)
+        # Test 3: Update email only (need to use unique email)
         timestamp = int(time.time())
         email_update = {"email": f"newemail{timestamp}@example.com"}
         result = self.run_test("Update Email Only", "PUT", "user/profile", 200, email_update)
@@ -578,13 +683,13 @@ class BirthdayReminderAPITester:
         else:
             self.log_test("Verify Email Update", True, "Email updated successfully")
         
-        # Test 8: Test invalid email format
+        # Test 4: Test invalid email format
         invalid_email = {"email": "invalid-email-format"}
         result = self.run_test("Invalid Email Format", "PUT", "user/profile", 422, invalid_email)
         if result is not None:  # Should fail with 422
             success = False
         
-        # Test 9: Test duplicate email (create another user first)
+        # Test 5: Test duplicate email (create another user first)
         timestamp2 = int(time.time()) + 1
         duplicate_user_data = {
             "email": f"duplicate{timestamp2}@example.com",
@@ -607,12 +712,12 @@ class BirthdayReminderAPITester:
             if result is not None:  # Should fail with 400
                 success = False
         
-        # Test 10: Update all fields together
+        # Test 6: Update all fields together
         timestamp3 = int(time.time()) + 2
         all_fields_update = {
             "full_name": "Complete Update Test User",
             "email": f"complete{timestamp3}@example.com",
-            "phone_number": "+1-800-555-0199"
+            "phone_number": "9876543210"  # Use valid Indian number
         }
         result = self.run_test("Update All Fields", "PUT", "user/profile", 200, all_fields_update)
         if not result:
@@ -630,13 +735,13 @@ class BirthdayReminderAPITester:
             else:
                 self.log_test("Verify All Fields Update", True, "All fields updated successfully")
         
-        # Test 11: Test with empty/null values
+        # Test 7: Test with empty/null values
         empty_update = {"full_name": None, "email": None, "phone_number": None}
         result = self.run_test("Update with Null Values", "PUT", "user/profile", 400, empty_update)
         if result is not None:  # Should fail with 400 (no valid fields to update)
             success = False
         
-        # Test 12: Test authentication requirement (remove token)
+        # Test 8: Test authentication requirement (remove token)
         temp_token = self.token
         self.token = None
         result = self.run_test("Profile Update Without Auth", "PUT", "user/profile", 403, {"full_name": "Test"})
@@ -646,7 +751,7 @@ class BirthdayReminderAPITester:
         # Restore token
         self.token = temp_token
         
-        # Test 13: Test GET profile without auth
+        # Test 9: Test GET profile without auth
         self.token = None
         result = self.run_test("Get Profile Without Auth", "GET", "user/profile", 403)
         if result is not None:  # Should fail with 403
@@ -655,8 +760,8 @@ class BirthdayReminderAPITester:
         # Restore token
         self.token = temp_token
         
-        # Test 14: Test whitespace trimming
-        whitespace_update = {"full_name": "  Trimmed Name  ", "phone_number": "  +1-555-999-8888  "}
+        # Test 10: Test whitespace trimming
+        whitespace_update = {"full_name": "  Trimmed Name  ", "phone_number": "  9876543210  "}
         result = self.run_test("Whitespace Trimming Test", "PUT", "user/profile", 200, whitespace_update)
         if not result:
             success = False
@@ -668,7 +773,7 @@ class BirthdayReminderAPITester:
             else:
                 self.log_test("Name Trimming Check", True, "Full name whitespace trimmed correctly")
             
-            if result.get('phone_number') != "+1-555-999-8888":
+            if result.get('phone_number') != "9876543210":
                 self.log_test("Phone Trimming Check", False, f"Phone not trimmed: '{result.get('phone_number')}'")
                 success = False
             else:
