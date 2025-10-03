@@ -414,29 +414,61 @@ const SettingsPage = () => {
                     <MessageCircle className="w-4 h-4 mr-2" />
                     DigitalSMS API Configuration
                   </h4>
-                  <div className="space-y-2">
-                    <Label htmlFor="digitalsms-api-key" className="flex items-center">
-                      <Key className="w-4 h-4 mr-2" />
-                      API Key
-                    </Label>
-                    <Input
-                      id="digitalsms-api-key"
-                      data-testid="digitalsms-api-key-input"
-                      type="password"
-                      value={settings.digitalsms_api_key}
-                      onChange={(e) => setSettings({ ...settings, digitalsms_api_key: e.target.value })}
-                      placeholder="Enter DigitalSMS API Key"
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="digitalsms-api-key" className="flex items-center">
+                        <Key className="w-4 h-4 mr-2" />
+                        API Key *
+                      </Label>
+                      <Input
+                        id="digitalsms-api-key"
+                        data-testid="digitalsms-api-key-input"
+                        type="password"
+                        value={settings.digitalsms_api_key}
+                        onChange={(e) => setSettings({ ...settings, digitalsms_api_key: e.target.value })}
+                        placeholder="Enter DigitalSMS API Key"
+                        required
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="whatsapp-sender-number" className="flex items-center">
+                        <Phone className="w-4 h-4 mr-2" />
+                        Sender Phone Number *
+                      </Label>
+                      <Input
+                        id="whatsapp-sender-number"
+                        data-testid="whatsapp-sender-number-input"
+                        type="tel"
+                        value={settings.whatsapp_sender_number}
+                        onChange={(e) => {
+                          // Clean and validate 10-digit Indian mobile number
+                          const cleaned = e.target.value.replace(/[^\d]/g, '').substring(0, 10);
+                          setSettings({ ...settings, whatsapp_sender_number: cleaned });
+                        }}
+                        placeholder="Enter 10-digit sender number"
+                        maxLength={10}
+                        required
+                      />
+                      <p className="text-xs text-gray-500">
+                        10-digit Indian mobile number for sending WhatsApp messages
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-xs text-green-700 bg-green-100 p-2 rounded">
-                    <strong>API Format:</strong> https://demo.digitalsms.biz/api/<br/>
-                    <strong>Parameters:</strong> ?apikey=[YourAPIKey]&mobile=[ContactPhone]&msg=[MessageText]<br/>
-                    <strong>Example:</strong> ?apikey=abc123&mobile=1234567890&msg=Happy Birthday John!
+                  
+                  <div className="text-xs text-green-700 bg-green-100 p-3 rounded-lg">
+                    <strong>DigitalSMS API Details:</strong><br/>
+                    <strong>Endpoint:</strong> https://demo.digitalsms.biz/api<br/>
+                    <strong>Required Parameters:</strong> apikey, mobile, msg<br/>
+                    <strong>Optional Parameters:</strong> img1 (image URL), pdf (PDF URL), video (video URL)<br/>
+                    <strong>Example:</strong> ?apikey=yourkey&mobile=9876543210&msg=Happy Birthday!&img1=https://example.com/image.jpg
                   </div>
-                  <Alert className="border-amber-200 bg-amber-50">
-                    <AlertCircle className="h-4 w-4 text-amber-600" />
-                    <AlertDescription className="text-amber-800">
-                      Note: DigitalSMS API supports text messages only. Images will be sent as text links.
+                  
+                  <Alert className="border-blue-200 bg-blue-50">
+                    <AlertCircle className="h-4 w-4 text-blue-600" />
+                    <AlertDescription className="text-blue-800">
+                      <strong>Features:</strong> Supports text messages with image, PDF, and video attachments. 
+                      Media files must be accessible via live URLs (max 1MB for images, 3MB for PDF/videos).
                     </AlertDescription>
                   </Alert>
                 </div>
