@@ -523,8 +523,9 @@ const SettingsPage = () => {
                       )}
                     </div>
 
-                    <div className="text-xs text-gray-500">
-                      Provider: DigitalSMS API
+                    <div className="text-xs text-gray-500 space-y-1">
+                      <div>Provider: DigitalSMS API</div>
+                      <div>📱 Test sends a real WhatsApp message to your phone number (from Account tab)</div>
                     </div>
                   </div>
 
