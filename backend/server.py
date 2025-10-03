@@ -2477,11 +2477,11 @@ async def get_reminder_logs(
 #     admin_user: User = Depends(get_admin_user)
 # ):
 #     """Update any user's information as admin - OLD ENDPOINT"""
-    
-    # Validate user exists
-    target_user = await db.users.find_one({"id": user_id})
-    if not target_user:
-        raise HTTPException(status_code=404, detail="User not found")
+#    
+#     # Validate user exists
+#     target_user = await db.users.find_one({"id": user_id})
+#     if not target_user:
+#         raise HTTPException(status_code=404, detail="User not found")
     
     # Prepare update fields
     update_fields = {}
