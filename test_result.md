@@ -188,6 +188,9 @@
       - working: true
       - agent: "testing"
       - comment: "TESTED SUCCESSFULLY: Comprehensive testing of user profile API endpoints completed with 100% success rate (24/24 tests passed). GET /api/user/profile correctly returns user profile including phone_number field. PUT /api/user/profile works perfectly with all validation scenarios: individual field updates (name, email, phone), combined field updates, email format validation, phone number format validation, duplicate email prevention, empty/null value handling, whitespace trimming, and authentication requirements. All validation rules working correctly - invalid phone numbers rejected with 400, invalid emails rejected with 422, duplicate emails rejected with 400, null values rejected with 400, unauthenticated requests rejected with 403. Phone number field properly supports various formats and empty values are correctly set to None."
+      - working: true
+      - agent: "testing"
+      - comment: "ENHANCED INDIAN PHONE VALIDATION TESTED SUCCESSFULLY: Comprehensive testing of enhanced Indian phone number validation completed with 100% success rate (40/40 tests passed). Fixed critical bug where modified_count=0 caused 404 errors when phone numbers were already set to the same cleaned value. All requested validation scenarios working perfectly: Valid 10-digit numbers starting with 6-9 (✅), +91 prefix cleaning (✅), 91 prefix cleaning (✅), space/dash/parentheses formatting removal (✅), invalid starting digits 0-5 rejection (✅), wrong length rejection (✅), non-digit character rejection (✅), empty/null handling (✅). Phone numbers are correctly cleaned and stored as exactly 10 digits starting with 6-9. All edge cases handled properly including international formats and malformed inputs."
 
 - task: "User Profile Edit Frontend"
   implemented: true
