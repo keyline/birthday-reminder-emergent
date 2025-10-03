@@ -38,8 +38,11 @@ const TemplatesPage = () => {
     type: 'email',
     subject: '',
     content: '',
-    is_default: false
+    is_default: false,
+    whatsapp_image_url: '',
+    email_image_url: ''
   });
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     fetchTemplates();
