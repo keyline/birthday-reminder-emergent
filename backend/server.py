@@ -1558,6 +1558,19 @@ async def send_test_message(request: TestMessageRequest, current_user: User = De
     # Get user settings for test contact information
     settings = await db.user_settings.find_one({"user_id": current_user.id})
     
+    # Get template defaults for fallback images
+    whatsapp_template = await db.templates.find_one({
+        "user_id": current_user.id,
+        "type": "whatsapp",
+        "is_default": True
+    })
+    
+    email_template = await db.templates.find_one({
+        "user_id": current_user.id,
+        "type": "email", 
+        "is_default": True
+    })
+
     # Get custom messages or generate defaults
     whatsapp_message_data = await db.custom_messages.find_one({
         "user_id": current_user.id,
@@ -1583,10 +1596,21 @@ async def send_test_message(request: TestMessageRequest, current_user: User = De
         )
         ai_message = await generate_message(message_request, current_user)
         whatsapp_message = ai_message.message
-        whatsapp_image = contact.get("whatsapp_image")
+        
+        # Image hierarchy: contact image -> template default image
+        whatsapp_image = (
+            contact.get("whatsapp_image") or 
+            (whatsapp_template.get("whatsapp_image_url") if whatsapp_template else None)
+        )
     else:
         whatsapp_message = whatsapp_message_data["custom_message"]
-        whatsapp_image = whatsapp_message_data.get("image_url") or contact.get("whatsapp_image")
+        
+        # Image hierarchy: custom message image -> contact image -> template default image
+        whatsapp_image = (
+            whatsapp_message_data.get("image_url") or 
+            contact.get("whatsapp_image") or
+            (whatsapp_template.get("whatsapp_image_url") if whatsapp_template else None)
+        )
     
     if not email_message_data:
         message_request = GenerateMessageRequest(
@@ -1597,10 +1621,21 @@ async def send_test_message(request: TestMessageRequest, current_user: User = De
         )
         ai_message = await generate_message(message_request, current_user)
         email_message = ai_message.message
-        email_image = contact.get("email_image")
+        
+        # Image hierarchy: contact image -> template default image
+        email_image = (
+            contact.get("email_image") or
+            (email_template.get("email_image_url") if email_template else None)
+        )
     else:
         email_message = email_message_data["custom_message"]
-        email_image = email_message_data.get("image_url") or contact.get("email_image")
+        
+        # Image hierarchy: custom message image -> contact image -> template default image
+        email_image = (
+            email_message_data.get("image_url") or
+            contact.get("email_image") or
+            (email_template.get("email_image_url") if email_template else None)
+        )
     
     # Send test WhatsApp message to user's phone (if they have WhatsApp configured and phone number in their profile)
     if contact.get("whatsapp"):
