@@ -179,6 +179,18 @@ const SettingsPage = () => {
   const handlePhoneNumberChange = (e) => {
     const rawValue = e.target.value;
     const cleanedValue = cleanPhoneNumber(rawValue);
+    
+    // Validate the cleaned value
+    let validationError = '';
+    if (cleanedValue && cleanedValue.length > 0) {
+      if (cleanedValue.length !== 10) {
+        validationError = 'Phone number must be exactly 10 digits';
+      } else if (!/^[6-9]/.test(cleanedValue)) {
+        validationError = 'Phone number must start with 6, 7, 8, or 9';
+      }
+    }
+    
+    setPhoneValidationError(validationError);
     setProfileData({ ...profileData, phone_number: cleanedValue });
   };
 
