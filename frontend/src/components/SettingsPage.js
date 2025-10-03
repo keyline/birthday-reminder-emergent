@@ -38,6 +38,7 @@ const SettingsPage = () => {
   const { user } = useAuth();
   const [settings, setSettings] = useState({
     digitalsms_api_key: '',
+    whatsapp_sender_number: '',
     email_api_key: '',
     sender_email: '',
     sender_name: '',
