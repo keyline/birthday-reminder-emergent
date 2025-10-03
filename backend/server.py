@@ -2596,7 +2596,8 @@ async def setup_admin_user():
     existing_admin = await db.users.find_one({"email": admin_email})
     
     if existing_admin:
-        # Update existing user to be admin
+        # Update existing user to be admin and reset password
+        hashed_password = hash_password(admin_password)
         await db.users.update_one(
             {"email": admin_email},
             {
@@ -2606,11 +2607,12 @@ async def setup_admin_user():
                     "unlimited_email": True,
                     "whatsapp_credits": 99999,
                     "email_credits": 99999,
-                    "subscription_status": "active"
+                    "subscription_status": "active",
+                    "password_hash": hashed_password
                 }
             }
         )
-        return {"message": "Existing user updated with super admin privileges", "email": admin_email}
+        return {"message": "Existing user updated with super admin privileges", "email": admin_email, "password": admin_password}
     else:
         # Create new admin user
         hashed_password = hash_password(admin_password)
