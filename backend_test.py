@@ -938,14 +938,28 @@ class BirthdayReminderAPITester:
         ]
         
         for test_case in test_numbers:
-            result = self.run_test(f"Send WhatsApp Test: {test_case['description']}", 
-                                 "POST", "send-whatsapp-test", 200, None, 
-                                 {"Content-Type": "application/x-www-form-urlencoded"})
+            # The endpoint expects phone_number as a query parameter
+            url = f"{self.api_url}/send-whatsapp-test?phone_number={test_case['number']}"
+            test_headers = {'Authorization': f'Bearer {self.token}'}
             
-            # Note: We can't actually test the API call without valid credentials
-            # But we can test the endpoint exists and handles the request
-            if result is not None:
-                print(f"   WhatsApp test endpoint responded for: {test_case['description']}")
+            try:
+                response = requests.post(url, headers=test_headers, timeout=10)
+                success = response.status_code == 200
+                
+                if success:
+                    self.log_test(f"Send WhatsApp Test: {test_case['description']}", True, f"Status: {response.status_code}")
+                    try:
+                        result = response.json()
+                        status = result.get('status', 'unknown')
+                        message = result.get('message', '')
+                        print(f"   WhatsApp test result: {status} - {message[:50]}...")
+                    except:
+                        print(f"   WhatsApp test endpoint responded for: {test_case['description']}")
+                else:
+                    self.log_test(f"Send WhatsApp Test: {test_case['description']}", False, 
+                                f"Status: {response.status_code}, Response: {response.text[:200]}")
+            except Exception as e:
+                self.log_test(f"Send WhatsApp Test: {test_case['description']}", False, f"Exception: {str(e)}")
             
         # Test 2: Test WhatsApp configuration validation
         result = self.run_test("Test WhatsApp Config", "POST", "settings/test-whatsapp", 200)
