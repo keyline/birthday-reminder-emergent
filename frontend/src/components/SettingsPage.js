@@ -838,7 +838,14 @@ const SettingsPage = () => {
                           onChange={handlePhoneNumberChange}
                           placeholder="Enter 10-digit mobile number (e.g., 9876543210)"
                           maxLength={10}
+                          className={phoneValidationError ? 'border-red-300 focus:border-red-500' : ''}
                         />
+                        {phoneValidationError && (
+                          <p className="text-xs text-red-600 flex items-center">
+                            <XCircle className="w-3 h-3 mr-1" />
+                            {phoneValidationError}
+                          </p>
+                        )}
                         <p className="text-xs text-gray-500">
                           Indian mobile numbers only. Must be 10 digits starting with 6, 7, 8, or 9. +91 will be automatically removed.
                         </p>
