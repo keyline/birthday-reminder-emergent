@@ -419,7 +419,8 @@ async def update_user_profile(profile_data: UserProfileUpdate, current_user: Use
         {"$set": update_fields}
     )
     
-    if result.modified_count == 0:
+    # Check if user exists (matched_count > 0 means user was found)
+    if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="User not found")
     
     # Fetch and return updated user
