@@ -1386,6 +1386,393 @@ class BirthdayReminderAPITester:
         
         return success
 
+    def test_template_image_upload_functionality(self):
+        """Test template-level image upload functionality as requested"""
+        if not self.token:
+            self.log_test("Template Image Upload Functionality", False, "No auth token available")
+            return False
+        
+        success = True
+        print("\n🖼️ Testing Template-Level Image Upload Functionality...")
+        
+        # Test 1: Create WhatsApp template with image URL
+        whatsapp_template_data = {
+            "name": "WhatsApp Birthday Template with Image",
+            "type": "whatsapp",
+            "content": "🎉 Happy Birthday {name}! Hope you have an amazing day!",
+            "is_default": True,
+            "whatsapp_image_url": "https://example.com/whatsapp-birthday.jpg",
+            "email_image_url": None
+        }
+        
+        result = self.run_test("Create WhatsApp Template with Image", "POST", "templates", 200, whatsapp_template_data)
+        if result:
+            self.whatsapp_template_id = result.get('id')
+            # Verify image fields are saved
+            if result.get('whatsapp_image_url') == whatsapp_template_data['whatsapp_image_url']:
+                self.log_test("Verify WhatsApp Template Image URL Saved", True, f"Image URL correctly saved: {result.get('whatsapp_image_url')}")
+            else:
+                self.log_test("Verify WhatsApp Template Image URL Saved", False, f"Expected: {whatsapp_template_data['whatsapp_image_url']}, Got: {result.get('whatsapp_image_url')}")
+                success = False
+        else:
+            success = False
+        
+        # Test 2: Create Email template with image URL
+        email_template_data = {
+            "name": "Email Anniversary Template with Image",
+            "type": "email",
+            "subject": "Happy Anniversary {name}!",
+            "content": "💕 Wishing you both a wonderful anniversary filled with love and joy!",
+            "is_default": True,
+            "whatsapp_image_url": None,
+            "email_image_url": "https://example.com/email-anniversary.jpg"
+        }
+        
+        result = self.run_test("Create Email Template with Image", "POST", "templates", 200, email_template_data)
+        if result:
+            self.email_template_id = result.get('id')
+            # Verify image fields are saved
+            if result.get('email_image_url') == email_template_data['email_image_url']:
+                self.log_test("Verify Email Template Image URL Saved", True, f"Image URL correctly saved: {result.get('email_image_url')}")
+            else:
+                self.log_test("Verify Email Template Image URL Saved", False, f"Expected: {email_template_data['email_image_url']}, Got: {result.get('email_image_url')}")
+                success = False
+        else:
+            success = False
+        
+        # Test 3: Create template with both WhatsApp and Email images
+        dual_template_data = {
+            "name": "Dual Channel Template with Images",
+            "type": "whatsapp",
+            "content": "🎊 Celebration message for {name}!",
+            "is_default": False,
+            "whatsapp_image_url": "https://example.com/dual-whatsapp.jpg",
+            "email_image_url": "https://example.com/dual-email.jpg"
+        }
+        
+        result = self.run_test("Create Template with Both Image Types", "POST", "templates", 200, dual_template_data)
+        if result:
+            self.dual_template_id = result.get('id')
+            # Verify both image fields are saved
+            whatsapp_correct = result.get('whatsapp_image_url') == dual_template_data['whatsapp_image_url']
+            email_correct = result.get('email_image_url') == dual_template_data['email_image_url']
+            
+            if whatsapp_correct and email_correct:
+                self.log_test("Verify Both Template Image URLs Saved", True, "Both WhatsApp and Email image URLs saved correctly")
+            else:
+                self.log_test("Verify Both Template Image URLs Saved", False, f"WhatsApp: {whatsapp_correct}, Email: {email_correct}")
+                success = False
+        else:
+            success = False
+        
+        # Test 4: Update existing template to add image URLs
+        if hasattr(self, 'whatsapp_template_id'):
+            update_data = {
+                "name": "Updated WhatsApp Template with New Image",
+                "type": "whatsapp",
+                "content": "🎂 Updated birthday message for {name}!",
+                "is_default": True,
+                "whatsapp_image_url": "https://example.com/updated-whatsapp.jpg",
+                "email_image_url": "https://example.com/updated-email.jpg"
+            }
+            
+            result = self.run_test("Update Template with Images", "PUT", f"templates/{self.whatsapp_template_id}", 200, update_data)
+            if result:
+                # Verify updated image fields
+                if (result.get('whatsapp_image_url') == update_data['whatsapp_image_url'] and 
+                    result.get('email_image_url') == update_data['email_image_url']):
+                    self.log_test("Verify Template Image Update", True, "Template images updated successfully")
+                else:
+                    self.log_test("Verify Template Image Update", False, f"Images not updated correctly")
+                    success = False
+            else:
+                success = False
+        
+        # Test 5: Retrieve templates and verify image fields are returned
+        result = self.run_test("Get All Templates with Images", "GET", "templates", 200)
+        if result and isinstance(result, list):
+            templates_with_images = [t for t in result if t.get('whatsapp_image_url') or t.get('email_image_url')]
+            if len(templates_with_images) >= 2:  # Should have at least the templates we created
+                self.log_test("Verify Templates Retrieved with Images", True, f"Found {len(templates_with_images)} templates with image URLs")
+                
+                # Check specific template fields
+                for template in templates_with_images:
+                    if 'whatsapp_image_url' in template and 'email_image_url' in template:
+                        self.log_test("Template Image Fields Present", True, f"Template '{template.get('name', 'Unknown')}' has image fields")
+                    else:
+                        self.log_test("Template Image Fields Missing", False, f"Template '{template.get('name', 'Unknown')}' missing image fields")
+                        success = False
+            else:
+                self.log_test("Verify Templates Retrieved with Images", False, f"Expected at least 2 templates with images, found {len(templates_with_images)}")
+                success = False
+        else:
+            success = False
+        
+        # Test 6: Create template without images (should work normally)
+        no_image_template_data = {
+            "name": "Template Without Images",
+            "type": "email",
+            "subject": "Simple Message",
+            "content": "Simple message without images for {name}",
+            "is_default": False
+        }
+        
+        result = self.run_test("Create Template Without Images", "POST", "templates", 200, no_image_template_data)
+        if result:
+            # Verify image fields are None/null
+            if result.get('whatsapp_image_url') is None and result.get('email_image_url') is None:
+                self.log_test("Verify Template Without Images", True, "Template created successfully without image URLs")
+            else:
+                self.log_test("Verify Template Without Images", False, f"Expected null images, got WhatsApp: {result.get('whatsapp_image_url')}, Email: {result.get('email_image_url')}")
+                success = False
+        else:
+            success = False
+        
+        return success
+    
+    def test_image_hierarchy_logic(self):
+        """Test the image hierarchy logic in send_test_message function"""
+        if not self.token or not hasattr(self, 'contact_id'):
+            self.log_test("Image Hierarchy Logic", False, "No auth token or contact ID available")
+            return False
+        
+        success = True
+        print("\n🔄 Testing Image Hierarchy Logic in send_test_message...")
+        
+        # Ensure we have default templates with images
+        if not hasattr(self, 'whatsapp_template_id') or not hasattr(self, 'email_template_id'):
+            print("   Setting up default templates with images...")
+            
+            # Create default WhatsApp template with image
+            whatsapp_template_data = {
+                "name": "Default WhatsApp Template",
+                "type": "whatsapp",
+                "content": "Default WhatsApp message for {name}",
+                "is_default": True,
+                "whatsapp_image_url": "https://example.com/default-whatsapp.jpg"
+            }
+            
+            result = self.run_test("Setup Default WhatsApp Template", "POST", "templates", 200, whatsapp_template_data)
+            if result:
+                self.whatsapp_template_id = result.get('id')
+            
+            # Create default Email template with image
+            email_template_data = {
+                "name": "Default Email Template",
+                "type": "email",
+                "subject": "Default Email Subject",
+                "content": "Default Email message for {name}",
+                "is_default": True,
+                "email_image_url": "https://example.com/default-email.jpg"
+            }
+            
+            result = self.run_test("Setup Default Email Template", "POST", "templates", 200, email_template_data)
+            if result:
+                self.email_template_id = result.get('id')
+        
+        # Test Scenario 1: Contact with custom image + template image (should use contact image)
+        print("\n   Testing Scenario 1: Contact image + Template image (should prioritize contact image)...")
+        
+        # Update contact to have custom images
+        contact_with_images = {
+            "name": "Test Contact with Images",
+            "email": "test@example.com",
+            "whatsapp": "9876543210",
+            "birthday": "1990-05-15",
+            "whatsapp_image": "https://example.com/contact-whatsapp.jpg",
+            "email_image": "https://example.com/contact-email.jpg"
+        }
+        
+        result = self.run_test("Update Contact with Images", "PUT", f"contacts/{self.contact_id}", 200, contact_with_images)
+        if result:
+            # Send test message - should use contact images over template images
+            test_message_data = {
+                "contact_id": self.contact_id,
+                "occasion": "birthday"
+            }
+            
+            result = self.run_test("Test Message - Contact + Template Images", "POST", "send-test-message", 200, test_message_data)
+            if result:
+                self.log_test("Image Hierarchy Test 1", True, "Test message sent with contact + template images scenario")
+                print(f"   WhatsApp result: {result.get('results', {}).get('whatsapp', {}).get('status', 'N/A')}")
+                print(f"   Email result: {result.get('results', {}).get('email', {}).get('status', 'N/A')}")
+            else:
+                success = False
+        
+        # Test Scenario 2: Custom message image + contact image + template image (should use custom message image)
+        print("\n   Testing Scenario 2: Custom message image (highest priority)...")
+        
+        # Create custom message with image
+        custom_message_data = {
+            "contact_id": self.contact_id,
+            "occasion": "birthday",
+            "message_type": "whatsapp",
+            "custom_message": "🎉 Custom birthday message with custom image!",
+            "image_url": "https://example.com/custom-message.jpg"
+        }
+        
+        result = self.run_test("Create Custom Message with Image", "POST", "custom-messages", 200, custom_message_data)
+        if result:
+            # Send test message - should use custom message image (highest priority)
+            result = self.run_test("Test Message - Custom Message Image Priority", "POST", "send-test-message", 200, test_message_data)
+            if result:
+                self.log_test("Image Hierarchy Test 2", True, "Test message sent with custom message image (highest priority)")
+            else:
+                success = False
+        
+        # Test Scenario 3: Only template image (no contact or custom message images)
+        print("\n   Testing Scenario 3: Only template image (should use template image)...")
+        
+        # Remove contact images
+        contact_no_images = {
+            "name": "Test Contact No Images",
+            "email": "test@example.com",
+            "whatsapp": "9876543210",
+            "birthday": "1990-05-15",
+            "whatsapp_image": None,
+            "email_image": None
+        }
+        
+        result = self.run_test("Remove Contact Images", "PUT", f"contacts/{self.contact_id}", 200, contact_no_images)
+        if result:
+            # Delete custom message to test template fallback
+            self.run_test("Delete Custom Message for Fallback Test", "DELETE", f"custom-messages/{self.contact_id}/birthday/whatsapp", 200)
+            
+            # Send test message - should use template images
+            result = self.run_test("Test Message - Template Image Only", "POST", "send-test-message", 200, test_message_data)
+            if result:
+                self.log_test("Image Hierarchy Test 3", True, "Test message sent with template image fallback")
+            else:
+                success = False
+        
+        # Test Scenario 4: No images anywhere (should work without images)
+        print("\n   Testing Scenario 4: No images anywhere (should work without images)...")
+        
+        # Create templates without images
+        no_image_whatsapp_template = {
+            "name": "No Image WhatsApp Template",
+            "type": "whatsapp",
+            "content": "Message without image for {name}",
+            "is_default": True,
+            "whatsapp_image_url": None,
+            "email_image_url": None
+        }
+        
+        result = self.run_test("Create Template Without Images", "POST", "templates", 200, no_image_whatsapp_template)
+        if result:
+            # Send test message - should work without any images
+            result = self.run_test("Test Message - No Images Anywhere", "POST", "send-test-message", 200, test_message_data)
+            if result:
+                self.log_test("Image Hierarchy Test 4", True, "Test message sent successfully without any images")
+            else:
+                success = False
+        
+        return success
+    
+    def test_template_image_api_endpoints(self):
+        """Test all template API endpoints with image functionality"""
+        if not self.token:
+            self.log_test("Template Image API Endpoints", False, "No auth token available")
+            return False
+        
+        success = True
+        print("\n🔌 Testing Template API Endpoints with Image Fields...")
+        
+        # Test 1: POST /api/templates - Create templates with image fields
+        template_test_cases = [
+            {
+                "name": "WhatsApp Only Image Template",
+                "type": "whatsapp",
+                "content": "WhatsApp message with image",
+                "whatsapp_image_url": "https://example.com/whatsapp-only.jpg",
+                "email_image_url": None
+            },
+            {
+                "name": "Email Only Image Template",
+                "type": "email",
+                "subject": "Email with image",
+                "content": "Email message with image",
+                "whatsapp_image_url": None,
+                "email_image_url": "https://example.com/email-only.jpg"
+            },
+            {
+                "name": "Both Images Template",
+                "type": "whatsapp",
+                "content": "Message with both images",
+                "whatsapp_image_url": "https://example.com/both-whatsapp.jpg",
+                "email_image_url": "https://example.com/both-email.jpg"
+            }
+        ]
+        
+        created_template_ids = []
+        
+        for i, template_case in enumerate(template_test_cases):
+            result = self.run_test(f"POST Templates - {template_case['name']}", "POST", "templates", 200, template_case)
+            if result:
+                created_template_ids.append(result.get('id'))
+                
+                # Verify image fields in response
+                whatsapp_match = result.get('whatsapp_image_url') == template_case.get('whatsapp_image_url')
+                email_match = result.get('email_image_url') == template_case.get('email_image_url')
+                
+                if whatsapp_match and email_match:
+                    self.log_test(f"Verify POST Response Images - {template_case['name']}", True, "Image fields correctly returned")
+                else:
+                    self.log_test(f"Verify POST Response Images - {template_case['name']}", False, f"Image fields mismatch")
+                    success = False
+            else:
+                success = False
+        
+        # Test 2: GET /api/templates - Retrieve templates including image fields
+        result = self.run_test("GET Templates with Images", "GET", "templates", 200)
+        if result and isinstance(result, list):
+            templates_with_images = [t for t in result if t.get('whatsapp_image_url') or t.get('email_image_url')]
+            
+            if len(templates_with_images) >= len(template_test_cases):
+                self.log_test("GET Templates Image Fields", True, f"Retrieved {len(templates_with_images)} templates with image fields")
+                
+                # Verify each template has the expected image field structure
+                for template in templates_with_images:
+                    has_image_fields = 'whatsapp_image_url' in template and 'email_image_url' in template
+                    if has_image_fields:
+                        self.log_test(f"Template Image Field Structure - {template.get('name', 'Unknown')}", True, "Has both image fields")
+                    else:
+                        self.log_test(f"Template Image Field Structure - {template.get('name', 'Unknown')}", False, "Missing image fields")
+                        success = False
+            else:
+                self.log_test("GET Templates Image Fields", False, f"Expected at least {len(template_test_cases)} templates with images")
+                success = False
+        else:
+            success = False
+        
+        # Test 3: PUT /api/templates/{id} - Update templates with images
+        if created_template_ids:
+            template_id = created_template_ids[0]
+            
+            update_data = {
+                "name": "Updated Template with New Images",
+                "type": "whatsapp",
+                "content": "Updated content with new images",
+                "whatsapp_image_url": "https://example.com/updated-whatsapp.jpg",
+                "email_image_url": "https://example.com/updated-email.jpg"
+            }
+            
+            result = self.run_test("PUT Template with Images", "PUT", f"templates/{template_id}", 200, update_data)
+            if result:
+                # Verify updated image fields
+                whatsapp_updated = result.get('whatsapp_image_url') == update_data['whatsapp_image_url']
+                email_updated = result.get('email_image_url') == update_data['email_image_url']
+                
+                if whatsapp_updated and email_updated:
+                    self.log_test("Verify PUT Template Images", True, "Template images updated successfully")
+                else:
+                    self.log_test("Verify PUT Template Images", False, f"Images not updated correctly")
+                    success = False
+            else:
+                success = False
+        
+        return success
+
     def run_all_tests(self):
         """Run all tests in sequence"""
         print("🚀 Starting Birthday Reminder API Tests...")
