@@ -187,13 +187,6 @@ class UserSettings(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     user_id: str
     
-    # WhatsApp API Provider
-    whatsapp_provider: str = "facebook"  # "facebook" or "digitalsms"
-    
-    # Facebook Graph API
-    whatsapp_phone_number_id: Optional[str] = None
-    whatsapp_access_token: Optional[str] = None
-    
     # DigitalSMS API
     digitalsms_api_key: Optional[str] = None
     
