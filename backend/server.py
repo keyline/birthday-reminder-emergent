@@ -336,24 +336,34 @@ def create_access_token(data: dict):
 async def get_current_admin(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Verify admin authentication"""
     try:
+        print("=== get_current_admin called ===")
         token = credentials.credentials
+        print(f"Token: {token[:50]}...")
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        print(f"Payload: {payload}")
         admin_id: str = payload.get("admin_id")
+        print(f"Admin ID from token: {admin_id}")
         if admin_id is None:
             raise HTTPException(status_code=401, detail="Invalid admin credentials")
         
         admin = await db.admins.find_one({"id": admin_id})
+        print(f"Admin from DB: {admin}")
         if not admin:
             raise HTTPException(status_code=401, detail="Admin not found")
         
         # Parse MongoDB data
         admin = parse_from_mongo(admin)
-        return AdminUser(**admin)
+        print(f"Admin after parse: {admin}")
+        admin_user = AdminUser(**admin)
+        print(f"AdminUser created: {admin_user}")
+        return admin_user
     except JWTError as e:
         print(f"JWT Error in get_current_admin: {str(e)}")
         raise HTTPException(status_code=401, detail="Could not validate admin credentials")
     except Exception as e:
         print(f"Error in get_current_admin: {str(e)}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=401, detail=f"Authentication error: {str(e)}")
 
 def generate_math_captcha():
