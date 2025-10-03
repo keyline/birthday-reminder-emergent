@@ -634,10 +634,7 @@ class BirthdayReminderAPITester:
         empty_update = {"full_name": None, "email": None, "phone_number": None}
         result = self.run_test("Update with Null Values", "PUT", "user/profile", 400, empty_update)
         if result is not None:  # Should fail with 400 (no valid fields to update)
-            self.log_test("Null Values Validation", False, "Null values were accepted")
             success = False
-        else:
-            self.log_test("Null Values Validation", True, "Null values correctly rejected")
         
         # Test 12: Test authentication requirement (remove token)
         temp_token = self.token
