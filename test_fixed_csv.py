@@ -4,7 +4,7 @@ import io
 from datetime import datetime
 
 # Test with the provided CSV file after fix
-BACKEND_URL = "https://birthday-alert-4.preview.emergentagent.com"
+BACKEND_URL = "https://birthday-buddy-16.preview.emergentagent.com"
 API_URL = f"{BACKEND_URL}/api"
 
 # Register and login with unique email

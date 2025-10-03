@@ -1323,7 +1323,7 @@ async def send_whatsapp_message(user_id: str, phone_number: str, message: str, i
                 # Convert relative URL to absolute if needed
                 if image_url.startswith('/'):
                     # Assume it's a local upload, convert to full URL
-                    final_message = f"{message}\n\n📷 Image: https://birthday-alert-4.preview.emergentagent.com{image_url}"
+                    final_message = f"{message}\n\n📷 Image: https://birthday-buddy-16.preview.emergentagent.com{image_url}"
                 else:
                     final_message = f"{message}\n\n📷 Image: {image_url}"
             

@@ -6,7 +6,7 @@ import pandas as pd
 from datetime import datetime
 
 class EnhancedUploadTester:
-    def __init__(self, base_url="https://birthday-alert-4.preview.emergentagent.com"):
+    def __init__(self, base_url="https://birthday-buddy-16.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.token = None
