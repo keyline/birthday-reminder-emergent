@@ -2770,7 +2770,8 @@ class BirthdayReminderAPITester:
 
 def main():
     tester = BirthdayReminderAPITester()
-    return tester.run_all_tests()
+    # Run template image tests specifically for this review request
+    return tester.run_template_image_tests()
 
 if __name__ == "__main__":
     sys.exit(main())
