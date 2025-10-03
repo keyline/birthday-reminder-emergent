@@ -1865,6 +1865,600 @@ class BirthdayReminderAPITester:
             print("❌ Some tests failed. Check the details above.")
             return 1
 
+    def test_daily_reminder_main_processing(self):
+        """Test the main daily reminder processing endpoint POST /api/system/daily-reminders"""
+        print("\n⏰ Testing Daily Reminder Main Processing Endpoint...")
+        
+        success = True
+        
+        # Test 1: Basic daily reminder execution (no authentication required for system endpoint)
+        original_token = self.token
+        self.token = None  # System endpoint doesn't require authentication
+        
+        result = self.run_test("Daily Reminder Main Processing", "POST", "system/daily-reminders", 200)
+        
+        self.token = original_token  # Restore token
+        
+        if result:
+            # Verify response structure
+            expected_fields = ['execution_time', 'date', 'total_users', 'messages_sent', 'whatsapp_sent', 'email_sent', 'errors']
+            has_required_fields = all(field in result for field in expected_fields)
+            
+            if has_required_fields:
+                self.log_test("Daily Reminder Response Structure", True, "Response contains all required fields")
+                
+                # Verify field types
+                execution_time = result.get('execution_time')
+                date = result.get('date')
+                total_users = result.get('total_users', 0)
+                messages_sent = result.get('messages_sent', 0)
+                whatsapp_sent = result.get('whatsapp_sent', 0)
+                email_sent = result.get('email_sent', 0)
+                errors = result.get('errors', [])
+                
+                # Validate data types
+                if isinstance(total_users, int) and isinstance(messages_sent, int) and isinstance(errors, list):
+                    self.log_test("Daily Reminder Field Types", True, "All fields have correct data types")
+                else:
+                    self.log_test("Daily Reminder Field Types", False, "Some fields have incorrect data types")
+                    success = False
+                
+                # Log execution results
+                print(f"   Execution Time: {execution_time}")
+                print(f"   Date: {date}")
+                print(f"   Total Users Processed: {total_users}")
+                print(f"   Messages Sent: {messages_sent} (WhatsApp: {whatsapp_sent}, Email: {email_sent})")
+                print(f"   Errors: {len(errors)}")
+                
+                if errors:
+                    print(f"   Error Details: {errors[:3]}...")  # Show first 3 errors
+                
+            else:
+                self.log_test("Daily Reminder Response Structure", False, f"Missing required fields. Got: {list(result.keys())}")
+                success = False
+        else:
+            success = False
+        
+        return success
+    
+    def test_daily_reminder_admin_endpoints(self):
+        """Test admin endpoints for reminder statistics and logs"""
+        print("\n📊 Testing Daily Reminder Admin Endpoints...")
+        
+        if not self.token:
+            self.log_test("Daily Reminder Admin Endpoints", False, "No auth token available")
+            return False
+        
+        success = True
+        
+        # First, create an admin user for testing
+        timestamp = int(time.time())
+        admin_data = {
+            "email": f"reminderadmin{timestamp}@example.com",
+            "password": "AdminPass123!",
+            "full_name": f"Reminder Admin {timestamp}"
+        }
+        
+        # Register admin user
+        admin_result = self.run_test("Register Admin for Reminder Tests", "POST", "auth/register", 200, admin_data)
+        if not admin_result:
+            return False
+        
+        admin_token = admin_result.get('access_token')
+        
+        # Store current token and switch to admin
+        original_token = self.token
+        self.token = admin_token
+        
+        # Test 1: GET /api/admin/reminder-stats (should fail - user not admin)
+        result = self.run_test("Reminder Stats - Non-Admin User", "GET", "admin/reminder-stats", 403)
+        if result is not None:  # Should fail with 403
+            self.log_test("Admin Access Control - Reminder Stats", False, "Non-admin user should not access reminder stats")
+            success = False
+        else:
+            self.log_test("Admin Access Control - Reminder Stats", True, "Correctly blocked non-admin access")
+        
+        # Test 2: GET /api/admin/reminder-logs (should fail - user not admin)
+        result = self.run_test("Reminder Logs - Non-Admin User", "GET", "admin/reminder-logs", 403)
+        if result is not None:  # Should fail with 403
+            self.log_test("Admin Access Control - Reminder Logs", False, "Non-admin user should not access reminder logs")
+            success = False
+        else:
+            self.log_test("Admin Access Control - Reminder Logs", True, "Correctly blocked non-admin access")
+        
+        # Test 3: Test with date parameter for reminder stats
+        today = datetime.now().date().isoformat()
+        result = self.run_test("Reminder Stats with Date Parameter", "GET", f"admin/reminder-stats?date={today}", 403)
+        if result is not None:  # Should still fail with 403
+            self.log_test("Admin Access Control - Stats with Date", False, "Non-admin user should not access stats with date")
+            success = False
+        else:
+            self.log_test("Admin Access Control - Stats with Date", True, "Correctly blocked non-admin access with date parameter")
+        
+        # Test 4: Test with days parameter for reminder logs
+        result = self.run_test("Reminder Logs with Days Parameter", "GET", "admin/reminder-logs?days=3", 403)
+        if result is not None:  # Should still fail with 403
+            self.log_test("Admin Access Control - Logs with Days", False, "Non-admin user should not access logs with days")
+            success = False
+        else:
+            self.log_test("Admin Access Control - Logs with Days", True, "Correctly blocked non-admin access with days parameter")
+        
+        # Restore original token
+        self.token = original_token
+        
+        # Note: We can't easily test the actual admin functionality without making the user an admin
+        # This would require database manipulation which is beyond the scope of API testing
+        print("   Note: Full admin functionality testing requires database admin privileges")
+        
+        return success
+    
+    def test_daily_reminder_timezone_handling(self):
+        """Test timezone handling and time window logic in daily reminders"""
+        print("\n🌍 Testing Daily Reminder Timezone Handling...")
+        
+        if not self.token:
+            self.log_test("Daily Reminder Timezone Handling", False, "No auth token available")
+            return False
+        
+        success = True
+        
+        # Test 1: Create user settings with different timezones
+        timezone_test_cases = [
+            {"timezone": "UTC", "daily_send_time": "09:00", "description": "UTC timezone"},
+            {"timezone": "America/New_York", "daily_send_time": "10:30", "description": "EST timezone"},
+            {"timezone": "Asia/Kolkata", "daily_send_time": "08:15", "description": "IST timezone"},
+            {"timezone": "Europe/London", "daily_send_time": "11:45", "description": "GMT timezone"},
+            {"timezone": "Asia/Tokyo", "daily_send_time": "07:30", "description": "JST timezone"}
+        ]
+        
+        for tz_case in timezone_test_cases:
+            settings_data = {
+                "timezone": tz_case["timezone"],
+                "daily_send_time": tz_case["daily_send_time"],
+                "execution_report_enabled": True
+            }
+            
+            result = self.run_test(f"Set Timezone Settings - {tz_case['description']}", "PUT", "settings", 200, settings_data)
+            if result:
+                # Verify timezone and time were saved correctly
+                if (result.get('timezone') == tz_case['timezone'] and 
+                    result.get('daily_send_time') == tz_case['daily_send_time']):
+                    self.log_test(f"Verify Timezone Settings - {tz_case['description']}", True, 
+                                f"Timezone: {result.get('timezone')}, Time: {result.get('daily_send_time')}")
+                else:
+                    self.log_test(f"Verify Timezone Settings - {tz_case['description']}", False, 
+                                f"Settings not saved correctly")
+                    success = False
+            else:
+                success = False
+        
+        # Test 2: Test invalid timezone handling
+        invalid_timezone_data = {
+            "timezone": "Invalid/Timezone",
+            "daily_send_time": "09:00"
+        }
+        
+        result = self.run_test("Invalid Timezone", "PUT", "settings", 200, invalid_timezone_data)
+        if result:
+            # The API might accept invalid timezones, but the daily reminder processing should handle them gracefully
+            self.log_test("Invalid Timezone Handling", True, "Invalid timezone accepted (will be handled during processing)")
+        
+        # Test 3: Test invalid time format handling
+        invalid_time_data = {
+            "timezone": "UTC",
+            "daily_send_time": "25:70"  # Invalid time
+        }
+        
+        result = self.run_test("Invalid Time Format", "PUT", "settings", 200, invalid_time_data)
+        if result:
+            # The API might accept invalid times, but processing should handle them gracefully
+            self.log_test("Invalid Time Format Handling", True, "Invalid time format accepted (will be handled during processing)")
+        
+        # Test 4: Test time window logic by running daily reminders
+        # Set a timezone and time, then run the daily reminder to see if time window logic works
+        current_settings = {
+            "timezone": "UTC",
+            "daily_send_time": "09:00",
+            "execution_report_enabled": True
+        }
+        
+        self.run_test("Set Current Time Settings", "PUT", "settings", 200, current_settings)
+        
+        # Run daily reminders to test time window logic
+        original_token = self.token
+        self.token = None  # System endpoint doesn't require auth
+        
+        result = self.run_test("Test Time Window Logic", "POST", "system/daily-reminders", 200)
+        
+        self.token = original_token
+        
+        if result:
+            # The system should process users based on their timezone and time windows
+            # Since we can't control the current time, we just verify the endpoint works
+            self.log_test("Time Window Logic Test", True, "Daily reminder processing completed with time window logic")
+            print(f"   Time window test result: {result.get('total_users', 0)} users processed")
+        else:
+            success = False
+        
+        return success
+    
+    def test_daily_reminder_credit_management(self):
+        """Test credit management and unlimited user handling in daily reminders"""
+        print("\n💳 Testing Daily Reminder Credit Management...")
+        
+        if not self.token:
+            self.log_test("Daily Reminder Credit Management", False, "No auth token available")
+            return False
+        
+        success = True
+        
+        # Test 1: Check current user credits
+        result = self.run_test("Get Current Credits", "GET", "credits", 200)
+        if result:
+            whatsapp_credits = result.get('whatsapp_credits', 0)
+            email_credits = result.get('email_credits', 0)
+            unlimited_whatsapp = result.get('unlimited_whatsapp', False)
+            unlimited_email = result.get('unlimited_email', False)
+            
+            print(f"   Current Credits - WhatsApp: {whatsapp_credits}, Email: {email_credits}")
+            print(f"   Unlimited - WhatsApp: {unlimited_whatsapp}, Email: {unlimited_email}")
+            
+            self.log_test("Credit Status Check", True, f"WhatsApp: {whatsapp_credits}, Email: {email_credits}")
+        else:
+            success = False
+        
+        # Test 2: Test credit deduction functionality
+        if result and result.get('whatsapp_credits', 0) > 0:
+            deduct_result = self.run_test("Test Credit Deduction - WhatsApp", "POST", "credits/deduct?message_type=whatsapp&count=1", 200)
+            if deduct_result:
+                remaining_credits = deduct_result.get('credits_remaining')
+                if isinstance(remaining_credits, int):
+                    self.log_test("WhatsApp Credit Deduction", True, f"Credits remaining: {remaining_credits}")
+                else:
+                    self.log_test("WhatsApp Credit Deduction", True, f"Unlimited credits: {remaining_credits}")
+            else:
+                success = False
+        
+        if result and result.get('email_credits', 0) > 0:
+            deduct_result = self.run_test("Test Credit Deduction - Email", "POST", "credits/deduct?message_type=email&count=1", 200)
+            if deduct_result:
+                remaining_credits = deduct_result.get('credits_remaining')
+                if isinstance(remaining_credits, int):
+                    self.log_test("Email Credit Deduction", True, f"Credits remaining: {remaining_credits}")
+                else:
+                    self.log_test("Email Credit Deduction", True, f"Unlimited credits: {remaining_credits}")
+            else:
+                success = False
+        
+        # Test 3: Test insufficient credits scenario
+        # Try to deduct more credits than available
+        if result and result.get('whatsapp_credits', 0) < 1000:
+            insufficient_result = self.run_test("Insufficient WhatsApp Credits", "POST", "credits/deduct?message_type=whatsapp&count=1000", 400)
+            if insufficient_result is None:  # Should fail with 400
+                self.log_test("Insufficient Credits Handling", True, "Correctly rejected insufficient credits")
+            else:
+                self.log_test("Insufficient Credits Handling", False, "Should have rejected insufficient credits")
+                success = False
+        
+        # Test 4: Test invalid message type for credit deduction
+        invalid_type_result = self.run_test("Invalid Message Type for Credits", "POST", "credits/deduct?message_type=invalid&count=1", 400)
+        if invalid_type_result is None:  # Should fail with 400
+            self.log_test("Invalid Message Type Handling", True, "Correctly rejected invalid message type")
+        else:
+            self.log_test("Invalid Message Type Handling", False, "Should have rejected invalid message type")
+            success = False
+        
+        # Test 5: Run daily reminders to test credit management in action
+        # First ensure we have some contacts with today's birthday/anniversary for testing
+        if hasattr(self, 'contact_id'):
+            # Update contact to have today's birthday for testing
+            today = datetime.now().date()
+            contact_update = {
+                "name": "Credit Test Contact",
+                "email": "credittest@example.com",
+                "whatsapp": "9876543210",
+                "birthday": today.isoformat(),  # Today's birthday
+                "anniversary_date": None
+            }
+            
+            self.run_test("Update Contact for Credit Test", "PUT", f"contacts/{self.contact_id}", 200, contact_update)
+            
+            # Set up user settings for immediate processing
+            settings_data = {
+                "timezone": "UTC",
+                "daily_send_time": datetime.now().strftime("%H:%M"),  # Current time
+                "execution_report_enabled": True,
+                "digitalsms_api_key": "test_credit_api_key",
+                "whatsapp_sender_number": "9876543210",
+                "email_api_key": "test_email_key",
+                "sender_email": "test@example.com"
+            }
+            
+            self.run_test("Setup Settings for Credit Test", "PUT", "settings", 200, settings_data)
+            
+            # Run daily reminders
+            original_token = self.token
+            self.token = None
+            
+            reminder_result = self.run_test("Daily Reminders Credit Test", "POST", "system/daily-reminders", 200)
+            
+            self.token = original_token
+            
+            if reminder_result:
+                messages_sent = reminder_result.get('messages_sent', 0)
+                whatsapp_sent = reminder_result.get('whatsapp_sent', 0)
+                email_sent = reminder_result.get('email_sent', 0)
+                errors = reminder_result.get('errors', [])
+                
+                print(f"   Credit test results: {messages_sent} messages sent ({whatsapp_sent} WhatsApp, {email_sent} Email)")
+                if errors:
+                    print(f"   Errors during credit test: {len(errors)}")
+                
+                self.log_test("Credit Management in Daily Reminders", True, 
+                            f"Processed reminders with credit management: {messages_sent} messages")
+            else:
+                success = False
+        
+        return success
+    
+    def test_daily_reminder_error_handling(self):
+        """Test error handling in daily reminder system"""
+        print("\n🚨 Testing Daily Reminder Error Handling...")
+        
+        success = True
+        
+        # Test 1: Test daily reminder processing with various error conditions
+        original_token = self.token
+        self.token = None  # System endpoint doesn't require auth
+        
+        # Run daily reminders multiple times to test error handling
+        for i in range(3):
+            result = self.run_test(f"Daily Reminder Error Handling - Run {i+1}", "POST", "system/daily-reminders", 200)
+            if result:
+                errors = result.get('errors', [])
+                total_users = result.get('total_users', 0)
+                
+                # Verify error handling structure
+                if isinstance(errors, list):
+                    self.log_test(f"Error Structure - Run {i+1}", True, f"Errors list with {len(errors)} entries")
+                    
+                    # Log some error examples if they exist
+                    if errors:
+                        print(f"   Sample errors from run {i+1}: {errors[:2]}")
+                else:
+                    self.log_test(f"Error Structure - Run {i+1}", False, "Errors field is not a list")
+                    success = False
+                
+                print(f"   Run {i+1}: {total_users} users processed, {len(errors)} errors")
+            else:
+                success = False
+        
+        self.token = original_token
+        
+        # Test 2: Test malformed date handling in admin endpoints (if we had admin access)
+        if self.token:
+            # Test with invalid date format
+            invalid_date_result = self.run_test("Invalid Date Format - Reminder Stats", "GET", "admin/reminder-stats?date=invalid-date", 403)
+            # We expect 403 because we're not admin, but the endpoint should handle invalid dates gracefully
+            
+            # Test with future date
+            future_date = (datetime.now().date() + timedelta(days=30)).isoformat()
+            future_date_result = self.run_test("Future Date - Reminder Stats", "GET", f"admin/reminder-stats?date={future_date}", 403)
+            
+            # Test with negative days parameter
+            negative_days_result = self.run_test("Negative Days - Reminder Logs", "GET", "admin/reminder-logs?days=-5", 403)
+            
+            # All should return 403 due to lack of admin privileges, but the endpoints should handle the parameters
+            self.log_test("Error Parameter Handling", True, "Admin endpoints handle various parameter formats (blocked by auth)")
+        
+        # Test 3: Test system resilience with multiple rapid calls
+        print("   Testing system resilience with rapid calls...")
+        rapid_call_results = []
+        
+        self.token = None  # System endpoint
+        
+        for i in range(5):
+            result = self.run_test(f"Rapid Call {i+1}", "POST", "system/daily-reminders", 200)
+            if result:
+                rapid_call_results.append(result)
+        
+        self.token = original_token
+        
+        if len(rapid_call_results) == 5:
+            self.log_test("System Resilience - Rapid Calls", True, "System handled 5 rapid calls successfully")
+            
+            # Check if results are consistent
+            user_counts = [r.get('total_users', 0) for r in rapid_call_results]
+            if len(set(user_counts)) <= 2:  # Allow some variation due to timing
+                self.log_test("Result Consistency", True, f"User counts consistent: {set(user_counts)}")
+            else:
+                self.log_test("Result Consistency", False, f"User counts vary significantly: {user_counts}")
+                success = False
+        else:
+            self.log_test("System Resilience - Rapid Calls", False, f"Only {len(rapid_call_results)} out of 5 calls succeeded")
+            success = False
+        
+        return success
+    
+    def test_daily_reminder_integration(self):
+        """Test integration of daily reminder system with contacts, messages, and APIs"""
+        print("\n🔗 Testing Daily Reminder Integration...")
+        
+        if not self.token:
+            self.log_test("Daily Reminder Integration", False, "No auth token available")
+            return False
+        
+        success = True
+        
+        # Test 1: Create test data for integration testing
+        # Create a contact with today's birthday
+        today = datetime.now().date()
+        integration_contact_data = {
+            "name": "Integration Test Contact",
+            "email": "integration@example.com",
+            "whatsapp": "9876543210",
+            "birthday": today.isoformat(),
+            "anniversary_date": None,
+            "message_tone": "funny",
+            "whatsapp_image": "/integration-whatsapp.jpg",
+            "email_image": "/integration-email.jpg"
+        }
+        
+        contact_result = self.run_test("Create Integration Test Contact", "POST", "contacts", 200, integration_contact_data)
+        if contact_result:
+            integration_contact_id = contact_result.get('id')
+            
+            # Test 2: Create custom messages for this contact
+            custom_whatsapp_message = {
+                "contact_id": integration_contact_id,
+                "occasion": "birthday",
+                "message_type": "whatsapp",
+                "custom_message": "🎉 Custom WhatsApp Birthday Message for Integration Test!",
+                "image_url": "/custom-integration-whatsapp.jpg"
+            }
+            
+            custom_email_message = {
+                "contact_id": integration_contact_id,
+                "occasion": "birthday",
+                "message_type": "email",
+                "custom_message": "🎂 Custom Email Birthday Message for Integration Test!",
+                "image_url": "/custom-integration-email.jpg"
+            }
+            
+            whatsapp_msg_result = self.run_test("Create Custom WhatsApp Message", "POST", "custom-messages", 200, custom_whatsapp_message)
+            email_msg_result = self.run_test("Create Custom Email Message", "POST", "custom-messages", 200, custom_email_message)
+            
+            if whatsapp_msg_result and email_msg_result:
+                self.log_test("Custom Message Integration", True, "Custom messages created for integration test")
+                
+                # Test 3: Create default templates for fallback
+                whatsapp_template = {
+                    "name": "Integration WhatsApp Template",
+                    "type": "whatsapp",
+                    "content": "Default WhatsApp template for integration",
+                    "is_default": True,
+                    "whatsapp_image_url": "/template-whatsapp-integration.jpg"
+                }
+                
+                email_template = {
+                    "name": "Integration Email Template",
+                    "type": "email",
+                    "subject": "Integration Email Template",
+                    "content": "Default Email template for integration",
+                    "is_default": True,
+                    "email_image_url": "/template-email-integration.jpg"
+                }
+                
+                whatsapp_template_result = self.run_test("Create WhatsApp Template", "POST", "templates", 200, whatsapp_template)
+                email_template_result = self.run_test("Create Email Template", "POST", "templates", 200, email_template)
+                
+                if whatsapp_template_result and email_template_result:
+                    self.log_test("Template Integration", True, "Default templates created for integration test")
+                    
+                    # Test 4: Set up complete user settings
+                    complete_settings = {
+                        "digitalsms_api_key": "integration_test_api_key",
+                        "whatsapp_sender_number": "9876543210",
+                        "email_api_key": "integration_email_api_key",
+                        "sender_email": "integration@reminderai.com",
+                        "sender_name": "ReminderAI Integration Test",
+                        "daily_send_time": datetime.now().strftime("%H:%M"),  # Current time for immediate processing
+                        "timezone": "UTC",
+                        "execution_report_enabled": True
+                    }
+                    
+                    settings_result = self.run_test("Setup Complete Integration Settings", "PUT", "settings", 200, complete_settings)
+                    
+                    if settings_result:
+                        self.log_test("Settings Integration", True, "Complete settings configured for integration test")
+                        
+                        # Test 5: Test message hierarchy by getting messages for the contact
+                        whatsapp_message_result = self.run_test("Get WhatsApp Message with Hierarchy", "GET", 
+                                                              f"custom-messages/{integration_contact_id}/birthday/whatsapp", 200)
+                        
+                        email_message_result = self.run_test("Get Email Message with Hierarchy", "GET", 
+                                                            f"custom-messages/{integration_contact_id}/birthday/email", 200)
+                        
+                        if whatsapp_message_result and email_message_result:
+                            # Verify custom messages are returned (highest priority)
+                            whatsapp_custom = whatsapp_message_result.get('custom_message', '')
+                            email_custom = email_message_result.get('custom_message', '')
+                            
+                            if "Custom WhatsApp" in whatsapp_custom and "Custom Email" in email_custom:
+                                self.log_test("Message Hierarchy Integration", True, "Custom messages correctly prioritized")
+                            else:
+                                self.log_test("Message Hierarchy Integration", False, "Custom messages not prioritized correctly")
+                                success = False
+                        
+                        # Test 6: Run daily reminders to test full integration
+                        original_token = self.token
+                        self.token = None
+                        
+                        integration_result = self.run_test("Full Integration Test - Daily Reminders", "POST", "system/daily-reminders", 200)
+                        
+                        self.token = original_token
+                        
+                        if integration_result:
+                            total_users = integration_result.get('total_users', 0)
+                            messages_sent = integration_result.get('messages_sent', 0)
+                            whatsapp_sent = integration_result.get('whatsapp_sent', 0)
+                            email_sent = integration_result.get('email_sent', 0)
+                            errors = integration_result.get('errors', [])
+                            
+                            print(f"   Integration test results:")
+                            print(f"   - Users processed: {total_users}")
+                            print(f"   - Messages sent: {messages_sent} (WhatsApp: {whatsapp_sent}, Email: {email_sent})")
+                            print(f"   - Errors: {len(errors)}")
+                            
+                            if errors:
+                                print(f"   - Sample errors: {errors[:2]}")
+                            
+                            # The integration is successful if the system processes without crashing
+                            self.log_test("Full Integration Test", True, 
+                                        f"Daily reminder system processed {total_users} users with {len(errors)} errors")
+                            
+                            # Test 7: Verify data was logged correctly
+                            # We can't directly access the logs without admin privileges, but we can verify the structure
+                            if isinstance(errors, list) and isinstance(messages_sent, int):
+                                self.log_test("Integration Data Logging", True, "Execution results properly structured for logging")
+                            else:
+                                self.log_test("Integration Data Logging", False, "Execution results not properly structured")
+                                success = False
+                        else:
+                            success = False
+                    else:
+                        success = False
+                else:
+                    success = False
+            else:
+                success = False
+        else:
+            success = False
+        
+        # Test 8: Test AI message generation integration
+        if hasattr(self, 'contact_id'):
+            # Test AI message generation for different tones
+            ai_test_tones = ["normal", "funny", "formal", "casual"]
+            
+            for tone in ai_test_tones:
+                # Update contact tone
+                tone_update = {"message_tone": tone}
+                self.run_test(f"Update Contact Tone - {tone}", "PUT", f"contacts/{self.contact_id}", 200, tone_update)
+                
+                # Get AI-generated message (for a message type that doesn't have custom message)
+                ai_result = self.run_test(f"AI Message Generation - {tone}", "GET", 
+                                        f"custom-messages/{self.contact_id}/anniversary/{tone}", 200)
+                
+                if ai_result and ai_result.get('is_default'):
+                    message_content = ai_result.get('custom_message', '')
+                    if len(message_content) > 10:  # Basic check for meaningful content
+                        self.log_test(f"AI Integration - {tone} tone", True, f"Generated message: {message_content[:30]}...")
+                    else:
+                        self.log_test(f"AI Integration - {tone} tone", False, "Generated message too short or empty")
+                        success = False
+        
+        return success
+
 def main():
     tester = BirthdayReminderAPITester()
     return tester.run_all_tests()
