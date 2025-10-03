@@ -1392,6 +1392,267 @@ async def send_test_whatsapp_message(phone_number: str, current_user: User = Dep
     )
     return result
 
+# Custom Messages Routes
+@api_router.post("/custom-messages", response_model=CustomMessage)
+async def create_custom_message(message_data: CustomMessageCreate, current_user: User = Depends(get_current_user)):
+    """Create or update a custom message for a contact"""
+    # Verify contact belongs to user
+    contact = await db.contacts.find_one({"id": message_data.contact_id, "user_id": current_user.id})
+    if not contact:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    
+    # Check if custom message already exists
+    existing_message = await db.custom_messages.find_one({
+        "user_id": current_user.id,
+        "contact_id": message_data.contact_id,
+        "occasion": message_data.occasion,
+        "message_type": message_data.message_type
+    })
+    
+    message_dict = prepare_for_mongo({
+        "user_id": current_user.id,
+        "contact_id": message_data.contact_id,
+        "occasion": message_data.occasion,
+        "message_type": message_data.message_type,
+        "custom_message": message_data.custom_message,
+        "image_url": message_data.image_url,
+        "updated_at": datetime.now(timezone.utc)
+    })
+    
+    if existing_message:
+        # Update existing message
+        await db.custom_messages.update_one(
+            {"id": existing_message["id"]},
+            {"$set": message_dict}
+        )
+        custom_message = CustomMessage(id=existing_message["id"], **message_dict)
+    else:
+        # Create new message
+        custom_message = CustomMessage(**message_dict)
+        await db.custom_messages.insert_one(prepare_for_mongo(custom_message.dict()))
+    
+    return custom_message
+
+@api_router.get("/custom-messages/{contact_id}")
+async def get_custom_messages(contact_id: str, current_user: User = Depends(get_current_user)):
+    """Get all custom messages for a specific contact"""
+    # Verify contact belongs to user
+    contact = await db.contacts.find_one({"id": contact_id, "user_id": current_user.id})
+    if not contact:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    
+    messages = await db.custom_messages.find({
+        "user_id": current_user.id,
+        "contact_id": contact_id
+    }).to_list(100)
+    
+    return [CustomMessage(**parse_from_mongo(msg)) for msg in messages]
+
+@api_router.get("/custom-messages/{contact_id}/{occasion}/{message_type}")
+async def get_custom_message(
+    contact_id: str, 
+    occasion: str, 
+    message_type: str, 
+    current_user: User = Depends(get_current_user)
+):
+    """Get a specific custom message for a contact, occasion and message type"""
+    # Verify contact belongs to user
+    contact = await db.contacts.find_one({"id": contact_id, "user_id": current_user.id})
+    if not contact:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    
+    message = await db.custom_messages.find_one({
+        "user_id": current_user.id,
+        "contact_id": contact_id,
+        "occasion": occasion,
+        "message_type": message_type
+    })
+    
+    if not message:
+        # Generate default message using AI
+        message_request = GenerateMessageRequest(
+            contact_name=contact["name"],
+            occasion=occasion,
+            relationship="friend",
+            tone=contact.get("message_tone", "normal")
+        )
+        
+        ai_message = await generate_message(message_request, current_user)
+        
+        return {
+            "contact_id": contact_id,
+            "occasion": occasion,
+            "message_type": message_type,
+            "custom_message": ai_message.message,
+            "image_url": None,
+            "is_default": True
+        }
+    
+    return CustomMessage(**parse_from_mongo(message))
+
+@api_router.delete("/custom-messages/{contact_id}/{occasion}/{message_type}")
+async def delete_custom_message(
+    contact_id: str, 
+    occasion: str, 
+    message_type: str, 
+    current_user: User = Depends(get_current_user)
+):
+    """Delete a specific custom message"""
+    result = await db.custom_messages.delete_one({
+        "user_id": current_user.id,
+        "contact_id": contact_id,
+        "occasion": occasion,
+        "message_type": message_type
+    })
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Custom message not found")
+    
+    return {"message": "Custom message deleted successfully"}
+
+@api_router.post("/send-test-message")
+async def send_test_message(request: TestMessageRequest, current_user: User = Depends(get_current_user)):
+    """Send test messages to user's own contact information"""
+    # Get contact
+    contact = await db.contacts.find_one({"id": request.contact_id, "user_id": current_user.id})
+    if not contact:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    
+    contact = parse_from_mongo(contact)
+    results = {"whatsapp": None, "email": None}
+    
+    # Get user settings for test contact information
+    settings = await db.user_settings.find_one({"user_id": current_user.id})
+    
+    # Get custom messages or generate defaults
+    whatsapp_message_data = await db.custom_messages.find_one({
+        "user_id": current_user.id,
+        "contact_id": request.contact_id,
+        "occasion": request.occasion,
+        "message_type": "whatsapp"
+    })
+    
+    email_message_data = await db.custom_messages.find_one({
+        "user_id": current_user.id,
+        "contact_id": request.contact_id,
+        "occasion": request.occasion,
+        "message_type": "email"
+    })
+    
+    # Generate default messages if no custom ones exist
+    if not whatsapp_message_data:
+        message_request = GenerateMessageRequest(
+            contact_name=contact["name"],
+            occasion=request.occasion,
+            relationship="friend",
+            tone=contact.get("message_tone", "normal")
+        )
+        ai_message = await generate_message(message_request, current_user)
+        whatsapp_message = ai_message.message
+        whatsapp_image = contact.get("whatsapp_image")
+    else:
+        whatsapp_message = whatsapp_message_data["custom_message"]
+        whatsapp_image = whatsapp_message_data.get("image_url") or contact.get("whatsapp_image")
+    
+    if not email_message_data:
+        message_request = GenerateMessageRequest(
+            contact_name=contact["name"],
+            occasion=request.occasion,
+            relationship="friend",
+            tone=contact.get("message_tone", "normal")
+        )
+        ai_message = await generate_message(message_request, current_user)
+        email_message = ai_message.message
+        email_image = contact.get("email_image")
+    else:
+        email_message = email_message_data["custom_message"]
+        email_image = email_message_data.get("image_url") or contact.get("email_image")
+    
+    # Send test WhatsApp message to user's phone (if they have WhatsApp configured and phone number in their profile)
+    if contact.get("whatsapp"):
+        test_whatsapp_message = f"🧪 TEST MESSAGE for {contact['name']}'s {request.occasion}:\n\n{whatsapp_message}\n\n📝 This is how your message will appear."
+        
+        whatsapp_result = await send_whatsapp_message(
+            user_id=current_user.id,
+            phone_number=contact["whatsapp"],
+            message=test_whatsapp_message,
+            image_url=whatsapp_image
+        )
+        results["whatsapp"] = whatsapp_result
+    
+    # Send test email to user's email
+    if settings and settings.get("email_api_key"):
+        import requests
+        
+        try:
+            api_key = settings.get("email_api_key")
+            sender_email = settings.get("sender_email")
+            sender_name = settings.get("sender_name", "ReminderAI")
+            
+            url = "https://api.brevo.com/v3/smtp/email"
+            headers = {
+                "api-key": api_key,
+                "Content-Type": "application/json"
+            }
+            
+            # Create HTML email content
+            html_content = f"""
+            <html>
+            <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <h2 style="color: #e11d48; border-bottom: 2px solid #e11d48; padding-bottom: 10px;">
+                        🧪 Test Message Preview
+                    </h2>
+                    <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                        <h3 style="margin-top: 0; color: #374151;">
+                            {contact['name']}'s {request.occasion.title()} Message:
+                        </h3>
+                        <div style="background-color: white; padding: 15px; border-radius: 6px; border-left: 4px solid #e11d48;">
+                            {email_message}
+                        </div>
+                        {f'<img src="{email_image}" style="max-width: 100%; height: auto; margin-top: 15px; border-radius: 6px;" alt="Celebration Image">' if email_image else ''}
+                    </div>
+                    <p style="font-size: 14px; color: #6b7280; margin-top: 30px;">
+                        📝 This is a preview of how your {request.occasion} message will appear when sent to {contact['name']}.
+                    </p>
+                </div>
+            </body>
+            </html>
+            """
+            
+            payload = {
+                "sender": {
+                    "name": sender_name,
+                    "email": sender_email
+                },
+                "to": [
+                    {
+                        "email": current_user.email,
+                        "name": current_user.full_name
+                    }
+                ],
+                "subject": f"Test: {contact['name']}'s {request.occasion.title()} Message Preview",
+                "htmlContent": html_content
+            }
+            
+            response = requests.post(url, json=payload, headers=headers)
+            
+            if response.status_code == 201:
+                results["email"] = {"status": "success", "message": "Test email sent successfully"}
+            else:
+                results["email"] = {"status": "error", "message": f"Email API error: {response.text}"}
+                
+        except Exception as e:
+            results["email"] = {"status": "error", "message": f"Email test error: {str(e)}"}
+    else:
+        results["email"] = {"status": "error", "message": "Email API not configured"}
+    
+    return {
+        "contact_name": contact["name"],
+        "occasion": request.occasion,
+        "results": results
+    }
+
 # Image Upload Routes
 @api_router.post("/upload-image")
 async def upload_image(file: UploadFile = File(...), current_user: User = Depends(get_current_user)):
