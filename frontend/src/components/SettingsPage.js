@@ -216,12 +216,15 @@ const SettingsPage = () => {
   };
 
   const testWhatsAppConfig = async () => {
-    const isConfigComplete = settings.whatsapp_provider === 'facebook' 
-      ? (settings.whatsapp_phone_number_id && settings.whatsapp_access_token)
-      : (settings.whatsapp_provider === 'digitalsms' && settings.digitalsms_api_key);
+    // Check if DigitalSMS configuration is complete
+    if (!settings.digitalsms_api_key || !settings.whatsapp_sender_number) {
+      toast.error('Please configure both API key and sender phone number first');
+      return;
+    }
 
-    if (!isConfigComplete) {
-      toast.error('Please configure WhatsApp settings first');
+    // Check if user has phone number in profile
+    if (!profileData.phone_number) {
+      toast.error('Please add your phone number in Account tab to receive test messages');
       return;
     }
 
@@ -233,17 +236,27 @@ const SettingsPage = () => {
       setWhatsappTestResult(response.data);
       
       if (response.data.status === 'success') {
-        toast.success('WhatsApp configuration test successful!');
+        toast.success('Test message sent successfully! Check your WhatsApp.', {
+          description: `Message sent to ${response.data.details?.recipient || 'your phone'}`,
+          duration: 8000
+        });
       } else {
-        toast.error('WhatsApp configuration test failed');
+        toast.error('WhatsApp test failed', {
+          description: response.data.message,
+          duration: 10000
+        });
       }
     } catch (error) {
       console.error('Error testing WhatsApp config:', error);
+      const errorMsg = error.response?.data?.message || error.response?.data?.detail || 'Test failed';
       setWhatsappTestResult({
         status: 'error',
-        message: error.response?.data?.detail || 'Test failed'
+        message: errorMsg
       });
-      toast.error('WhatsApp configuration test failed');
+      toast.error('WhatsApp test failed', {
+        description: errorMsg,
+        duration: 10000
+      });
     } finally {
       setTestingWhatsApp(false);
     }
