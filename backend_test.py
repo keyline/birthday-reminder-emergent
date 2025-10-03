@@ -564,10 +564,7 @@ class BirthdayReminderAPITester:
         invalid_phone = {"phone_number": "invalid-phone-123abc"}
         result = self.run_test("Invalid Phone Number Format", "PUT", "user/profile", 400, invalid_phone)
         if result is not None:  # Should fail with 400
-            self.log_test("Invalid Phone Validation", False, "Invalid phone number was accepted")
             success = False
-        else:
-            self.log_test("Invalid Phone Validation", True, "Invalid phone number correctly rejected")
         
         # Test 7: Update email only (need to use unique email)
         timestamp = int(time.time())
@@ -585,10 +582,7 @@ class BirthdayReminderAPITester:
         invalid_email = {"email": "invalid-email-format"}
         result = self.run_test("Invalid Email Format", "PUT", "user/profile", 422, invalid_email)
         if result is not None:  # Should fail with 422
-            self.log_test("Invalid Email Validation", False, "Invalid email format was accepted")
             success = False
-        else:
-            self.log_test("Invalid Email Validation", True, "Invalid email format correctly rejected")
         
         # Test 9: Test duplicate email (create another user first)
         timestamp2 = int(time.time()) + 1
