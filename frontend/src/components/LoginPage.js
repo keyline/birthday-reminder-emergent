@@ -161,23 +161,49 @@ const LoginPage = () => {
             sent automatically via WhatsApp & Email.
           </p>
           
-          <div className="space-y-4">
-            <div className="flex items-center space-x-3">
-              <CheckCircle className="w-5 h-5 text-green-300" />
-              <span className="text-white/90">AI-Generated Personalized Messages</span>
+          <div className="space-y-4 bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+            <div className="flex items-center space-x-4">
+              <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center">
+                <CheckCircle className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <span className="text-white font-medium">🤖 AI-Generated Personalized Messages</span>
+                <p className="text-white/70 text-sm">Custom tones and heartfelt content</p>
+              </div>
             </div>
-            <div className="flex items-center space-x-3">
-              <CheckCircle className="w-5 h-5 text-green-300" />
-              <span className="text-white/90">WhatsApp & Email Integration</span>
+            <div className="flex items-center space-x-4">
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-400 to-cyan-500 rounded-full flex items-center justify-center">
+                <CheckCircle className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <span className="text-white font-medium">📱 WhatsApp & Email Integration</span>
+                <p className="text-white/70 text-sm">Multi-channel celebration delivery</p>
+              </div>
             </div>
-            <div className="flex items-center space-x-3">
-              <CheckCircle className="w-5 h-5 text-green-300" />
-              <span className="text-white/90">Custom Template Management</span>
+            <div className="flex items-center space-x-4">
+              <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full flex items-center justify-center">
+                <CheckCircle className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <span className="text-white font-medium">🎨 Custom Template Management</span>
+                <p className="text-white/70 text-sm">Design your celebration style</p>
+              </div>
             </div>
-            <div className="flex items-center space-x-3">
-              <CheckCircle className="w-5 h-5 text-green-300" />
-              <span className="text-white/90">Automated Reminder System</span>
+            <div className="flex items-center space-x-4">
+              <div className="w-8 h-8 bg-gradient-to-r from-orange-400 to-red-500 rounded-full flex items-center justify-center">
+                <CheckCircle className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <span className="text-white font-medium">⏰ Automated Reminder System</span>
+                <p className="text-white/70 text-sm">Never forget a special day again</p>
+              </div>
             </div>
+          </div>
+          
+          <div className="mt-8 flex items-center space-x-2 text-white/80">
+            <span className="text-lg">🎂</span>
+            <span className="text-sm font-medium">Join thousands celebrating life's precious moments</span>
+            <span className="text-lg">💕</span>
           </div>
         </div>
       </div>
