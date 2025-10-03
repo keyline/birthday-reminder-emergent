@@ -1094,76 +1094,39 @@ async def test_whatsapp_config(current_user: User = Depends(get_current_user)):
     if not settings:
         raise HTTPException(status_code=400, detail="Settings not found")
     
-    whatsapp_provider = settings.get("whatsapp_provider", "facebook")
-    
     try:
         import requests
         
-        if whatsapp_provider == "facebook":
-            # Test Facebook Graph API
-            phone_number_id = settings.get("whatsapp_phone_number_id")
-            access_token = settings.get("whatsapp_access_token")
-            
-            if not phone_number_id or not access_token:
-                return {"status": "error", "message": "Facebook WhatsApp configuration incomplete"}
-            
-            url = f"https://graph.facebook.com/v21.0/{phone_number_id}/messages"
-            headers = {
-                "Authorization": f"Bearer {access_token}",
-                "Content-Type": "application/json"
-            }
-            
-            # Test message payload
-            payload = {
-                "messaging_product": "whatsapp",
-                "to": "1234567890",  # Test number (won't actually send)
-                "type": "text",
-                "text": {
-                    "body": "Test configuration - Facebook WhatsApp API"
-                }
-            }
-            
-            response = requests.post(url, json=payload, headers=headers)
-            
-            if response.status_code in [200, 400]:  # 400 might be invalid number, but credentials are valid
-                return {"status": "success", "message": "Facebook WhatsApp API configuration is valid", "provider": "facebook"}
-            else:
-                return {"status": "error", "message": f"Facebook WhatsApp API test failed: {response.text}"}
-                
-        elif whatsapp_provider == "digitalsms":
-            # Test DigitalSMS API
-            api_key = settings.get("digitalsms_api_key")
-            
-            if not api_key:
-                return {"status": "error", "message": "DigitalSMS API key not configured"}
-            
-            url = "https://demo.digitalsms.biz/api/"
-            params = {
-                "apikey": api_key,
-                "mobile": "1234567890",  # Test mobile number (won't actually send)
-                "msg": "Test configuration from ReminderAI - Your DigitalSMS API is working correctly!"
-            }
-            
-            # Make test request
-            response = requests.get(url, params=params)
-            
-            # DigitalSMS API response handling
-            if response.status_code == 200:
-                response_text = response.text.strip()
-                
-                # Check for success indicators
-                if any(indicator in response_text.lower() for indicator in ["success", "sent", "ok", "delivered", "queued"]):
-                    return {"status": "success", "message": f"DigitalSMS API is valid. Response: {response_text}", "provider": "digitalsms"}
-                elif any(error in response_text.lower() for error in ["invalid", "error", "fail", "unauthorized", "forbidden"]):
-                    return {"status": "error", "message": f"DigitalSMS API test failed: {response_text}"}
-                else:
-                    # If we get a response but can't determine success/failure, assume it's working
-                    return {"status": "success", "message": f"DigitalSMS API responded: {response_text}", "provider": "digitalsms"}
-            else:
-                return {"status": "error", "message": f"DigitalSMS API HTTP error {response.status_code}: {response.text}"}
+        # Test DigitalSMS API
+        api_key = settings.get("digitalsms_api_key")
         
+        if not api_key:
+            return {"status": "error", "message": "DigitalSMS API key not configured"}
+        
+        url = "https://demo.digitalsms.biz/api/"
+        params = {
+            "apikey": api_key,
+            "mobile": "1234567890",  # Test mobile number (won't actually send)
+            "msg": "Test configuration from ReminderAI - Your DigitalSMS API is working correctly!"
+        }
+        
+        # Make test request
+        response = requests.get(url, params=params)
+        
+        # DigitalSMS API response handling
+        if response.status_code == 200:
+            response_text = response.text.strip()
+            
+            # Check for success indicators
+            if any(indicator in response_text.lower() for indicator in ["success", "sent", "ok", "delivered", "queued"]):
+                return {"status": "success", "message": f"DigitalSMS API is valid. Response: {response_text}", "provider": "digitalsms"}
+            elif any(error in response_text.lower() for error in ["invalid", "error", "fail", "unauthorized", "forbidden"]):
+                return {"status": "error", "message": f"DigitalSMS API test failed: {response_text}"}
+            else:
+                # If we get a response but can't determine success/failure, assume it's working
+                return {"status": "success", "message": f"DigitalSMS API responded: {response_text}", "provider": "digitalsms"}
         else:
-            return {"status": "error", "message": f"Unknown WhatsApp provider: {whatsapp_provider}"}
+            return {"status": "error", "message": f"DigitalSMS API HTTP error {response.status_code}: {response.text}"}
             
     except Exception as e:
         return {"status": "error", "message": f"WhatsApp API test error: {str(e)}"}
