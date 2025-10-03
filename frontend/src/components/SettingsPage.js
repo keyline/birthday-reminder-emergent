@@ -864,7 +864,7 @@ const SettingsPage = () => {
                       </Button>
                       <Button
                         onClick={handleSaveProfile}
-                        disabled={savingProfile || !profileData.full_name.trim() || !profileData.email.trim()}
+                        disabled={savingProfile || !profileData.full_name.trim() || !profileData.email.trim() || phoneValidationError}
                         className="btn-gradient"
                         data-testid="save-profile-button"
                       >
