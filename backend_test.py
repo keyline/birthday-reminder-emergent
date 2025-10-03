@@ -2427,6 +2427,12 @@ class BirthdayReminderAPITester:
             self.test_get_templates()
             self.test_update_template()
         
+        # IMAGE UPLOAD FUNCTIONALITY TESTS (NEW - Review Request)
+        print("\n📸 Testing Image Upload URL Functionality...")
+        self.test_image_upload_functionality()
+        self.test_template_image_integration()
+        self.test_image_upload_validation()
+        
         # AI and dashboard tests
         self.test_generate_message()
         self.test_dashboard_stats()
