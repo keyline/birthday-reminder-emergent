@@ -1442,6 +1442,12 @@ class BirthdayReminderAPITester:
         print("\n🧪 Testing WhatsApp Test Configuration Functionality...")
         self.test_whatsapp_test_configuration()
         
+        # Template Image Upload Functionality tests (NEW - Review Request)
+        print("\n🖼️ Testing Template-Level Image Upload Functionality...")
+        self.test_template_image_upload_functionality()
+        self.test_image_hierarchy_logic()
+        self.test_template_image_api_endpoints()
+        
         # Admin tests
         self.test_admin_functionality()
         
