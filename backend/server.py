@@ -2558,26 +2558,26 @@ async def get_reminder_logs(
 #     # Prevent admin from deleting themselves
 #     if user_id == admin_user.id:
 #         raise HTTPException(status_code=400, detail="Cannot delete your own admin account")
-    
-    # Check if user exists
-    target_user = await db.users.find_one({"id": user_id})
-    if not target_user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    # Don't allow deleting admin users (except self-deletion is already prevented above)
-    if target_user.get('is_admin', False):
-        raise HTTPException(status_code=400, detail="Cannot delete admin users")
-    
-    # Delete user's data
-    await db.contacts.delete_many({"user_id": user_id})
-    await db.templates.delete_many({"user_id": user_id})
-    await db.custom_messages.delete_many({"user_id": user_id})
-    await db.user_settings.delete_many({"user_id": user_id})
-    
-    # Delete user
-    await db.users.delete_one({"id": user_id})
-    
-    return {"message": f"User {target_user['email']} and all associated data deleted successfully"}
+#     
+#     # Check if user exists
+#     target_user = await db.users.find_one({"id": user_id})
+#     if not target_user:
+#         raise HTTPException(status_code=404, detail="User not found")
+#     
+#     # Don't allow deleting admin users (except self-deletion is already prevented above)
+#     if target_user.get('is_admin', False):
+#         raise HTTPException(status_code=400, detail="Cannot delete admin users")
+#     
+#     # Delete user's data
+#     await db.contacts.delete_many({"user_id": user_id})
+#     await db.templates.delete_many({"user_id": user_id})
+#     await db.custom_messages.delete_many({"user_id": user_id})
+#     await db.user_settings.delete_many({"user_id": user_id})
+#     
+#     # Delete user
+#     await db.users.delete_one({"id": user_id})
+#     
+#     return {"message": f"User {target_user['email']} and all associated data deleted successfully"}
 
 @api_router.get("/admin/platform-stats")
 async def get_platform_stats(admin_user: User = Depends(get_admin_user)):
