@@ -1261,20 +1261,15 @@ class BirthdayReminderAPITester:
         ]
         
         for phone_test in invalid_phone_numbers:
-            # Set invalid phone number in user profile - this should fail
+            # Set invalid phone number in user profile - this should fail with 400
             invalid_profile = {"phone_number": phone_test["phone"]}
             profile_result = self.run_test(f"Set Invalid Phone: {phone_test['description']}", "PUT", "user/profile", 400, invalid_profile)
-            # The API returns 400 but our test framework expects None for failures
+            # The API returns 400 and our test framework expects None for failures (which means the 400 was correctly returned)
             if profile_result is None:  # Should fail with 400
                 self.log_test(f"Invalid Phone Rejected at Profile Level: {phone_test['description']}", True, "Profile correctly rejected invalid phone")
             else:
-                # If profile update somehow succeeded, test that WhatsApp endpoint catches it
-                whatsapp_result = self.run_test(f"WhatsApp Test Invalid Phone: {phone_test['description']}", "POST", "settings/test-whatsapp", 200)
-                if whatsapp_result and whatsapp_result.get('status') == 'error' and 'invalid phone' in whatsapp_result.get('message', '').lower():
-                    self.log_test(f"Invalid Phone Caught by WhatsApp Endpoint: {phone_test['description']}", True, "WhatsApp endpoint correctly rejected invalid phone")
-                else:
-                    self.log_test(f"Invalid Phone Not Properly Validated: {phone_test['description']}", False, "Neither profile nor WhatsApp endpoint rejected invalid phone")
-                    success = False
+                self.log_test(f"Invalid Phone Validation Failed: {phone_test['description']}", False, "Profile should have rejected invalid phone with 400 status")
+                success = False
         
         # Test Scenario 5: Test with complete settings and valid user phone number (should attempt to send)
         print("\n   Testing complete configuration scenario...")
