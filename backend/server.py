@@ -1406,9 +1406,9 @@ async def send_whatsapp_message(user_id: str, phone_number: str, message: str, i
                 absolute_image_url = image_url
             else:
                 # Use default celebration image if image_url is not a valid URL
-                absolute_image_url = "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njl8MHwxfHNlYXJjaHwxfHxiaXJ0aGRheSUyMGNlbGVicmF0aW9ufGVufDB8fHx8MTc1OTQ4ODk0Nnww&ixlib=rb-4.1.0&q=85&w=400&h=400&fit=crop"
+                absolute_image_url = get_default_celebration_image(occasion)
             
-            # Validate URL before sending
+            # Validate URL before sending  
             try:
                 import requests
                 # Quick HEAD request to check if image is accessible
@@ -1417,13 +1417,13 @@ async def send_whatsapp_message(user_id: str, phone_number: str, message: str, i
                     params["img1"] = absolute_image_url
                 else:
                     # Use default celebration image if original is not accessible
-                    params["img1"] = "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njl8MHwxfHNlYXJjaHwxfHxiaXJ0aGRheSUyMGNlbGVicmF0aW9ufGVufDB8fHx8MTc1OTQ4ODk0Nnww&ixlib=rb-4.1.0&q=85&w=400&h=400&fit=crop"
+                    params["img1"] = get_default_celebration_image(occasion)
             except:
                 # If validation fails, use default celebration image
-                params["img1"] = "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njl8MHwxfHNlYXJjaHwxfHxiaXJ0aGRheSUyMGNlbGVicmF0aW9ufGVufDB8fHx8MTc1OTQ4ODk0Nnww&ixlib=rb-4.1.0&q=85&w=400&h=400&fit=crop"
+                params["img1"] = get_default_celebration_image(occasion)
         else:
             # No image provided, use default celebration image
-            params["img1"] = "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njl8MHwxfHNlYXJjaHwxfHxiaXJ0aGRheSUyMGNlbGVicmF0aW9ufGVufDB8fHx8MTc1OTQ4ODk0Nnww&ixlib=rb-4.1.0&q=85&w=400&h=400&fit=crop"
+            params["img1"] = get_default_celebration_image(occasion)
         
         # Make API request (GET method as per documentation)
         response = requests.get(url, params=params, timeout=30)
