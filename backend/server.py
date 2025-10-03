@@ -276,6 +276,52 @@ class AdminDashboardStats(BaseModel):
     recent_signups: int  # Last 30 days
     churn_rate: float
 
+# New Admin System Models
+class AdminUser(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    username: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class AdminLogin(BaseModel):
+    username: str
+    password: str
+    captcha_answer: str
+
+class CaptchaResponse(BaseModel):
+    captcha_id: str
+    question: str
+
+class AdminTokenResponse(BaseModel):
+    access_token: str
+    token_type: str
+    admin: dict
+
+class UserWithContactCount(BaseModel):
+    id: str
+    email: str
+    full_name: str
+    phone_number: Optional[str]
+    subscription_status: str
+    whatsapp_credits: int
+    email_credits: int
+    unlimited_whatsapp: bool
+    unlimited_email: bool
+    created_at: datetime
+    contact_count: int
+
+class UserUpdateRequest(BaseModel):
+    full_name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    company: Optional[str] = None
+    phone_number: Optional[str] = None
+
+class SubscriptionUpdateRequest(BaseModel):
+    subscription_status: Optional[str] = None
+    whatsapp_credits: Optional[int] = None
+    email_credits: Optional[int] = None
+    unlimited_whatsapp: Optional[bool] = None
+    unlimited_email: Optional[bool] = None
+
 # Helper functions
 def hash_password(password: str) -> str:
     salt = bcrypt.gensalt()
