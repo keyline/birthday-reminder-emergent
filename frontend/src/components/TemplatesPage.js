@@ -649,6 +649,35 @@ const TemplatesPage = () => {
                     </div>
                   </div>
                   
+                  {/* Image Indicators */}
+                  {(template.whatsapp_image_url || template.email_image_url) && (
+                    <div className="flex items-center space-x-3 pt-2">
+                      <p className="text-xs font-medium text-gray-600">Default Images:</p>
+                      {template.whatsapp_image_url && (
+                        <div className="flex items-center space-x-1">
+                          <MessageCircle className="w-3 h-3 text-green-600" />
+                          <span className="text-xs text-green-600">WhatsApp</span>
+                          <img 
+                            src={`${BACKEND_URL}${template.whatsapp_image_url}`} 
+                            alt="WhatsApp default" 
+                            className="w-6 h-6 rounded object-cover border"
+                          />
+                        </div>
+                      )}
+                      {template.email_image_url && (
+                        <div className="flex items-center space-x-1">
+                          <Mail className="w-3 h-3 text-blue-600" />
+                          <span className="text-xs text-blue-600">Email</span>
+                          <img 
+                            src={`${BACKEND_URL}${template.email_image_url}`} 
+                            alt="Email default" 
+                            className="w-6 h-6 rounded object-cover border"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
                   <div className="text-xs text-gray-500 pt-2 border-t border-gray-100">
                     Created: {new Date(template.created_at).toLocaleDateString()}
                   </div>
