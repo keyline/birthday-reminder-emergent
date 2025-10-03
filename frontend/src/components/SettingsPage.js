@@ -69,6 +69,7 @@ const SettingsPage = () => {
   });
   const [editingProfile, setEditingProfile] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
+  const [phoneValidationError, setPhoneValidationError] = useState('');
 
   const timezones = [
     'UTC', 'America/New_York', 'America/Los_Angeles', 'America/Chicago',
