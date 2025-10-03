@@ -2637,19 +2637,19 @@ class BirthdayReminderAPITester:
         # Test updating non-existent user
         invalid_update_data = {"full_name": "Non-existent User"}
         result = self.run_test("Update Non-existent User", "PUT", "admin/users/invalid-user-id", 404, invalid_update_data)
-        if result is not None:  # Should fail with 404
+        if result is None:  # Should fail with 404, so result should be None
+            self.log_test("Non-existent User Update", True, "Non-existent user update properly handled")
+        else:
             self.log_test("Non-existent User Update", False, "Should return 404 for non-existent user")
             success = False
-        else:
-            self.log_test("Non-existent User Update", True, "Non-existent user update properly handled")
         
         # Test deleting non-existent user
         result = self.run_test("Delete Non-existent User", "DELETE", "admin/users/invalid-user-id", 404)
-        if result is not None:  # Should fail with 404
+        if result is None:  # Should fail with 404, so result should be None
+            self.log_test("Non-existent User Deletion", True, "Non-existent user deletion properly handled")
+        else:
             self.log_test("Non-existent User Deletion", False, "Should return 404 for non-existent user")
             success = False
-        else:
-            self.log_test("Non-existent User Deletion", True, "Non-existent user deletion properly handled")
         
         # Restore original token
         self.token = original_token
