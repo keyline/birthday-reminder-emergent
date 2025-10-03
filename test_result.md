@@ -131,28 +131,28 @@
 
 ## frontend:
   - task: "Contact List Icons (WhatsApp, Email, Test)"
-    implemented: false
+    implemented: true
     working: "NA"
     file: "ContactsPage.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: false
         - agent: "main"
-        - comment: "Add three action icons to each contact card in the contact list"
+        - comment: "Added three action icons to each contact card with handlers for WhatsApp, Email and Test messaging"
         
   - task: "Message Editing Popup Modal"
-    implemented: false
+    implemented: true
     working: "NA"
     file: "ContactsPage.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: false
         - agent: "main"
-        - comment: "Create popup for editing/regenerating messages with image attachment support"
+        - comment: "Added comprehensive popup modal for editing/regenerating messages with image attachment, occasion selection, and preview"
 
 ## metadata:
   created_by: "main_agent"
