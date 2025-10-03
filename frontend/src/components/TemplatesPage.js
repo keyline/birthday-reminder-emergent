@@ -311,20 +311,21 @@ const TemplatesPage = () => {
                   />
                 </div>
                 
-                {/* Image Upload Section */}
+                {/* Image Upload Section - Only show relevant image based on template type */}
                 <div className="space-y-4 p-4 bg-gray-50 rounded-lg border">
                   <h4 className="text-sm font-medium text-gray-700 flex items-center">
                     <Image className="w-4 h-4 mr-2" />
-                    Default Images (Optional)
+                    Default Image (Optional)
                   </h4>
                   <p className="text-xs text-gray-500">
-                    These images will be used by default if no custom image is set for individual contacts
+                    This image will be used by default if no custom image is set for individual contacts
                   </p>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* WhatsApp Image Upload */}
+                  {/* WhatsApp Image Upload - Only for WhatsApp templates */}
+                  {formData.type === 'whatsapp' && (
                     <div className="space-y-2">
-                      <Label htmlFor="whatsapp-image-upload" className="text-sm">
+                      <Label htmlFor="whatsapp-image-upload" className="text-sm flex items-center">
+                        <MessageCircle className="w-4 h-4 mr-2 text-green-600" />
                         WhatsApp Default Image
                       </Label>
                       <div className="flex items-center space-x-2">
@@ -377,10 +378,13 @@ const TemplatesPage = () => {
                         )}
                       </div>
                     </div>
-                    
-                    {/* Email Image Upload */}
+                  )}
+                  
+                  {/* Email Image Upload - Only for Email templates */}
+                  {formData.type === 'email' && (
                     <div className="space-y-2">
-                      <Label htmlFor="email-image-upload" className="text-sm">
+                      <Label htmlFor="email-image-upload" className="text-sm flex items-center">
+                        <Mail className="w-4 h-4 mr-2 text-blue-600" />
                         Email Default Image
                       </Label>
                       <div className="flex items-center space-x-2">
@@ -433,7 +437,7 @@ const TemplatesPage = () => {
                         )}
                       </div>
                     </div>
-                  </div>
+                  )}
                 </div>
                 
                 <div className="flex items-center space-x-2">
