@@ -724,46 +724,162 @@ const SettingsPage = () => {
           <TabsContent value="account" className="space-y-6">
             <Card className="border-0 shadow-xl glass">
               <CardHeader>
-                <CardTitle className="flex items-center text-xl">
-                  <User className="w-5 h-5 mr-2 text-gray-500" />
-                  Account Information
+                <CardTitle className="flex items-center text-xl justify-between">
+                  <div className="flex items-center">
+                    <User className="w-5 h-5 mr-2 text-gray-500" />
+                    Account Information
+                  </div>
+                  {!editingProfile && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setEditingProfile(true)}
+                      className="text-sm"
+                      data-testid="edit-profile-button"
+                    >
+                      <Settings className="w-4 h-4 mr-2" />
+                      Edit Profile
+                    </Button>
+                  )}
                 </CardTitle>
                 <CardDescription>
-                  Your account details and subscription status
+                  {editingProfile ? 'Update your personal information' : 'Your account details and subscription status'}
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-sm text-gray-600">Full Name</Label>
-                    <p className="font-medium">{user?.full_name}</p>
+              <CardContent className="space-y-6">
+                {editingProfile ? (
+                  /* Editable Profile Form */
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="profile-name" className="flex items-center">
+                          <User className="w-4 h-4 mr-2" />
+                          Full Name *
+                        </Label>
+                        <Input
+                          id="profile-name"
+                          data-testid="profile-name-input"
+                          value={profileData.full_name}
+                          onChange={(e) => setProfileData({ ...profileData, full_name: e.target.value })}
+                          placeholder="Enter your full name"
+                          required
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="profile-email" className="flex items-center">
+                          <Mail className="w-4 h-4 mr-2" />
+                          Email Address *
+                        </Label>
+                        <Input
+                          id="profile-email"
+                          data-testid="profile-email-input"
+                          type="email"
+                          value={profileData.email}
+                          onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+                          placeholder="Enter your email address"
+                          required
+                        />
+                      </div>
+                      
+                      <div className="space-y-2 md:col-span-2">
+                        <Label htmlFor="profile-phone" className="flex items-center">
+                          <Phone className="w-4 h-4 mr-2" />
+                          Phone Number (Optional)
+                        </Label>
+                        <Input
+                          id="profile-phone"
+                          data-testid="profile-phone-input"
+                          type="tel"
+                          value={profileData.phone_number}
+                          onChange={(e) => setProfileData({ ...profileData, phone_number: e.target.value })}
+                          placeholder="Enter your phone number (e.g., +1234567890)"
+                        />
+                        <p className="text-xs text-gray-500">
+                          Include country code for international numbers
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {/* Action Buttons */}
+                    <div className="flex justify-end space-x-3 pt-4 border-t">
+                      <Button
+                        variant="outline"
+                        onClick={handleCancelProfileEdit}
+                        disabled={savingProfile}
+                        data-testid="cancel-profile-button"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={handleSaveProfile}
+                        disabled={savingProfile || !profileData.full_name.trim() || !profileData.email.trim()}
+                        className="btn-gradient"
+                        data-testid="save-profile-button"
+                      >
+                        {savingProfile ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b border-white mr-2" />
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <Save className="w-4 h-4 mr-2" />
+                            Save Changes
+                          </>
+                        )}
+                      </Button>
+                    </div>
                   </div>
-                  <div>
-                    <Label className="text-sm text-gray-600">Email Address</Label>
-                    <p className="font-medium">{user?.email}</p>
+                ) : (
+                  /* Read-only Profile Display */
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-sm text-gray-600">Full Name</Label>
+                      <p className="font-medium" data-testid="display-name">
+                        {profileData.full_name || user?.full_name || 'Not set'}
+                      </p>
+                    </div>
+                    <div>
+                      <Label className="text-sm text-gray-600">Email Address</Label>
+                      <p className="font-medium" data-testid="display-email">
+                        {profileData.email || user?.email || 'Not set'}
+                      </p>
+                    </div>
+                    <div>
+                      <Label className="text-sm text-gray-600">Phone Number</Label>
+                      <p className="font-medium" data-testid="display-phone">
+                        {profileData.phone_number || 'Not set'}
+                      </p>
+                    </div>
+                    <div>
+                      <Label className="text-sm text-gray-600">Subscription Status</Label>
+                      <Badge 
+                        variant="outline" 
+                        className={`${
+                          user?.subscription_status === 'active' 
+                            ? 'bg-green-100 text-green-700 border-green-200'
+                            : user?.subscription_status === 'trial'
+                            ? 'bg-blue-100 text-blue-700 border-blue-200'
+                            : 'bg-gray-100 text-gray-700 border-gray-200'
+                        } capitalize`}
+                        data-testid="subscription-status"
+                      >
+                        {user?.subscription_status || 'Trial'}
+                      </Badge>
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label className="text-sm text-gray-600">Member Since</Label>
+                      <p className="font-medium" data-testid="member-since">
+                        {user?.created_at ? new Date(user.created_at).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        }) : 'N/A'}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <Label className="text-sm text-gray-600">Subscription Status</Label>
-                    <Badge 
-                      variant="outline" 
-                      className={`${
-                        user?.subscription_status === 'active' 
-                          ? 'bg-green-100 text-green-700 border-green-200'
-                          : user?.subscription_status === 'trial'
-                          ? 'bg-blue-100 text-blue-700 border-blue-200'
-                          : 'bg-gray-100 text-gray-700 border-gray-200'
-                      } capitalize`}
-                    >
-                      {user?.subscription_status || 'Trial'}
-                    </Badge>
-                  </div>
-                  <div>
-                    <Label className="text-sm text-gray-600">Member Since</Label>
-                    <p className="font-medium">
-                      {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
-                    </p>
-                  </div>
-                </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
