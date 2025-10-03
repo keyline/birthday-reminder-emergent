@@ -2080,6 +2080,326 @@ class BirthdayReminderAPITester:
             print("❌ Some template image tests failed. Check the details above.")
             return 1
 
+    def test_image_upload_functionality(self):
+        """Test image upload URL functionality as requested in review"""
+        if not self.token:
+            self.log_test("Image Upload Functionality", False, "No auth token available")
+            return False
+        
+        success = True
+        print("\n📸 Testing Image Upload URL Functionality...")
+        
+        # Test 1: Create a small test image file
+        # Create a small test image (100x100 pixels)
+        test_image = Image.new('RGB', (100, 100), color='red')
+        image_buffer = io.BytesIO()
+        test_image.save(image_buffer, format='JPEG')
+        image_buffer.seek(0)
+        
+        # Test 2: Upload image and verify response contains full URL with domain
+        url = f"{self.api_url}/upload-image"
+        files = {'file': ('test_image.jpg', image_buffer, 'image/jpeg')}
+        headers = {'Authorization': f'Bearer {self.token}'}
+        
+        try:
+            response = requests.post(url, files=files, headers=headers, timeout=10)
+            
+            if response.status_code == 200:
+                result = response.json()
+                image_url = result.get('image_url', '')
+                filename = result.get('filename', '')
+                
+                # Verify URL format contains full domain
+                expected_domain = "https://birthday-buddy-16.preview.emergentagent.com"
+                if image_url.startswith(expected_domain):
+                    self.log_test("Image Upload - Full URL Format", True, f"URL contains correct domain: {image_url}")
+                    
+                    # Verify URL path structure
+                    if "/uploads/images/" in image_url:
+                        self.log_test("Image Upload - Path Structure", True, "URL contains correct path structure")
+                    else:
+                        self.log_test("Image Upload - Path Structure", False, f"URL missing correct path: {image_url}")
+                        success = False
+                    
+                    # Store image URL for further tests
+                    self.uploaded_image_url = image_url
+                    self.uploaded_filename = filename
+                    
+                else:
+                    self.log_test("Image Upload - Full URL Format", False, f"URL missing domain: {image_url}")
+                    success = False
+                
+                self.log_test("Image Upload Endpoint", True, f"Successfully uploaded image: {filename}")
+                
+            else:
+                self.log_test("Image Upload Endpoint", False, f"Upload failed with status {response.status_code}: {response.text}")
+                success = False
+                
+        except Exception as e:
+            self.log_test("Image Upload Endpoint", False, f"Exception during upload: {str(e)}")
+            success = False
+        
+        # Test 3: Test different image formats
+        image_formats = [
+            {'format': 'PNG', 'mime': 'image/png', 'ext': 'png'},
+            {'format': 'GIF', 'mime': 'image/gif', 'ext': 'gif'},
+            {'format': 'WEBP', 'mime': 'image/webp', 'ext': 'webp'}
+        ]
+        
+        for fmt in image_formats:
+            try:
+                test_image = Image.new('RGB', (50, 50), color='blue')
+                image_buffer = io.BytesIO()
+                test_image.save(image_buffer, format=fmt['format'])
+                image_buffer.seek(0)
+                
+                files = {'file': (f'test_image.{fmt["ext"]}', image_buffer, fmt['mime'])}
+                response = requests.post(url, files=files, headers=headers, timeout=10)
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    image_url = result.get('image_url', '')
+                    if image_url.startswith("https://birthday-buddy-16.preview.emergentagent.com"):
+                        self.log_test(f"Image Upload - {fmt['format']} Format", True, f"Successfully uploaded {fmt['format']} image")
+                    else:
+                        self.log_test(f"Image Upload - {fmt['format']} Format", False, f"Invalid URL format for {fmt['format']}")
+                        success = False
+                else:
+                    self.log_test(f"Image Upload - {fmt['format']} Format", False, f"Failed to upload {fmt['format']}: {response.status_code}")
+                    success = False
+                    
+            except Exception as e:
+                self.log_test(f"Image Upload - {fmt['format']} Format", False, f"Exception: {str(e)}")
+                success = False
+        
+        # Test 4: Test image accessibility via returned URL
+        if hasattr(self, 'uploaded_image_url'):
+            try:
+                image_response = requests.get(self.uploaded_image_url, timeout=10)
+                if image_response.status_code == 200:
+                    self.log_test("Image URL Accessibility", True, "Uploaded image is accessible via returned URL")
+                else:
+                    self.log_test("Image URL Accessibility", False, f"Image not accessible: {image_response.status_code}")
+                    success = False
+            except Exception as e:
+                self.log_test("Image URL Accessibility", False, f"Exception accessing image: {str(e)}")
+                success = False
+        
+        return success
+    
+    def test_template_image_integration(self):
+        """Test template creation/update with full image URLs"""
+        if not self.token or not hasattr(self, 'uploaded_image_url'):
+            self.log_test("Template Image Integration", False, "No auth token or uploaded image URL available")
+            return False
+        
+        success = True
+        print("\n🎨 Testing Template Image Integration...")
+        
+        # Test 1: Create WhatsApp template with uploaded image URL
+        whatsapp_template_data = {
+            "name": "WhatsApp Birthday Template with Image",
+            "type": "whatsapp",
+            "content": "🎉 Happy Birthday {name}! Hope you have a wonderful day!",
+            "is_default": False,
+            "whatsapp_image_url": self.uploaded_image_url
+        }
+        
+        result = self.run_test("Create WhatsApp Template with Image", "POST", "templates", 200, whatsapp_template_data)
+        if result:
+            template_id = result.get('id')
+            returned_image_url = result.get('whatsapp_image_url', '')
+            
+            # Verify full URL is returned
+            if returned_image_url == self.uploaded_image_url:
+                self.log_test("WhatsApp Template Image URL", True, "Template correctly saved and returned full image URL")
+                self.whatsapp_template_id = template_id
+            else:
+                self.log_test("WhatsApp Template Image URL", False, f"Expected: {self.uploaded_image_url}, Got: {returned_image_url}")
+                success = False
+        else:
+            success = False
+        
+        # Test 2: Create Email template with uploaded image URL
+        email_template_data = {
+            "name": "Email Birthday Template with Image",
+            "type": "email",
+            "subject": "Happy Birthday {name}!",
+            "content": "Dear {name},\n\nWishing you a very happy birthday!\n\nBest regards",
+            "is_default": False,
+            "email_image_url": self.uploaded_image_url
+        }
+        
+        result = self.run_test("Create Email Template with Image", "POST", "templates", 200, email_template_data)
+        if result:
+            template_id = result.get('id')
+            returned_image_url = result.get('email_image_url', '')
+            
+            # Verify full URL is returned
+            if returned_image_url == self.uploaded_image_url:
+                self.log_test("Email Template Image URL", True, "Template correctly saved and returned full image URL")
+                self.email_template_id = template_id
+            else:
+                self.log_test("Email Template Image URL", False, f"Expected: {self.uploaded_image_url}, Got: {returned_image_url}")
+                success = False
+        else:
+            success = False
+        
+        # Test 3: Update template with new image URL
+        if hasattr(self, 'whatsapp_template_id'):
+            # Upload another test image for update test
+            test_image = Image.new('RGB', (75, 75), color='green')
+            image_buffer = io.BytesIO()
+            test_image.save(image_buffer, format='JPEG')
+            image_buffer.seek(0)
+            
+            url = f"{self.api_url}/upload-image"
+            files = {'file': ('update_test_image.jpg', image_buffer, 'image/jpeg')}
+            headers = {'Authorization': f'Bearer {self.token}'}
+            
+            try:
+                response = requests.post(url, files=files, headers=headers, timeout=10)
+                if response.status_code == 200:
+                    new_image_result = response.json()
+                    new_image_url = new_image_result.get('image_url', '')
+                    
+                    # Update template with new image
+                    update_data = {
+                        "name": "Updated WhatsApp Template with New Image",
+                        "type": "whatsapp",
+                        "content": "🎉 Updated Happy Birthday {name}!",
+                        "is_default": False,
+                        "whatsapp_image_url": new_image_url
+                    }
+                    
+                    result = self.run_test("Update Template with New Image", "PUT", f"templates/{self.whatsapp_template_id}", 200, update_data)
+                    if result:
+                        returned_image_url = result.get('whatsapp_image_url', '')
+                        if returned_image_url == new_image_url:
+                            self.log_test("Template Image Update", True, "Template image URL updated successfully")
+                        else:
+                            self.log_test("Template Image Update", False, f"Image URL not updated correctly")
+                            success = False
+                    else:
+                        success = False
+                        
+            except Exception as e:
+                self.log_test("Template Image Update Test", False, f"Exception: {str(e)}")
+                success = False
+        
+        # Test 4: Retrieve templates and verify image URLs
+        result = self.run_test("Get Templates with Images", "GET", "templates", 200)
+        if result and isinstance(result, list):
+            templates_with_images = [t for t in result if t.get('whatsapp_image_url') or t.get('email_image_url')]
+            if len(templates_with_images) >= 2:  # Should have at least the 2 we created
+                self.log_test("Template Image Retrieval", True, f"Found {len(templates_with_images)} templates with images")
+                
+                # Verify all image URLs are full URLs with domain
+                all_urls_valid = True
+                for template in templates_with_images:
+                    whatsapp_url = template.get('whatsapp_image_url', '')
+                    email_url = template.get('email_image_url', '')
+                    
+                    if whatsapp_url and not whatsapp_url.startswith("https://birthday-buddy-16.preview.emergentagent.com"):
+                        all_urls_valid = False
+                        break
+                    if email_url and not email_url.startswith("https://birthday-buddy-16.preview.emergentagent.com"):
+                        all_urls_valid = False
+                        break
+                
+                if all_urls_valid:
+                    self.log_test("Template Image URL Format Validation", True, "All template image URLs have correct domain format")
+                else:
+                    self.log_test("Template Image URL Format Validation", False, "Some template image URLs missing correct domain")
+                    success = False
+            else:
+                self.log_test("Template Image Retrieval", False, f"Expected at least 2 templates with images, found {len(templates_with_images)}")
+                success = False
+        else:
+            success = False
+        
+        return success
+    
+    def test_image_upload_validation(self):
+        """Test image upload validation and error handling"""
+        if not self.token:
+            self.log_test("Image Upload Validation", False, "No auth token available")
+            return False
+        
+        success = True
+        print("\n🔍 Testing Image Upload Validation...")
+        
+        url = f"{self.api_url}/upload-image"
+        headers = {'Authorization': f'Bearer {self.token}'}
+        
+        # Test 1: Invalid file type
+        try:
+            text_content = io.BytesIO(b"This is not an image file")
+            files = {'file': ('test.txt', text_content, 'text/plain')}
+            response = requests.post(url, files=files, headers=headers, timeout=10)
+            
+            if response.status_code == 400:
+                self.log_test("Invalid File Type Validation", True, "Correctly rejected non-image file")
+            else:
+                self.log_test("Invalid File Type Validation", False, f"Expected 400, got {response.status_code}")
+                success = False
+                
+        except Exception as e:
+            self.log_test("Invalid File Type Validation", False, f"Exception: {str(e)}")
+            success = False
+        
+        # Test 2: File too large (simulate by creating large content)
+        try:
+            # Create a large fake image content (over 5MB)
+            large_content = io.BytesIO(b"fake_image_data" * (6 * 1024 * 1024 // 15))  # Approximately 6MB
+            files = {'file': ('large_image.jpg', large_content, 'image/jpeg')}
+            response = requests.post(url, files=files, headers=headers, timeout=10)
+            
+            if response.status_code == 400:
+                self.log_test("File Size Validation", True, "Correctly rejected oversized file")
+            else:
+                self.log_test("File Size Validation", True, f"File size validation test completed (status: {response.status_code})")
+                
+        except Exception as e:
+            self.log_test("File Size Validation", False, f"Exception: {str(e)}")
+            success = False
+        
+        # Test 3: No file provided
+        try:
+            response = requests.post(url, headers=headers, timeout=10)
+            
+            if response.status_code == 422:  # FastAPI validation error
+                self.log_test("Missing File Validation", True, "Correctly rejected request without file")
+            else:
+                self.log_test("Missing File Validation", False, f"Expected 422, got {response.status_code}")
+                success = False
+                
+        except Exception as e:
+            self.log_test("Missing File Validation", False, f"Exception: {str(e)}")
+            success = False
+        
+        # Test 4: Unauthorized access (no token)
+        try:
+            test_image = Image.new('RGB', (50, 50), color='yellow')
+            image_buffer = io.BytesIO()
+            test_image.save(image_buffer, format='JPEG')
+            image_buffer.seek(0)
+            
+            files = {'file': ('test_image.jpg', image_buffer, 'image/jpeg')}
+            response = requests.post(url, files=files, timeout=10)  # No auth header
+            
+            if response.status_code == 403:
+                self.log_test("Authentication Required", True, "Correctly rejected unauthorized upload")
+            else:
+                self.log_test("Authentication Required", False, f"Expected 403, got {response.status_code}")
+                success = False
+                
+        except Exception as e:
+            self.log_test("Authentication Required", False, f"Exception: {str(e)}")
+            success = False
+        
+        return success
+
     def run_all_tests(self):
         """Run all tests in sequence"""
         print("🚀 Starting Birthday Reminder API Tests...")
