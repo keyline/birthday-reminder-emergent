@@ -1802,8 +1802,7 @@ async def update_contact_images(
     
     return {"message": "Contact images updated successfully"}
 
-# Include the router in the main app
-app.include_router(api_router)
+# Router will be included after all endpoints are defined
 
 # Create uploads directory
 uploads_dir = Path("uploads")
