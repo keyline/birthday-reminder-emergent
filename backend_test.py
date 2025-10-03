@@ -1835,6 +1835,15 @@ class BirthdayReminderAPITester:
         self.test_image_hierarchy_logic()
         self.test_template_image_api_endpoints()
         
+        # Daily Reminder System tests (NEW - Review Request)
+        print("\n⏰ Testing Daily Reminder System...")
+        self.test_daily_reminder_main_processing()
+        self.test_daily_reminder_admin_endpoints()
+        self.test_daily_reminder_timezone_handling()
+        self.test_daily_reminder_credit_management()
+        self.test_daily_reminder_error_handling()
+        self.test_daily_reminder_integration()
+        
         # Admin tests
         self.test_admin_functionality()
         
