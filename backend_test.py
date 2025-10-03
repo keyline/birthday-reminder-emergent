@@ -2044,6 +2044,40 @@ class BirthdayReminderAPITester:
         
         return success
 
+    def run_template_image_tests(self):
+        """Run template image upload functionality tests specifically"""
+        print("🖼️ Starting Template Image Upload Tests...")
+        print(f"Testing against: {self.base_url}")
+        print("=" * 60)
+        
+        # Authentication setup
+        if not self.test_user_registration():
+            print("❌ User registration failed - stopping tests")
+            return 1
+        
+        # Create a contact for testing
+        if not self.test_create_contact():
+            print("❌ Contact creation failed - stopping tests")
+            return 1
+        
+        # Run template image specific tests
+        print("\n🖼️ Testing Template-Level Image Upload Functionality...")
+        self.test_template_image_upload_functionality()
+        self.test_image_hierarchy_logic()
+        self.test_template_image_api_endpoints()
+        
+        # Print results
+        print("=" * 60)
+        print(f"📊 Template Image Test Results: {self.tests_passed}/{self.tests_run} tests passed")
+        print(f"Success Rate: {(self.tests_passed/self.tests_run)*100:.1f}%")
+        
+        if self.tests_passed == self.tests_run:
+            print("🎉 All template image tests passed!")
+            return 0
+        else:
+            print("❌ Some template image tests failed. Check the details above.")
+            return 1
+
     def run_all_tests(self):
         """Run all tests in sequence"""
         print("🚀 Starting Birthday Reminder API Tests...")
