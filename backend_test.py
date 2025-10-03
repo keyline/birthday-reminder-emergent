@@ -2561,18 +2561,18 @@ class BirthdayReminderAPITester:
         
         # Try to access admin endpoints with regular user
         result = self.run_test("Non-admin Access to Users", "GET", "admin/users", 403)
-        if result is not None:  # Should fail with 403
+        if result is None:  # Should fail with 403, so result should be None
+            self.log_test("Admin Protection - Users Endpoint", True, "Admin endpoint properly protected")
+        else:
             self.log_test("Admin Protection - Users Endpoint", False, "Non-admin user should not access admin endpoints")
             success = False
-        else:
-            self.log_test("Admin Protection - Users Endpoint", True, "Admin endpoint properly protected")
         
         result = self.run_test("Non-admin Access to Stats", "GET", "admin/platform-stats", 403)
-        if result is not None:  # Should fail with 403
+        if result is None:  # Should fail with 403, so result should be None
+            self.log_test("Admin Protection - Stats Endpoint", True, "Admin endpoint properly protected")
+        else:
             self.log_test("Admin Protection - Stats Endpoint", False, "Non-admin user should not access admin endpoints")
             success = False
-        else:
-            self.log_test("Admin Protection - Stats Endpoint", True, "Admin endpoint properly protected")
         
         # Switch back to admin token for remaining tests
         self.token = self.admin_token
