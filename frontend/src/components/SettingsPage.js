@@ -151,6 +151,36 @@ const SettingsPage = () => {
     setEditingProfile(false);
   };
 
+  const cleanPhoneNumber = (phone) => {
+    if (!phone) return '';
+    
+    // Remove all spaces, dashes, parentheses
+    let cleaned = phone.replace(/[\s\-\(\)]/g, '');
+    
+    // Remove +91 country code if present
+    if (cleaned.startsWith('+91')) {
+      cleaned = cleaned.substring(3);
+    } else if (cleaned.startsWith('91') && cleaned.length === 12) {
+      cleaned = cleaned.substring(2);
+    }
+    
+    // Keep only digits
+    cleaned = cleaned.replace(/\D/g, '');
+    
+    // Limit to 10 digits for Indian numbers
+    if (cleaned.length > 10) {
+      cleaned = cleaned.substring(0, 10);
+    }
+    
+    return cleaned;
+  };
+
+  const handlePhoneNumberChange = (e) => {
+    const rawValue = e.target.value;
+    const cleanedValue = cleanPhoneNumber(rawValue);
+    setProfileData({ ...profileData, phone_number: cleanedValue });
+  };
+
   const handleSaveSettings = async () => {
     setSaving(true);
     
