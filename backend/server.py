@@ -2548,16 +2548,16 @@ async def get_reminder_logs(
 #     
 #     return {"message": "User updated successfully", "user": updated_user}
 
-@api_router.delete("/admin/users/{user_id}")
-async def delete_user_by_admin(
-    user_id: str,
-    admin_user: User = Depends(get_admin_user)
-):
-    """Delete a user and all their data"""
-    
-    # Prevent admin from deleting themselves
-    if user_id == admin_user.id:
-        raise HTTPException(status_code=400, detail="Cannot delete your own admin account")
+# @api_router.delete("/admin/users/{user_id}")
+# async def delete_user_by_admin_old(
+#     user_id: str,
+#     admin_user: User = Depends(get_admin_user)
+# ):
+#     """Delete a user and all their data - OLD ENDPOINT"""
+#     
+#     # Prevent admin from deleting themselves
+#     if user_id == admin_user.id:
+#         raise HTTPException(status_code=400, detail="Cannot delete your own admin account")
     
     # Check if user exists
     target_user = await db.users.find_one({"id": user_id})
