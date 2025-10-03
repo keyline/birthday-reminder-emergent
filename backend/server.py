@@ -62,6 +62,7 @@ class User(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     email: str
     full_name: str
+    phone_number: Optional[str] = None
     subscription_status: str = "trial"
     is_admin: bool = False
     whatsapp_credits: int = 100  # Default credits
