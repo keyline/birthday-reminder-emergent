@@ -499,6 +499,201 @@ class BirthdayReminderAPITester:
         
         return success
 
+    def test_user_profile_functionality(self):
+        """Test user profile GET and PUT endpoints with comprehensive validation"""
+        if not self.token:
+            self.log_test("User Profile Functionality", False, "No auth token available")
+            return False
+        
+        success = True
+        print("\n🔧 Testing User Profile Update Functionality...")
+        
+        # Test 1: Get current user profile
+        result = self.run_test("Get User Profile", "GET", "user/profile", 200)
+        if not result:
+            success = False
+        else:
+            print(f"   Current profile: {result.get('full_name', 'N/A')}, {result.get('email', 'N/A')}, Phone: {result.get('phone_number', 'None')}")
+            # Verify phone_number field exists (even if None)
+            if 'phone_number' not in result:
+                self.log_test("Profile Phone Field Check", False, "phone_number field missing from profile response")
+                success = False
+            else:
+                self.log_test("Profile Phone Field Check", True, "phone_number field present in profile")
+        
+        # Test 2: Update full name only
+        name_update = {"full_name": "Updated Test User Name"}
+        result = self.run_test("Update Full Name Only", "PUT", "user/profile", 200, name_update)
+        if not result:
+            success = False
+        elif result.get('full_name') != name_update['full_name']:
+            self.log_test("Verify Name Update", False, f"Name not updated correctly: {result.get('full_name')}")
+            success = False
+        else:
+            self.log_test("Verify Name Update", True, "Full name updated successfully")
+        
+        # Test 3: Update phone number only (valid format)
+        phone_update = {"phone_number": "+1-555-123-4567"}
+        result = self.run_test("Update Phone Number Valid", "PUT", "user/profile", 200, phone_update)
+        if not result:
+            success = False
+        elif result.get('phone_number') != phone_update['phone_number']:
+            self.log_test("Verify Phone Update", False, f"Phone not updated correctly: {result.get('phone_number')}")
+            success = False
+        else:
+            self.log_test("Verify Phone Update", True, "Phone number updated successfully")
+        
+        # Test 4: Update phone number with different valid format
+        phone_update2 = {"phone_number": "(555) 987-6543"}
+        result = self.run_test("Update Phone Number Format 2", "PUT", "user/profile", 200, phone_update2)
+        if not result:
+            success = False
+        
+        # Test 5: Update phone number to empty (should set to None)
+        phone_empty = {"phone_number": ""}
+        result = self.run_test("Update Phone Number Empty", "PUT", "user/profile", 200, phone_empty)
+        if not result:
+            success = False
+        elif result.get('phone_number') is not None:
+            self.log_test("Verify Empty Phone", False, f"Empty phone should be None: {result.get('phone_number')}")
+            success = False
+        else:
+            self.log_test("Verify Empty Phone", True, "Empty phone number set to None")
+        
+        # Test 6: Test invalid phone number format
+        invalid_phone = {"phone_number": "invalid-phone-123abc"}
+        result = self.run_test("Invalid Phone Number Format", "PUT", "user/profile", 400, invalid_phone)
+        if result is not None:  # Should fail with 400
+            self.log_test("Invalid Phone Validation", False, "Invalid phone number was accepted")
+            success = False
+        else:
+            self.log_test("Invalid Phone Validation", True, "Invalid phone number correctly rejected")
+        
+        # Test 7: Update email only (need to use unique email)
+        timestamp = int(time.time())
+        email_update = {"email": f"newemail{timestamp}@example.com"}
+        result = self.run_test("Update Email Only", "PUT", "user/profile", 200, email_update)
+        if not result:
+            success = False
+        elif result.get('email') != email_update['email']:
+            self.log_test("Verify Email Update", False, f"Email not updated correctly: {result.get('email')}")
+            success = False
+        else:
+            self.log_test("Verify Email Update", True, "Email updated successfully")
+        
+        # Test 8: Test invalid email format
+        invalid_email = {"email": "invalid-email-format"}
+        result = self.run_test("Invalid Email Format", "PUT", "user/profile", 422, invalid_email)
+        if result is not None:  # Should fail with 422
+            self.log_test("Invalid Email Validation", False, "Invalid email format was accepted")
+            success = False
+        else:
+            self.log_test("Invalid Email Validation", True, "Invalid email format correctly rejected")
+        
+        # Test 9: Test duplicate email (create another user first)
+        timestamp2 = int(time.time()) + 1
+        duplicate_user_data = {
+            "email": f"duplicate{timestamp2}@example.com",
+            "password": "TestPass123!",
+            "full_name": f"Duplicate Test User {timestamp2}"
+        }
+        
+        # Store current token
+        original_token = self.token
+        
+        # Register duplicate user
+        dup_result = self.run_test("Register User for Duplicate Test", "POST", "auth/register", 200, duplicate_user_data)
+        if dup_result:
+            # Restore original token
+            self.token = original_token
+            
+            # Try to update current user's email to the duplicate user's email
+            duplicate_email = {"email": duplicate_user_data["email"]}
+            result = self.run_test("Duplicate Email Test", "PUT", "user/profile", 400, duplicate_email)
+            if result is not None:  # Should fail with 400
+                self.log_test("Duplicate Email Validation", False, "Duplicate email was accepted")
+                success = False
+            else:
+                self.log_test("Duplicate Email Validation", True, "Duplicate email correctly rejected")
+        
+        # Test 10: Update all fields together
+        timestamp3 = int(time.time()) + 2
+        all_fields_update = {
+            "full_name": "Complete Update Test User",
+            "email": f"complete{timestamp3}@example.com",
+            "phone_number": "+1-800-555-0199"
+        }
+        result = self.run_test("Update All Fields", "PUT", "user/profile", 200, all_fields_update)
+        if not result:
+            success = False
+        else:
+            # Verify all fields were updated
+            fields_correct = (
+                result.get('full_name') == all_fields_update['full_name'] and
+                result.get('email') == all_fields_update['email'] and
+                result.get('phone_number') == all_fields_update['phone_number']
+            )
+            if not fields_correct:
+                self.log_test("Verify All Fields Update", False, f"Not all fields updated correctly: {result}")
+                success = False
+            else:
+                self.log_test("Verify All Fields Update", True, "All fields updated successfully")
+        
+        # Test 11: Test with empty/null values
+        empty_update = {"full_name": None, "email": None, "phone_number": None}
+        result = self.run_test("Update with Null Values", "PUT", "user/profile", 400, empty_update)
+        if result is not None:  # Should fail with 400 (no valid fields to update)
+            self.log_test("Null Values Validation", False, "Null values were accepted")
+            success = False
+        else:
+            self.log_test("Null Values Validation", True, "Null values correctly rejected")
+        
+        # Test 12: Test authentication requirement (remove token)
+        temp_token = self.token
+        self.token = None
+        result = self.run_test("Profile Update Without Auth", "PUT", "user/profile", 401, {"full_name": "Test"})
+        if result is not None:  # Should fail with 401
+            self.log_test("Auth Requirement Test", False, "Unauthenticated request was accepted")
+            success = False
+        else:
+            self.log_test("Auth Requirement Test", True, "Authentication correctly required")
+        
+        # Restore token
+        self.token = temp_token
+        
+        # Test 13: Test GET profile without auth
+        self.token = None
+        result = self.run_test("Get Profile Without Auth", "GET", "user/profile", 401)
+        if result is not None:  # Should fail with 401
+            self.log_test("Get Profile Auth Test", False, "Unauthenticated GET request was accepted")
+            success = False
+        else:
+            self.log_test("Get Profile Auth Test", True, "Authentication correctly required for GET")
+        
+        # Restore token
+        self.token = temp_token
+        
+        # Test 14: Test whitespace trimming
+        whitespace_update = {"full_name": "  Trimmed Name  ", "phone_number": "  +1-555-999-8888  "}
+        result = self.run_test("Whitespace Trimming Test", "PUT", "user/profile", 200, whitespace_update)
+        if not result:
+            success = False
+        else:
+            # Check if whitespace was trimmed
+            if result.get('full_name') != "Trimmed Name":
+                self.log_test("Name Trimming Check", False, f"Name not trimmed: '{result.get('full_name')}'")
+                success = False
+            else:
+                self.log_test("Name Trimming Check", True, "Full name whitespace trimmed correctly")
+            
+            if result.get('phone_number') != "+1-555-999-8888":
+                self.log_test("Phone Trimming Check", False, f"Phone not trimmed: '{result.get('phone_number')}'")
+                success = False
+            else:
+                self.log_test("Phone Trimming Check", True, "Phone number whitespace trimmed correctly")
+        
+        return success
+
     def test_delete_operations(self):
         """Test delete operations"""
         if not self.token:
