@@ -75,7 +75,7 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen flex">
       {/* Left side - Hero Section */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-rose-500 via-pink-500 to-orange-400 relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 celebration-gradient relative overflow-hidden">
         <div className="absolute inset-0 bg-black/30" />
         
         {/* Celebration Images Banner */}
