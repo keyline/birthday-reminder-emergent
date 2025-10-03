@@ -285,19 +285,9 @@ class AdminUser(BaseModel):
     username: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-class AdminLogin(BaseModel):
-    username: str
-    password: str
-    captcha_answer: str
-
 class CaptchaResponse(BaseModel):
     captcha_id: str
     question: str
-
-class AdminTokenResponse(BaseModel):
-    access_token: str
-    token_type: str
-    admin: dict
 
 class UserWithContactCount(BaseModel):
     id: str
