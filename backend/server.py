@@ -380,11 +380,35 @@ async def update_user_profile(profile_data: UserProfileUpdate, current_user: Use
         update_fields["email"] = str(profile_data.email).lower()
     
     if profile_data.phone_number is not None:
-        # Basic phone number validation
+        # Country-specific phone number validation
         phone = profile_data.phone_number.strip()
-        if phone and not phone.replace("+", "").replace("-", "").replace(" ", "").replace("(", "").replace(")", "").isdigit():
-            raise HTTPException(status_code=400, detail="Invalid phone number format")
-        update_fields["phone_number"] = phone if phone else None
+        if phone:
+            # Clean the phone number - remove spaces, dashes, parentheses
+            cleaned_phone = phone.replace(" ", "").replace("-", "").replace("(", "").replace(")", "")
+            
+            # Remove +91 country code for India if present
+            if cleaned_phone.startswith("+91"):
+                cleaned_phone = cleaned_phone[3:]
+            elif cleaned_phone.startswith("91") and len(cleaned_phone) == 12:
+                cleaned_phone = cleaned_phone[2:]
+            
+            # Validate for Indian phone numbers (10 digits)
+            if cleaned_phone:
+                if not cleaned_phone.isdigit():
+                    raise HTTPException(status_code=400, detail="Phone number must contain only digits")
+                
+                if len(cleaned_phone) != 10:
+                    raise HTTPException(status_code=400, detail="Indian phone numbers must be exactly 10 digits")
+                
+                # Additional validation for Indian mobile numbers (should start with 6-9)
+                if not cleaned_phone[0] in ['6', '7', '8', '9']:
+                    raise HTTPException(status_code=400, detail="Indian mobile numbers must start with 6, 7, 8, or 9")
+                
+                update_fields["phone_number"] = cleaned_phone
+            else:
+                update_fields["phone_number"] = None
+        else:
+            update_fields["phone_number"] = None
     
     if not update_fields:
         raise HTTPException(status_code=400, detail="No valid fields to update")
