@@ -303,6 +303,202 @@ class BirthdayReminderAPITester:
         
         return result is None  # Should fail, so None is expected
 
+    def test_custom_message_crud(self):
+        """Test custom message CRUD operations"""
+        if not self.token or not hasattr(self, 'contact_id'):
+            self.log_test("Custom Message CRUD", False, "No auth token or contact ID available")
+            return False
+        
+        success = True
+        
+        # Test 1: Create custom WhatsApp birthday message
+        whatsapp_message_data = {
+            "contact_id": self.contact_id,
+            "occasion": "birthday",
+            "message_type": "whatsapp",
+            "custom_message": "🎉 Happy Birthday! Hope you have an amazing day filled with joy and celebration!",
+            "image_url": "/default-birthday.jpg"
+        }
+        
+        result = self.run_test("Create Custom WhatsApp Birthday Message", "POST", "custom-messages", 200, whatsapp_message_data)
+        if not result:
+            success = False
+        
+        # Test 2: Create custom Email anniversary message
+        email_message_data = {
+            "contact_id": self.contact_id,
+            "occasion": "anniversary",
+            "message_type": "email",
+            "custom_message": "💕 Happy Anniversary! Wishing you both continued happiness and love.",
+            "image_url": "/default-anniversary.jpg"
+        }
+        
+        result = self.run_test("Create Custom Email Anniversary Message", "POST", "custom-messages", 200, email_message_data)
+        if not result:
+            success = False
+        
+        # Test 3: Get all custom messages for contact
+        result = self.run_test("Get All Custom Messages for Contact", "GET", f"custom-messages/{self.contact_id}", 200)
+        if not result:
+            success = False
+        elif isinstance(result, list) and len(result) >= 2:
+            print(f"   Found {len(result)} custom messages for contact")
+        
+        # Test 4: Get specific custom message (WhatsApp birthday)
+        result = self.run_test("Get Specific Custom Message", "GET", f"custom-messages/{self.contact_id}/birthday/whatsapp", 200)
+        if not result:
+            success = False
+        elif result.get('custom_message'):
+            print(f"   Retrieved message: {result['custom_message'][:50]}...")
+        
+        # Test 5: Get non-existent custom message (should return AI-generated default)
+        result = self.run_test("Get Default AI Message", "GET", f"custom-messages/{self.contact_id}/birthday/email", 200)
+        if not result:
+            success = False
+        elif result.get('is_default'):
+            print(f"   AI-generated default message: {result.get('custom_message', '')[:50]}...")
+        
+        # Test 6: Update existing custom message
+        updated_message_data = {
+            "contact_id": self.contact_id,
+            "occasion": "birthday",
+            "message_type": "whatsapp",
+            "custom_message": "🎂 Updated Birthday Message! Have a fantastic celebration!",
+            "image_url": "/updated-birthday.jpg"
+        }
+        
+        result = self.run_test("Update Custom Message", "POST", "custom-messages", 200, updated_message_data)
+        if not result:
+            success = False
+        
+        # Test 7: Delete custom message
+        result = self.run_test("Delete Custom Message", "DELETE", f"custom-messages/{self.contact_id}/anniversary/email", 200)
+        if not result:
+            success = False
+        
+        # Test 8: Try to delete non-existent message (should return 404)
+        result = self.run_test("Delete Non-existent Message", "DELETE", f"custom-messages/{self.contact_id}/nonexistent/whatsapp", 404)
+        if result is not None:  # Should fail with 404
+            success = False
+        
+        return success
+    
+    def test_send_test_message(self):
+        """Test sending test messages"""
+        if not self.token or not hasattr(self, 'contact_id'):
+            self.log_test("Send Test Message", False, "No auth token or contact ID available")
+            return False
+        
+        # Test sending test message for birthday
+        test_message_data = {
+            "contact_id": self.contact_id,
+            "occasion": "birthday"
+        }
+        
+        result = self.run_test("Send Test Birthday Message", "POST", "send-test-message", 200, test_message_data)
+        if result:
+            print(f"   Test message results: WhatsApp: {result.get('results', {}).get('whatsapp', {}).get('status', 'N/A')}, Email: {result.get('results', {}).get('email', {}).get('status', 'N/A')}")
+            return True
+        return False
+    
+    def test_custom_message_error_handling(self):
+        """Test custom message error handling"""
+        if not self.token:
+            self.log_test("Custom Message Error Handling", False, "No auth token available")
+            return False
+        
+        success = True
+        
+        # Test 1: Create custom message with invalid contact ID
+        invalid_message_data = {
+            "contact_id": "invalid-contact-id",
+            "occasion": "birthday",
+            "message_type": "whatsapp",
+            "custom_message": "Test message"
+        }
+        
+        result = self.run_test("Custom Message Invalid Contact", "POST", "custom-messages", 404, invalid_message_data)
+        if result is not None:  # Should fail with 404
+            success = False
+        
+        # Test 2: Get custom messages for invalid contact
+        result = self.run_test("Get Messages Invalid Contact", "GET", "custom-messages/invalid-contact-id", 404)
+        if result is not None:  # Should fail with 404
+            success = False
+        
+        # Test 3: Send test message with invalid contact
+        invalid_test_data = {
+            "contact_id": "invalid-contact-id",
+            "occasion": "birthday"
+        }
+        
+        result = self.run_test("Test Message Invalid Contact", "POST", "send-test-message", 404, invalid_test_data)
+        if result is not None:  # Should fail with 404
+            success = False
+        
+        return success
+    
+    def test_custom_message_integration(self):
+        """Test custom message integration with existing systems"""
+        if not self.token or not hasattr(self, 'contact_id'):
+            self.log_test("Custom Message Integration", False, "No auth token or contact ID available")
+            return False
+        
+        success = True
+        
+        # Test 1: Create custom messages for different occasions and types
+        test_scenarios = [
+            {"occasion": "birthday", "message_type": "whatsapp", "message": "🎉 WhatsApp Birthday Wishes!"},
+            {"occasion": "birthday", "message_type": "email", "message": "📧 Email Birthday Greetings!"},
+            {"occasion": "anniversary", "message_type": "whatsapp", "message": "💕 WhatsApp Anniversary Love!"},
+            {"occasion": "anniversary", "message_type": "email", "message": "💌 Email Anniversary Wishes!"}
+        ]
+        
+        for scenario in test_scenarios:
+            message_data = {
+                "contact_id": self.contact_id,
+                "occasion": scenario["occasion"],
+                "message_type": scenario["message_type"],
+                "custom_message": scenario["message"],
+                "image_url": f"/test-{scenario['occasion']}-{scenario['message_type']}.jpg"
+            }
+            
+            result = self.run_test(f"Create {scenario['occasion'].title()} {scenario['message_type'].title()} Message", 
+                                 "POST", "custom-messages", 200, message_data)
+            if not result:
+                success = False
+        
+        # Test 2: Verify all messages were created
+        result = self.run_test("Verify All Custom Messages Created", "GET", f"custom-messages/{self.contact_id}", 200)
+        if result and isinstance(result, list):
+            print(f"   Total custom messages created: {len(result)}")
+            if len(result) < 4:  # Should have at least 4 messages from scenarios above
+                success = False
+        else:
+            success = False
+        
+        # Test 3: Test message generation integration with contact tone
+        # First update contact with different tone
+        contact_update = {
+            "name": "John Doe Updated",
+            "email": "john.updated@example.com",
+            "whatsapp": "+1234567891",
+            "birthday": "1990-05-16",
+            "anniversary_date": "2020-06-21",
+            "message_tone": "funny"
+        }
+        
+        update_result = self.run_test("Update Contact Tone for Integration Test", "PUT", f"contacts/{self.contact_id}", 200, contact_update)
+        if update_result:
+            # Now test getting default message with funny tone
+            result = self.run_test("Get AI Message with Funny Tone", "GET", f"custom-messages/{self.contact_id}/birthday/sms", 200)
+            if result and result.get('is_default'):
+                print(f"   AI message with funny tone: {result.get('custom_message', '')[:50]}...")
+            elif not result:
+                success = False
+        
+        return success
+
     def test_delete_operations(self):
         """Test delete operations"""
         if not self.token:
@@ -310,6 +506,12 @@ class BirthdayReminderAPITester:
             return False
         
         success = True
+        
+        # Delete custom messages first (cleanup)
+        if hasattr(self, 'contact_id'):
+            # Try to delete some custom messages (may not exist, that's ok)
+            self.run_test("Cleanup Custom Messages 1", "DELETE", f"custom-messages/{self.contact_id}/birthday/whatsapp", 200)
+            self.run_test("Cleanup Custom Messages 2", "DELETE", f"custom-messages/{self.contact_id}/anniversary/email", 200)
         
         # Delete template
         if hasattr(self, 'template_id'):
