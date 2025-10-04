@@ -1823,6 +1823,11 @@ async def send_test_message(request: TestMessageRequest, current_user: User = De
                 "Content-Type": "application/json"
             }
             
+            # Convert email image to absolute URL
+            absolute_email_image = ensure_absolute_image_url(email_image)
+            if not absolute_email_image:
+                absolute_email_image = get_default_celebration_image(request.occasion)
+            
             # Create HTML email content
             html_content = f"""
             <html>
@@ -1838,7 +1843,7 @@ async def send_test_message(request: TestMessageRequest, current_user: User = De
                         <div style="background-color: white; padding: 15px; border-radius: 6px; border-left: 4px solid #e11d48;">
                             {email_message}
                         </div>
-                        {f'<img src="{email_image}" style="max-width: 100%; height: auto; margin-top: 15px; border-radius: 6px;" alt="Celebration Image">' if email_image else ''}
+                        {f'<img src="{absolute_email_image}" style="max-width: 100%; height: auto; margin-top: 15px; border-radius: 6px;" alt="Celebration Image">' if absolute_email_image else ''}
                     </div>
                     <p style="font-size: 14px; color: #6b7280; margin-top: 30px;">
                         📝 This is a preview of how your {request.occasion} message will appear when sent to {contact['name']}.
