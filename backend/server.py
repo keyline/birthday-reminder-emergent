@@ -1456,6 +1456,24 @@ def get_default_celebration_image(occasion: str = "birthday") -> str:
     }
     return default_images.get(occasion.lower(), default_images["birthday"])
 
+def ensure_absolute_image_url(image_url: Optional[str]) -> Optional[str]:
+    """Convert relative image URLs to absolute URLs using the backend URL"""
+    if not image_url or not image_url.strip():
+        return None
+    
+    image_url = image_url.strip()
+    
+    # If it's already a full URL (starts with http:// or https://), return as is
+    if image_url.startswith('http://') or image_url.startswith('https://'):
+        return image_url
+    
+    # If it's a relative URL starting with /, prepend the backend URL
+    if image_url.startswith('/'):
+        return f"{BACKEND_URL}{image_url}"
+    
+    # If it's a relative path without leading /, assume it's in uploads/images/
+    return f"{BACKEND_URL}/uploads/images/{image_url}"
+
 # WhatsApp Message Sending Functions
 async def send_whatsapp_message(user_id: str, phone_number: str, message: str, image_url: Optional[str] = None, occasion: str = "birthday"):
     """Send WhatsApp message using DigitalSMS API according to official documentation"""
