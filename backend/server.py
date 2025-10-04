@@ -2110,6 +2110,11 @@ async def send_email_reminder(user_id: str, contact: dict, occasion: str, messag
             "Content-Type": "application/json"
         }
         
+        # Convert image URL to absolute URL
+        absolute_image_url = ensure_absolute_image_url(image_url)
+        if not absolute_image_url:
+            absolute_image_url = get_default_celebration_image(occasion)
+        
         # Create HTML email content
         html_content = f"""
         <html>
@@ -2122,7 +2127,7 @@ async def send_email_reminder(user_id: str, contact: dict, occasion: str, messag
                     <div style="background-color: white; padding: 15px; border-radius: 6px; border-left: 4px solid #e11d48;">
                         {message}
                     </div>
-                    {f'<img src="{image_url}" style="max-width: 100%; height: auto; margin-top: 15px; border-radius: 6px;" alt="Celebration Image">' if image_url else ''}
+                    {f'<img src="{absolute_image_url}" style="max-width: 100%; height: auto; margin-top: 15px; border-radius: 6px;" alt="Celebration Image">' if absolute_image_url else ''}
                 </div>
                 <p style="font-size: 14px; color: #6b7280; margin-top: 30px;">
                     Sent with ❤️ by ReminderAI
