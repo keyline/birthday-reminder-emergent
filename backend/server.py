@@ -1505,34 +1505,16 @@ async def send_whatsapp_message(user_id: str, phone_number: str, message: str, i
             "msg": message
         }
         
-        # For now, skip images entirely to isolate the 407 error issue
-        # We'll add image support back once basic messaging works
-        # TODO: Add image support back after resolving 407 error
+        # Handle image URL - convert to absolute URL and add to params
+        absolute_image_url = ensure_absolute_image_url(image_url)
         
-        # Temporarily commenting out image logic:
-        # if image_url and image_url.strip():
-        #     # Convert relative URL to absolute if needed
-        #     if image_url.startswith('/'):
-        #         absolute_image_url = f"https://remindhub-5.preview.emergentagent.com{image_url}"
-        #     elif image_url.startswith('http'):
-        #         absolute_image_url = image_url
-        #     else:
-        #         # Skip image if not a valid URL format
-        #         absolute_image_url = None
-        #     
-        #     # Only add image if we have a valid URL and it's accessible
-        #     if absolute_image_url:
-        #         try:
-        #             import requests
-        #             # Quick HEAD request to check if image is accessible
-        #             head_response = requests.head(absolute_image_url, timeout=5)
-        #             if head_response.status_code == 200:
-        #                 params["img1"] = absolute_image_url
-        #             # If image is not accessible, don't include img1 parameter
-        #         except:
-        #             # If validation fails, don't include img1 parameter
-        #             pass
-        # If no valid image, don't include img1 parameter (send text-only message)
+        # If no image provided, use default celebration image
+        if not absolute_image_url:
+            absolute_image_url = get_default_celebration_image(occasion)
+        
+        # Always include image in WhatsApp message
+        if absolute_image_url:
+            params["img1"] = absolute_image_url
         
         # Log request details for debugging (remove img1 from logs for brevity)
         debug_params = {k: v for k, v in params.items() if k != "img1"}
